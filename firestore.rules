@@ -1,0 +1,152 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Funções auxiliares ───────────────────────────────────────────────────
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Verifica se o usuário autenticado pertence à org (lê users/{userId}).
+    function isGestorDaOrg(orgId) {
+      return isAuthenticated()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.org_id == orgId
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.ativo == true;
+    }
+
+    // Verifica se o usuário tem role admin na org.
+    function isAdminDaOrg(orgId) {
+      return isGestorDaOrg(orgId)
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Verifica se o usuário tem role gestor ou admin na org.
+    function isGestorOuAdmin(orgId) {
+      return isGestorDaOrg(orgId)
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'gestor'];
+    }
+
+    // Verifica se o usuário é auditor da org.
+    function isAuditorDaOrg(orgId) {
+      return isGestorDaOrg(orgId)
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'auditor';
+    }
+
+    // Verifica se o userId autenticado está na lista de mencionados do caso (regra S5).
+    // Se sim, nega acesso mesmo sendo admin.
+    function isMencionado(caseId, orgId) {
+      return isAuthenticated()
+        && exists(/databases/$(database)/documents/cases/$(caseId))
+        && request.auth.uid in get(/databases/$(database)/documents/cases/$(caseId)).data.mencionados;
+    }
+
+    // Verifica isolamento de unit: gestores com unit_id só veem casos da sua unit.
+    function podeVerUnidade(caseData, orgId) {
+      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return userDoc.unit_id == null
+        || userDoc.unit_id == ''
+        || userDoc.unit_id == caseData.unit_id;
+    }
+
+    // ─── orgs ─────────────────────────────────────────────────────────────────
+    // Admins podem ler e atualizar a própria org. Criação apenas via Admin SDK.
+    match /orgs/{orgId} {
+      allow read: if isGestorDaOrg(orgId);
+      allow update: if isAdminDaOrg(orgId);
+      allow create, delete: if false; // somente Admin SDK
+    }
+
+    // ─── units ────────────────────────────────────────────────────────────────
+    // Apenas admins da org podem gerenciar unidades.
+    match /units/{unitId} {
+      allow read: if isAuthenticated()
+        && resource.data.org_id == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.org_id;
+      allow create, update: if isAdminDaOrg(resource.data.org_id);
+      allow delete: if false;
+    }
+
+    // ─── users ────────────────────────────────────────────────────────────────
+    // Gestores leem sua própria org. Apenas admin cria/atualiza outros usuários.
+    match /users/{userId} {
+      allow read: if isAuthenticated()
+        && (request.auth.uid == userId
+            || isGestorDaOrg(resource.data.org_id));
+      allow create: if isAdminDaOrg(request.resource.data.org_id);
+      allow update: if isAdminDaOrg(resource.data.org_id)
+        || (request.auth.uid == userId
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nome']));
+      allow delete: if false; // desativar com ativo=false, nunca deletar
+    }
+
+    // ─── cases ────────────────────────────────────────────────────────────────
+    // Denunciantes NÃO têm conta — criação é via Admin SDK (Firebase Function).
+    // Gestores autenticados acessam casos da própria org.
+    // Usuários mencionados em mencionados[] NUNCA acessam o caso (regra S5).
+    match /cases/{caseId} {
+      allow read: if isGestorDaOrg(resource.data.org_id)
+        && !isMencionado(caseId, resource.data.org_id)
+        && podeVerUnidade(resource.data, resource.data.org_id);
+
+      allow update: if isGestorOuAdmin(resource.data.org_id)
+        && !isMencionado(caseId, resource.data.org_id)
+        && podeVerUnidade(resource.data, resource.data.org_id)
+        // org_id e protocolo são imutáveis após criação
+        && request.resource.data.org_id == resource.data.org_id
+        && request.resource.data.protocolo == resource.data.protocolo;
+
+      // Criação via Admin SDK (Firebase Function) — client não cria cases diretamente.
+      allow create: if false;
+      allow delete: if false;
+    }
+
+    // ─── messages ────────────────────────────────────────────────────────────
+    // Gestores leem e criam mensagens da própria org.
+    // Denunciantes não têm conta — leitura/escrita de denunciante via Admin SDK.
+    match /messages/{messageId} {
+      allow read: if isGestorDaOrg(resource.data.org_id)
+        && !isMencionado(resource.data.case_id, resource.data.org_id);
+
+      allow create: if isGestorOuAdmin(request.resource.data.org_id)
+        && !isMencionado(request.resource.data.case_id, request.resource.data.org_id)
+        && request.resource.data.org_id == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.org_id
+        && request.resource.data.autor == 'gestor';
+
+      allow update, delete: if false;
+    }
+
+    // ─── audit_logs ──────────────────────────────────────────────────────────
+    // Imutáveis: update e delete NUNCA permitidos (regra S6).
+    // Criação permitida para qualquer autenticado (gestores gravando ações).
+    match /audit_logs/{logId} {
+      allow read: if isGestorDaOrg(resource.data.org_id);
+      allow create: if isAuthenticated()
+        && request.resource.data.org_id == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.org_id;
+      allow update: if false; // NUNCA
+      allow delete: if false; // NUNCA
+    }
+
+    // ─── reports ─────────────────────────────────────────────────────────────
+    match /reports/{reportId} {
+      allow read: if isGestorDaOrg(resource.data.org_id);
+      allow create: if isGestorOuAdmin(request.resource.data.org_id);
+      allow update: if isAdminDaOrg(resource.data.org_id);
+      allow delete: if false;
+    }
+
+    // ─── whatsapp_sessions ───────────────────────────────────────────────────
+    // Acesso EXCLUSIVAMENTE via Admin SDK (Firebase Function).
+    // Client nunca acessa — o número hashed é dado sensível (regra S2).
+    match /whatsapp_sessions/{sessionId} {
+      allow read, write: if false;
+    }
+
+    // ─── Regra de fallback ────────────────────────────────────────────────────
+    // Qualquer coleção não listada acima é bloqueada por padrão.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

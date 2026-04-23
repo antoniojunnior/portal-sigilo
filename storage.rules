@@ -1,0 +1,41 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ─── Anexos de casos ──────────────────────────────────────────────────────
+    // Estrutura: cases/{orgId}/{caseId}/{filename}
+    // - Uploads de denunciantes: SOMENTE via Firebase Function com Admin SDK.
+    //   Client nunca faz upload direto (validação de mime type é server-side — regra S7).
+    // - Gestores autenticados podem baixar anexos da própria org.
+    match /cases/{orgId}/{caseId}/{filename} {
+      // Download: gestor autenticado pertencente à org.
+      allow read: if request.auth != null
+        && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.org_id == orgId
+        && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.ativo == true;
+
+      // Upload direto pelo client: BLOQUEADO.
+      // Todo upload passa por Firebase Function que valida o mime type antes.
+      allow write: if false;
+    }
+
+    // ─── Logos das orgs ───────────────────────────────────────────────────────
+    // Estrutura: orgs/{orgId}/logo/{filename}
+    // Apenas admins fazem upload. Leitura pública (exibida no portal sem auth).
+    match /orgs/{orgId}/logo/{filename} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.org_id == orgId
+        && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin'
+        && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.ativo == true
+        && request.resource.size < 2 * 1024 * 1024  // máx 2 MB
+        && request.resource.contentType.matches('image/(jpeg|png|webp|svg\\+xml)');
+    }
+
+    // ─── Fallback ─────────────────────────────────────────────────────────────
+    // Qualquer path não listado acima: bloqueado.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
