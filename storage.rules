@@ -29,7 +29,7 @@ service firebase.storage {
         && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin'
         && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.ativo == true
         && request.resource.size < 2 * 1024 * 1024  // máx 2 MB
-        && request.resource.contentType.matches('image/(jpeg|png|webp|svg\\+xml)');
+        && request.resource.contentType.matches('image/(jpeg|png|webp)');
     }
 
     // ─── Fallback ─────────────────────────────────────────────────────────────

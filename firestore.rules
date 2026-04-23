@@ -64,7 +64,8 @@ service cloud.firestore {
     match /units/{unitId} {
       allow read: if isAuthenticated()
         && resource.data.org_id == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.org_id;
-      allow create, update: if isAdminDaOrg(resource.data.org_id);
+      allow create: if isAdminDaOrg(request.resource.data.org_id);
+      allow update: if isAdminDaOrg(resource.data.org_id);
       allow delete: if false;
     }
 

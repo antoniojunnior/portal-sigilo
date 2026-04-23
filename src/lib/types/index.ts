@@ -94,6 +94,8 @@ export interface Case {
   urgencia?: UrgenciaNivel;
   status: CaseStatus;
   created_at: Timestamp;
+  /** Firestore TTL: created_at + 5 anos. Após este timestamp o Firestore exclui automaticamente. */
+  ttl: Timestamp;
   triagem_ia?: TriagemIA;
   historico: CaseHistoricoItem[];
   mencionados: string[];
@@ -124,6 +126,9 @@ export interface Message {
 }
 
 // ─── AuditLog (imutável — regra S6) ──────────────────────────────────────────
+// Retenção: 20 anos (NR-1). SEM campo ttl — Firestore TTL bypassaria as rules
+// e deletaria documentos imutáveis. Retenção implementada via export periódico
+// para Cloud Storage (job externo).
 
 export interface AuditLog {
   id: string;
