@@ -1,4 +1,6 @@
-// Centraliza TODAS as variáveis de ambiente com validação em runtime.
+import "server-only";
+
+// Centraliza variáveis de ambiente server-side com validação em runtime.
 // Nunca acesse process.env diretamente fora deste arquivo.
 
 function requireEnv(key: string): string {
@@ -10,10 +12,6 @@ function requireEnv(key: string): string {
     );
   }
   return value;
-}
-
-function optionalEnv(key: string): string | undefined {
-  return process.env[key];
 }
 
 // ─── Server-only (NUNCA exportar para o bundle do browser) ───────────────────
@@ -33,34 +31,5 @@ export const FIREBASE_PRIVATE_KEY = requireEnv("FIREBASE_PRIVATE_KEY").replace(
 /** Email do service account Firebase Admin. */
 export const FIREBASE_CLIENT_EMAIL = requireEnv("FIREBASE_CLIENT_EMAIL");
 
-// ─── Client-side (prefixo NEXT_PUBLIC_ — sem segredos) ───────────────────────
-
-/** API Key pública do Firebase (sem segredo — usada no browser). */
-export const NEXT_PUBLIC_FIREBASE_API_KEY = requireEnv(
-  "NEXT_PUBLIC_FIREBASE_API_KEY"
-);
-
-/** Auth domain público do Firebase. */
-export const NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN = requireEnv(
-  "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN"
-);
-
-/** Project ID público do Firebase (igual ao server-side). */
-export const NEXT_PUBLIC_FIREBASE_PROJECT_ID = requireEnv(
-  "NEXT_PUBLIC_FIREBASE_PROJECT_ID"
-);
-
-/** Storage bucket público do Firebase. */
-export const NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET = requireEnv(
-  "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET"
-);
-
-/** Messaging sender ID público do Firebase. */
-export const NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID = optionalEnv(
-  "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID"
-);
-
-/** App ID público do Firebase. */
-export const NEXT_PUBLIC_FIREBASE_APP_ID = optionalEnv(
-  "NEXT_PUBLIC_FIREBASE_APP_ID"
-);
+// ─── Client-side (prefixo NEXT_PUBLIC_) — exportados aqui somente para uso
+// em Route Handlers e Server Components. Para Client Components, use env.client.ts.

@@ -1,7 +1,4 @@
-// ATENÇÃO: Este arquivo é exclusivamente server-side.
-// NUNCA importe este módulo em componentes client-side ou arquivos
-// que possam ser incluídos no bundle do browser.
-// Verificação: grep -r "firebase-admin/admin" src/app --include="*.tsx" → zero resultados esperados.
+import "server-only";
 
 import * as admin from "firebase-admin";
 import {
