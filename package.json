@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "npx ts-node --skip-project scripts/seed-emulator.ts"
+    "seed": "npx ts-node --compiler-options '{\"module\":\"CommonJS\",\"esModuleInterop\":true}' scripts/seed-emulator.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",

@@ -1,21 +1,20 @@
 /**
  * Popula o Firestore Emulator com dados de teste.
- * Execute com: npx ts-node scripts/seed-emulator.ts
+ * Execute com: npm run seed
  *
  * O emulador deve estar rodando: firebase emulators:start
  */
 
-import * as admin from "firebase-admin";
+// Conecta ao emulador ANTES de qualquer import do firebase-admin.
+process.env["FIRESTORE_EMULATOR_HOST"] = "localhost:8080";
+process.env["FIREBASE_AUTH_EMULATOR_HOST"] = "localhost:9099";
+process.env["FIREBASE_STORAGE_EMULATOR_HOST"] = "localhost:9199";
 
-// Conecta ao emulador — NUNCA ao Firebase real.
-process.env.FIRESTORE_EMULATOR_HOST = "localhost:8080";
-process.env.FIREBASE_AUTH_EMULATOR_HOST = "localhost:9099";
-process.env.FIREBASE_STORAGE_EMULATOR_HOST = "localhost:9199";
+import { initializeApp } from "firebase-admin/app";
+import { getFirestore, Timestamp } from "firebase-admin/firestore";
 
-admin.initializeApp({ projectId: "portal-sigilo" });
-
-const db = admin.firestore();
-const Timestamp = admin.firestore.Timestamp;
+initializeApp({ projectId: "portal-sigilo" });
+const db = getFirestore();
 
 // ─── IDs fixos para referência cruzada ───────────────────────────────────────
 
@@ -34,29 +33,21 @@ const CASE_5_ID = "case-violacao-lgpd";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function now() {
-  return Timestamp.now();
-}
-
-function daysFromNow(days: number) {
+function daysFromNow(days: number): FirebaseFirestore.Timestamp {
   return Timestamp.fromMillis(Date.now() + days * 24 * 60 * 60 * 1000);
 }
 
-function daysAgo(days: number) {
+function daysAgo(days: number): FirebaseFirestore.Timestamp {
   return Timestamp.fromMillis(Date.now() - days * 24 * 60 * 60 * 1000);
 }
 
-function fiveYearsFromNow() {
-  return daysFromNow(5 * 365);
-}
-
-function protocolo(prefix: string) {
-  return `ETK-${new Date().getFullYear()}-${prefix}`;
+function protocolo(suffix: string): string {
+  return `ETK-${new Date().getFullYear()}-${suffix}`;
 }
 
 // ─── 1. Orgs ─────────────────────────────────────────────────────────────────
 
-async function seedOrgs() {
+async function seedOrgs(): Promise<void> {
   console.log("→ Criando orgs...");
 
   await db.collection("orgs").doc(ORG_GESTAO_ID).set({
@@ -99,12 +90,12 @@ async function seedOrgs() {
     },
   });
 
-  console.log("  ✓ 2 orgs criadas");
+  console.log("  ✓ 2 orgs");
 }
 
 // ─── 2. Users ─────────────────────────────────────────────────────────────────
 
-async function seedUsers() {
+async function seedUsers(): Promise<void> {
   console.log("→ Criando usuários...");
 
   await db.collection("users").doc(USER_ADMIN_GESTAO_ID).set({
@@ -137,12 +128,12 @@ async function seedUsers() {
     criado_em: daysAgo(30),
   });
 
-  console.log("  ✓ 3 usuários criados");
+  console.log("  ✓ 3 usuários");
 }
 
 // ─── 3. Cases ─────────────────────────────────────────────────────────────────
 
-async function seedCases() {
+async function seedCases(): Promise<void> {
   console.log("→ Criando cases...");
 
   await db.collection("cases").doc(CASE_1_ID).set({
@@ -154,7 +145,7 @@ async function seedCases() {
     urgencia: 4,
     status: "em_apuracao",
     created_at: daysAgo(15),
-    ttl: fiveYearsFromNow(),
+    ttl: daysFromNow(5 * 365),
     triagem_ia: {
       categoria: "assedio_moral",
       subcategoria: "humilhacao_publica",
@@ -162,7 +153,7 @@ async function seedCases() {
       lei_aplicavel: "nr1",
       area_risco: "Operações",
       recomendacao:
-        "Afastar o gestor imediato do caso. Iniciar apuração formal em 48h.",
+        "Afastar o gestor imediato. Iniciar apuração formal em 48h.",
       gerado_em: daysAgo(14),
     },
     historico: [
@@ -182,7 +173,7 @@ async function seedCases() {
     anexos: [],
     prazo: daysFromNow(15),
     responsavel_id: USER_GESTOR_ID,
-    notas_internas: "Confirmado padrão recorrente com 2 relatos anteriores.",
+    notas_internas: "Padrão recorrente — 2 relatos anteriores similares.",
   });
 
   await db.collection("cases").doc(CASE_2_ID).set({
@@ -194,7 +185,7 @@ async function seedCases() {
     urgencia: 5,
     status: "aguardando_triagem",
     created_at: daysAgo(2),
-    ttl: fiveYearsFromNow(),
+    ttl: daysFromNow(5 * 365),
     historico: [
       {
         acao: "case_criado",
@@ -205,7 +196,6 @@ async function seedCases() {
     mencionados: [],
     anexos: [],
     prazo: daysFromNow(28),
-    notas_internas: null,
   });
 
   await db.collection("cases").doc(CASE_3_ID).set({
@@ -217,7 +207,7 @@ async function seedCases() {
     urgencia: 3,
     status: "pendente_informacao",
     created_at: daysAgo(20),
-    ttl: fiveYearsFromNow(),
+    ttl: daysFromNow(5 * 365),
     triagem_ia: {
       categoria: "discriminacao_salarial",
       urgencia: 3,
@@ -243,7 +233,6 @@ async function seedCases() {
     anexos: [],
     prazo: daysFromNow(10),
     responsavel_id: USER_GESTOR_ID,
-    notas_internas: null,
   });
 
   await db.collection("cases").doc(CASE_4_ID).set({
@@ -255,7 +244,7 @@ async function seedCases() {
     urgencia: 2,
     status: "encerrado_sem_infracao",
     created_at: daysAgo(45),
-    ttl: fiveYearsFromNow(),
+    ttl: daysFromNow(5 * 365),
     triagem_ia: {
       categoria: "risco_psicossocial",
       urgencia: 2,
@@ -293,14 +282,14 @@ async function seedCases() {
     urgencia: 3,
     status: "em_apuracao",
     created_at: daysAgo(7),
-    ttl: fiveYearsFromNow(),
+    ttl: daysFromNow(5 * 365),
     triagem_ia: {
       categoria: "violacao_lgpd",
       urgencia: 3,
       lei_aplicavel: "lgpd",
       area_risco: "TI",
       recomendacao:
-        "Envolver DPO imediatamente. Verificar logs de acesso ao sistema indicado.",
+        "Envolver DPO imediatamente. Verificar logs de acesso ao sistema.",
       gerado_em: daysAgo(6),
     },
     historico: [
@@ -310,34 +299,39 @@ async function seedCases() {
         detalhes: "Relato recebido via portal web.",
       },
     ],
-    mencionados: [USER_GESTOR_ID], // gestor mencionado — testa bloqueio das rules
+    // USER_GESTOR_ID mencionado → testa bloqueio das Firestore Rules
+    mencionados: [USER_GESTOR_ID],
     anexos: [],
     prazo: daysFromNow(23),
     responsavel_id: USER_ADMIN_GESTAO_ID,
-    notas_internas: null,
   });
 
-  console.log("  ✓ 5 cases criados (1 com mencionado para testar bloqueio)");
+  console.log("  ✓ 5 cases (CASE_5 tem mencionado para testar bloqueio)");
 }
 
 // ─── 4. Messages ──────────────────────────────────────────────────────────────
 
-async function seedMessages() {
-  console.log("→ Criando messages para case-assedio-moral...");
+async function seedMessages(): Promise<void> {
+  console.log("→ Criando messages...");
 
-  const msgs = [
-    { autor: "sistema", texto: "Olá! Este é um espaço seguro e sigiloso. Como posso te ajudar?", daysAgoN: 15 },
-    { autor: "denunciante", texto: "Quero relatar uma situação de assédio do meu gestor.", daysAgoN: 15 },
-    { autor: "sistema", texto: "Entendo. Pode me contar mais sobre o que aconteceu, quando e onde?", daysAgoN: 15 },
-    { autor: "denunciante", texto: "Foi na semana passada, durante uma reunião de equipe. Ele me humilhou na frente de todos.", daysAgoN: 14 },
-    { autor: "sistema", texto: "Isso é sério e foi correto você trazer isso aqui. Esse tipo de situação aconteceu outras vezes?", daysAgoN: 14 },
-    { autor: "denunciante", texto: "Sim, é recorrente há uns 3 meses. Outros colegas também presenciaram.", daysAgoN: 14 },
-    { autor: "sistema", texto: "Obrigado por compartilhar. Seu relato foi registrado. Protocolo gerado.", daysAgoN: 14 },
-    { autor: "gestor", texto: "Recebemos seu relato. Iniciamos a apuração. Em breve retornaremos.", daysAgoN: 13 },
-    { autor: "denunciante", texto: "Ok, obrigado. Preciso de mais informações?", daysAgoN: 12 },
-    { autor: "gestor", texto: "Por ora não. Podemos contatar por aqui se precisarmos. Prazo: 30 dias.", daysAgoN: 12 },
-  ] as const;
+  const msgs: Array<{
+    autor: "sistema" | "denunciante" | "gestor";
+    texto: string;
+    offsetMin: number;
+  }> = [
+    { autor: "sistema", texto: "Olá! Este é um espaço seguro e sigiloso. Como posso te ajudar?", offsetMin: 0 },
+    { autor: "denunciante", texto: "Quero relatar uma situação de assédio do meu gestor.", offsetMin: 3 },
+    { autor: "sistema", texto: "Entendo. Pode me contar mais sobre o que aconteceu, quando e onde?", offsetMin: 4 },
+    { autor: "denunciante", texto: "Foi na semana passada, em uma reunião de equipe. Ele me humilhou na frente de todos.", offsetMin: 8 },
+    { autor: "sistema", texto: "Isso é sério e foi correto você trazer aqui. Isso aconteceu outras vezes?", offsetMin: 9 },
+    { autor: "denunciante", texto: "Sim, é recorrente há 3 meses. Outros colegas presenciaram.", offsetMin: 12 },
+    { autor: "sistema", texto: "Obrigado por compartilhar. Vou registrar seu relato agora.", offsetMin: 13 },
+    { autor: "sistema", texto: "Relato registrado. Seu protocolo foi gerado. Guarde-o.", offsetMin: 14 },
+    { autor: "gestor", texto: "Recebemos seu relato. Iniciamos a apuração. Retornaremos em breve.", offsetMin: 1440 },
+    { autor: "denunciante", texto: "Ok, obrigado. Preciso fornecer mais alguma informação?", offsetMin: 2880 },
+  ];
 
+  const baseMs = daysAgo(15).toMillis();
   const batch = db.batch();
 
   msgs.forEach((msg, i) => {
@@ -348,18 +342,18 @@ async function seedMessages() {
       org_id: ORG_GESTAO_ID,
       autor: msg.autor,
       texto: msg.texto,
-      timestamp: Timestamp.fromMillis(daysAgo(msg.daysAgoN).toMillis() + i * 60000),
+      timestamp: Timestamp.fromMillis(baseMs + msg.offsetMin * 60 * 1000),
       anexos: [],
     });
   });
 
   await batch.commit();
-  console.log("  ✓ 10 messages criadas");
+  console.log("  ✓ 10 messages");
 }
 
 // ─── 5. Audit logs ────────────────────────────────────────────────────────────
 
-async function seedAuditLogs() {
+async function seedAuditLogs(): Promise<void> {
   console.log("→ Criando audit_logs...");
 
   const logs = [
@@ -416,15 +410,15 @@ async function seedAuditLogs() {
   });
   await batch.commit();
 
-  console.log("  ✓ 5 audit_logs criados");
+  console.log("  ✓ 5 audit_logs");
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-async function main() {
-  console.log("\n🌱 Seed do Firestore Emulator — Portal Sigilo");
+async function main(): Promise<void> {
+  console.log("\n🌱 Seed — Firestore Emulator — Portal Sigilo");
   console.log("─────────────────────────────────────────────");
-  console.log("Emulador: localhost:8080\n");
+  console.log("Host: localhost:8080\n");
 
   try {
     await seedOrgs();
@@ -433,19 +427,17 @@ async function main() {
     await seedMessages();
     await seedAuditLogs();
 
-    console.log("\n✅ Seed completo!\n");
-    console.log("Dados criados:");
-    console.log("  Orgs    : 2 (acme / startup-veloz)");
-    console.log("  Users   : 3 (admin-gestao, gestor, admin-entrada)");
-    console.log("  Cases   : 5 (acme) — 1 com mencionado para testar bloqueio");
-    console.log("  Messages: 10 (para case-assedio-moral)");
+    console.log("\n✅ Seed completo!");
+    console.log("\nDados:");
+    console.log("  Orgs    : 2  (acme/gestao · startup-veloz/entrada)");
+    console.log("  Users   : 3  (admin-gestao · gestor · admin-entrada)");
+    console.log("  Cases   : 5  (acme) — case-5 tem mencionado para testar rules");
+    console.log("  Messages: 10 (em case-assedio-moral)");
     console.log("  Logs    : 5");
-    console.log("\nUI do emulador: http://localhost:4000/firestore");
+    console.log("\nUI: http://localhost:4000/firestore\n");
   } catch (err) {
     console.error("\n❌ Erro durante o seed:", err);
-    console.error(
-      "Verifique se o emulador está rodando: firebase emulators:start"
-    );
+    console.error("Verifique: firebase emulators:start");
     process.exit(1);
   }
 }
