@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "npx ts-node --compiler-options '{\"module\":\"CommonJS\",\"esModuleInterop\":true}' scripts/seed-emulator.ts"
+    "seed": "npx ts-node --compiler-options '{\"module\":\"CommonJS\",\"esModuleInterop\":true}' scripts/seed-emulator.ts",
+    "test:rules": "npx ts-node --compiler-options '{\"module\":\"CommonJS\",\"esModuleInterop\":true}' scripts/test-rules.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
@@ -19,6 +20,7 @@
     "server-only": "^0.0.1"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20.19.39",
     "@types/react": "^19",
