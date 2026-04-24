@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed": "npx ts-node --skip-project scripts/seed-emulator.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
