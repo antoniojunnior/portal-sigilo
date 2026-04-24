@@ -44,11 +44,15 @@ service cloud.firestore {
     }
 
     // Verifica isolamento de unit: gestores com unit_id só veem casos da sua unit.
+    // Usa .get('unit_id', null) porque unit_id é opcional — acesso direto a campo
+    // ausente lança erro de avaliação nas Rules.
     function podeVerUnidade(caseData, orgId) {
       let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-      return userDoc.unit_id == null
-        || userDoc.unit_id == ''
-        || userDoc.unit_id == caseData.unit_id;
+      let userUnitId = userDoc.get('unit_id', null);
+      let caseUnitId = caseData.get('unit_id', null);
+      return userUnitId == null
+        || userUnitId == ''
+        || userUnitId == caseUnitId;
     }
 
     // ─── orgs ─────────────────────────────────────────────────────────────────
