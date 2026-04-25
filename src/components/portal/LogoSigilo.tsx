@@ -32,15 +32,15 @@ export function LogoSigilo({ variant = "full", className = "", iconSize = 32 }: 
     </svg>
   );
 
-  if (variant === "icon") return <div className={className}>{icon}</div>;
+  if (variant === "icon") return <span className={className}>{icon}</span>;
 
   return (
-    <div className={`flex items-center gap-2.5 ${className}`}>
+    <span className={`flex items-center gap-2.5 ${className}`}>
       {icon}
       <span className="font-bold leading-none tracking-tight" style={{ fontSize: iconSize * 0.56 }}>
         <span style={{ color: "#1B3D7B" }}>portal</span>
         <span style={{ color: "#00B5AD" }}>sigilo</span>
       </span>
-    </div>
+    </span>
   );
 }
