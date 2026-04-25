@@ -3,26 +3,52 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ComoFuncionaModal } from "./ComoFuncionaModal";
 import { AcompanharForm } from "./AcompanharForm";
+import { LogoSigilo } from "@/components/portal/LogoSigilo";
+import { SessionOrgId } from "./SessionOrgId";
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
 async function getOrgBySlug(slug: string) {
-  const snapshot = await adminDb
-    .collection("orgs")
-    .where("slug", "==", slug)
-    .limit(1)
-    .get();
-
-  if (snapshot.empty) return null;
-  return snapshot.docs[0].data();
+  const snap = await adminDb.collection("orgs").where("slug", "==", slug).limit(1).get();
+  if (snap.empty) return null;
+  return snap.docs[0].data();
 }
+
+const GUARANTEES = [
+  {
+    icon: (
+      <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="#0F6E56" strokeWidth="1.8" aria-hidden>
+        <path d="M8 2L4 5v4c0 2.5 1.8 4.7 4 5 2.2-.3 4-2.5 4-5V5L8 2z"/>
+      </svg>
+    ),
+    title: "Anonimato garantido",
+    desc: "Nenhum dado que identifique você é coletado ou armazenado.",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="#0F6E56" strokeWidth="1.8" aria-hidden>
+        <circle cx="8" cy="8" r="5"/><path d="M8 5v3l2 2" strokeLinecap="round"/>
+      </svg>
+    ),
+    title: "Resposta em até 30 dias",
+    desc: "Acompanhe o andamento pelo número de protocolo gerado.",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="#0F6E56" strokeWidth="1.8" aria-hidden>
+        <rect x="3" y="6" width="10" height="8" rx="1"/><path d="M5 6V4a3 3 0 016 0v2" strokeLinecap="round"/>
+      </svg>
+    ),
+    title: "Gestão independente",
+    desc: "Casos analisados por comitê externo sem conflito de interesse.",
+  },
+];
 
 export default async function Tela1({ params }: Props) {
   const { slug } = await params;
   const org = await getOrgBySlug(slug);
-
   if (!org) notFound();
 
   const boasVindas =
@@ -30,89 +56,108 @@ export default async function Tela1({ params }: Props) {
     "Este é um espaço seguro para você ser ouvido.";
 
   return (
-    <div className="min-h-screen flex flex-col bg-zinc-50">
-      {/* Header */}
-      <header className="bg-white border-b border-zinc-200 px-4 py-4">
-        <div className="max-w-xl mx-auto flex items-center gap-3">
+    <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
+      {/* Persiste org_id em sessionStorage para o client */}
+      <SessionOrgId orgId={org.id as string} />
+
+      {/* Topbar */}
+      <header className="bg-white border-b border-slate-200 px-6 py-3.5">
+        <div className="max-w-2xl mx-auto flex items-center justify-between">
           {org.logo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={org.logo as string}
               alt={`Logo ${org.nome as string}`}
-              className="h-10 max-w-[200px] object-contain"
+              className="h-8 max-w-[180px] object-contain"
             />
           ) : (
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded bg-blue-600 flex items-center justify-center text-white text-sm font-bold">
-                {(org.nome as string).charAt(0)}
-              </div>
-              <span className="font-semibold text-zinc-800">{org.nome as string}</span>
+            <div className="flex items-center gap-2.5">
+              <div
+                className="w-2 h-2 rounded-full"
+                style={{ background: "#1D9E75" }}
+                aria-hidden
+              />
+              <span className="text-[14px] font-semibold text-slate-800">
+                {org.nome as string}
+              </span>
             </div>
           )}
+          <Link
+            href={`/${slug}/acompanhar`}
+            className="text-[12px] text-slate-500 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded transition-colors"
+          >
+            Já tem protocolo? Acompanhe
+          </Link>
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
-        <div className="w-full max-w-xl space-y-8">
+      <main className="flex-1">
+        <div className="max-w-2xl mx-auto px-6 py-0">
+
           {/* Hero */}
-          <div className="text-center space-y-3">
-            <h1 className="text-2xl font-semibold text-zinc-900 leading-snug">
+          <div className="py-12 text-center border-b border-slate-200 bg-white -mx-6 px-6">
+            <div className="inline-flex items-center gap-1.5 bg-brand-light text-brand-darkest text-[11px] font-medium px-3 py-1 rounded-full mb-5">
+              <span className="w-1.5 h-1.5 rounded-full bg-brand" aria-hidden />
+              Canal de denúncias seguro e confidencial
+            </div>
+            <h1 className="text-[22px] font-semibold text-slate-900 leading-snug max-w-md mx-auto mb-3">
               {boasVindas}
             </h1>
-            <p className="text-zinc-500 text-sm">
-              Suas informações não são coletadas. O relato é completamente anônimo.
+            <p className="text-[13px] text-slate-500 leading-relaxed max-w-sm mx-auto mb-7">
+              Relate situações de assédio, fraude ou qualquer irregularidade.
+              Sua identidade é protegida durante todo o processo.
             </p>
+            <div className="flex items-center justify-center gap-2.5">
+              <Link
+                href={`/${slug}/chat`}
+                className="inline-flex items-center justify-center rounded-lg bg-brand px-6 py-2.5 text-[13px] font-semibold text-white hover:bg-brand-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-brand transition-colors"
+              >
+                Fazer uma denúncia
+              </Link>
+              <ComoFuncionaModal />
+            </div>
           </div>
 
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link
-              href={`/${slug}/chat`}
-              className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-6 py-3.5 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors"
-            >
-              Contar o que aconteceu
-            </Link>
-            <ComoFuncionaModal />
-          </div>
-
-          {/* Garantias */}
-          <div className="grid grid-cols-3 gap-4 text-center">
-            {[
-              { icon: "🔒", title: "Anônimo", desc: "Sem identificação pessoal" },
-              { icon: "🚫", title: "Sem rastreio", desc: "Nenhum dado coletado" },
-              { icon: "🏛️", title: "Gestão independente", desc: "Comitê imparcial" },
-            ].map((g) => (
+          {/* Guarantees */}
+          <div className="grid grid-cols-3 border-b border-slate-200 bg-white -mx-6">
+            {GUARANTEES.map((g, i) => (
               <div
                 key={g.title}
-                className="bg-white rounded-xl border border-zinc-200 p-4 space-y-1"
+                className={`py-5 px-4 text-center ${i < 2 ? "border-r border-slate-200" : ""}`}
               >
-                <div className="text-2xl" aria-hidden>{g.icon}</div>
-                <div className="text-xs font-semibold text-zinc-700">{g.title}</div>
-                <div className="text-xs text-zinc-400">{g.desc}</div>
+                <div className="w-7 h-7 rounded-full bg-brand-light flex items-center justify-center mx-auto mb-2">
+                  {g.icon}
+                </div>
+                <p className="text-[11px] font-semibold text-slate-700 mb-1">{g.title}</p>
+                <p className="text-[10px] text-slate-400 leading-relaxed">{g.desc}</p>
               </div>
             ))}
           </div>
 
-          {/* Acompanhar protocolo */}
-          <div className="bg-white rounded-2xl border border-zinc-200 p-5 space-y-3">
-            <p className="text-sm font-medium text-zinc-700">
-              Já tem um protocolo? Acompanhe seu relato:
-            </p>
+          {/* Protocol row */}
+          <div className="flex items-center gap-3 bg-[#F8FAFC] border-b border-slate-200 -mx-6 px-6 py-4">
+            <span className="text-[12px] text-slate-500 whitespace-nowrap">Já tem protocolo?</span>
             <AcompanharForm slug={slug} />
           </div>
+
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-zinc-100 py-4 px-4">
-        <p className="text-center text-xs text-zinc-400">
-          Em conformidade com{" "}
-          <span className="font-medium text-zinc-500">Lei 14.457/22</span> ·{" "}
-          <span className="font-medium text-zinc-500">NR-1</span> ·{" "}
-          <span className="font-medium text-zinc-500">LGPD</span>
-          <br />
-          Canal operado pelo Portal Sigilo
-        </p>
+      <footer className="bg-white border-t border-slate-100 px-6 py-3.5">
+        <div className="max-w-2xl mx-auto flex items-center justify-between">
+          <p className="text-[11px] text-slate-400">
+            Canal operado pelo <LogoSigilo variant="icon" iconSize={14} className="inline-flex" />
+            <span className="font-medium text-[#00B5AD]">Portal Sigilo</span> · LGPD compliant
+          </p>
+          <div className="flex gap-1.5">
+            {["Lei 14.457/22", "NR-1", "LGPD"].map((l) => (
+              <span key={l} className="text-[10px] text-slate-400 px-2 py-0.5 rounded-full border border-slate-200">
+                {l}
+              </span>
+            ))}
+          </div>
+        </div>
       </footer>
     </div>
   );

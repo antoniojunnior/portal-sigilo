@@ -3,19 +3,20 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ChatContainer, type ChatMessage } from "@/components/portal/ChatContainer";
+import Link from "next/link";
 
 const INITIAL_MESSAGE: ChatMessage = {
   id: "sys-0",
   autor: "sistema",
   texto:
-    "Olá! Este é um canal seguro e sigiloso.\n\nVocê pode contar o que aconteceu com suas próprias palavras. Não precisamos saber seu nome ou qualquer dado pessoal.\n\nQuando estiver pronto, pode começar. Estamos aqui para ouvir.",
+    "Olá. Este é um espaço seguro e confidencial.\n\nVocê pode me contar o que aconteceu com suas próprias palavras, no seu ritmo. Nenhuma informação que identifique você será solicitada ou armazenada.\n\nQuando estiver pronto, pode começar.",
   timestamp: new Date().toISOString(),
 };
 
 const QUICK_REPLIES = [
-  "Quero relatar uma situação de assédio",
-  "Há uma irregularidade financeira",
-  "Testemunhei algo preocupante",
+  "Ambiente de trabalho",
+  "Relação com gestor",
+  "Processo ou contrato",
   "Outro assunto",
 ];
 
@@ -39,28 +40,19 @@ export default function Tela2() {
   async function handleSendMessage(text: string, _attachments: File[]) {
     if (!text.trim()) return;
     setShowQuickReplies(false);
-
-    // Atualizar progresso conforme a conversa avança
     setProgressStep((prev) => Math.min(prev + 1, 3));
 
     const messageCount = messages.filter((m) => m.autor === "denunciante").length + 1;
 
-    // Fase 2: respostas estáticas. Na Fase 3, isso vai para Claude via SSE.
     let resposta = "";
     if (messageCount === 1) {
-      resposta =
-        "Obrigado por contar. Para eu entender melhor: quando isso aconteceu (aproximadamente) e onde foi?";
+      resposta = "Obrigado por compartilhar. Para eu entender melhor: quando isso aconteceu (aproximadamente) e onde foi?";
     } else if (messageCount === 2) {
-      resposta =
-        "Entendido. Há mais detalhes que você queira acrescentar? Por exemplo, se havia outras pessoas presentes ou se isso já aconteceu antes?";
+      resposta = "Entendido. Há mais detalhes que você queira acrescentar? Por exemplo, se havia outras pessoas presentes ou se isso já aconteceu antes?";
     } else if (messageCount === 3) {
-      resposta =
-        "Você tem alguma evidência ou documento relacionado que queira enviar? Se não, tudo bem — seu relato já é suficiente.";
+      resposta = "Você tem alguma evidência ou documento relacionado que queira mencionar? Se não, tudo bem — seu relato já é suficiente.";
     } else {
-      resposta =
-        "Recebi todas as informações. Vou registrar seu relato agora. Um protocolo único será gerado para você acompanhar.";
-
-      // Após a 4ª mensagem, criar o caso
+      resposta = "Recebi todas as informações. Vou registrar seu relato agora. Um protocolo único será gerado para você acompanhar.";
       setTimeout(() => void submitCase(messages, text), 500);
       return;
     }
@@ -75,7 +67,7 @@ export default function Tela2() {
           timestamp: new Date().toISOString(),
         },
       ]);
-    }, 600);
+    }, 700);
   }
 
   async function submitCase(currentMessages: ChatMessage[], lastText: string) {
@@ -120,7 +112,7 @@ export default function Tela2() {
         {
           id: crypto.randomUUID(),
           autor: "sistema",
-          texto: `⚠️ ${msg} Por favor, tente novamente.`,
+          texto: `Ocorreu um erro: ${msg} Por favor, tente novamente.`,
           timestamp: new Date().toISOString(),
         },
       ]);
@@ -130,14 +122,18 @@ export default function Tela2() {
 
   if (!orgId) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-50 p-4">
-        <div className="text-center space-y-3">
-          <p className="text-zinc-600 text-sm">
-            Selecione uma empresa antes de continuar.
-          </p>
+      <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] p-4">
+        <div className="text-center space-y-4 max-w-xs">
+          <div className="w-12 h-12 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto">
+            <svg viewBox="0 0 16 16" width="20" height="20" fill="none" stroke="#92400E" strokeWidth="1.5" aria-hidden>
+              <path d="M8 1L1 13h14L8 1z" strokeLinejoin="round"/>
+              <path d="M8 6v3M8 11v.5" strokeLinecap="round"/>
+            </svg>
+          </div>
+          <p className="text-[13px] text-slate-600">Selecione uma empresa antes de continuar.</p>
           <a
             href="/"
-            className="inline-block rounded-lg bg-blue-600 text-white px-4 py-2 text-sm"
+            className="inline-block rounded-lg bg-brand px-5 py-2.5 text-[13px] font-medium text-white hover:bg-brand-dark transition-colors"
           >
             Voltar ao início
           </a>
@@ -147,15 +143,15 @@ export default function Tela2() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-zinc-50">
+    <div className="flex flex-col h-screen bg-[#F8FAFC]">
       {/* Breadcrumb */}
-      <div className="bg-white border-b border-zinc-200 px-4 py-2">
-        <a
+      <div className="bg-white border-b border-slate-200 px-5 py-2.5 flex-shrink-0">
+        <Link
           href={`/${slug}`}
-          className="text-xs text-zinc-400 hover:text-zinc-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+          className="text-[12px] text-slate-400 hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded transition-colors"
         >
           ← Voltar
-        </a>
+        </Link>
       </div>
 
       <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full overflow-hidden">
@@ -168,14 +164,13 @@ export default function Tela2() {
 
         {/* Quick replies */}
         {showQuickReplies && (
-          <div className="px-4 py-3 bg-white border-t border-zinc-200 flex flex-wrap gap-2">
+          <div className="px-5 py-3 bg-white border-t border-slate-200 flex flex-wrap gap-2 flex-shrink-0">
             {QUICK_REPLIES.map((reply) => (
               <button
                 key={reply}
                 type="button"
                 onClick={() => {
                   setShowQuickReplies(false);
-                  void handleSendMessage(reply, []);
                   setMessages((prev) => [
                     ...prev,
                     {
@@ -185,8 +180,9 @@ export default function Tela2() {
                       timestamp: new Date().toISOString(),
                     },
                   ]);
+                  void handleSendMessage(reply, []);
                 }}
-                className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs text-blue-700 hover:bg-blue-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors"
+                className="rounded-full border border-brand/30 bg-brand-light px-3.5 py-1.5 text-[12px] text-brand-darkest hover:bg-brand hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand transition-colors"
               >
                 {reply}
               </button>

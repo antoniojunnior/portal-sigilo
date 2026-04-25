@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "npx ts-node --compiler-options '{\"module\":\"CommonJS\",\"esModuleInterop\":true}' scripts/seed-emulator.ts",
-    "test:rules": "npx ts-node --compiler-options '{\"module\":\"CommonJS\",\"esModuleInterop\":true}' scripts/test-rules.ts"
+    "test:rules": "npx ts-node --compiler-options '{\"module\":\"CommonJS\",\"esModuleInterop\":true}' scripts/test-rules.ts",
+    "seed:remote": "DOTENV_CONFIG_PATH=.env.local npx ts-node -r dotenv/config --compiler-options '{\"module\":\"CommonJS\",\"esModuleInterop\":true}' scripts/seed-remote.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
@@ -25,6 +26,7 @@
     "@types/node": "^20.19.39",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
     "tailwindcss": "^4",
