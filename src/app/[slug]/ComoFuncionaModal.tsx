@@ -46,7 +46,7 @@ export function ComoFuncionaModal() {
         ref={triggerRef}
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-5 min-h-[44px] text-sm font-medium text-slate-600 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand transition-colors cursor-pointer"
+        className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-5 min-h-[44px] text-[13px] font-medium text-slate-500 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand transition-colors cursor-pointer"
       >
         Como funciona?
       </button>

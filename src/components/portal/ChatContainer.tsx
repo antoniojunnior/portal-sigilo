@@ -21,8 +21,6 @@ interface ChatContainerProps {
   progressStep?: number; // 0–3
 }
 
-const STEPS = ["Início", "Detalhes", "Evidências", "Confirmação"];
-
 export function ChatContainer({
   initialMessages = [],
   onSendMessage,
@@ -65,14 +63,16 @@ export function ChatContainer({
     }
   }
 
+  const progressPct = Math.round((progressStep / 3) * 100);
+
   return (
     <div className="flex flex-col h-full">
       {/* Chat header */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-white flex-shrink-0">
-        <div className="flex items-center gap-2.5">
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 bg-white flex-shrink-0">
+        <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-brand-light flex items-center justify-center flex-shrink-0">
-            <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="#0F6E56" strokeWidth="1.8" aria-hidden>
-              <path d="M8 2L4 5v4c0 2.5 1.8 4.7 4 5 2.2-.3 4-2.5 4-5V5L8 2z" />
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="#0F6E56" strokeWidth="2" aria-hidden>
+              <path d="M8 2L4 5v4c0 2.5 1.8 4.7 4 5 2.2-.3 4-2.5 4-5V5L8 2z"/>
             </svg>
           </div>
           <div>
@@ -80,23 +80,24 @@ export function ChatContainer({
             <p className="text-[11px] text-brand mt-0.5">Ativo · conversa anônima</p>
           </div>
         </div>
+        <span className="inline-flex items-center gap-1 rounded-full bg-brand-light px-2.5 py-1 text-[11px] font-medium text-brand-darkest">
+          {badge}
+        </span>
+      </div>
 
-        <div className="flex items-center gap-3">
-          {/* Progress steps */}
-          <div className="hidden sm:flex items-center gap-1" role="progressbar" aria-label="Progresso" aria-valuenow={progressStep} aria-valuemin={0} aria-valuemax={3}>
-            {STEPS.map((step, i) => (
-              <div key={step} className="flex items-center gap-1">
-                <div
-                  className={`h-1 w-7 rounded-full transition-colors duration-300 ${i <= progressStep ? "bg-brand" : "bg-slate-200"}`}
-                  title={step}
-                />
-              </div>
-            ))}
-          </div>
-          <span className="inline-flex items-center gap-1 rounded-full bg-brand-light px-2.5 py-1 text-[11px] font-medium text-brand-darkest">
-            {badge}
-          </span>
-        </div>
+      {/* Thin progress bar — like mockup */}
+      <div
+        className="h-0.5 bg-slate-100 flex-shrink-0"
+        role="progressbar"
+        aria-label="Progresso do relato"
+        aria-valuenow={progressStep}
+        aria-valuemin={0}
+        aria-valuemax={3}
+      >
+        <div
+          className="h-full bg-brand transition-all duration-500 rounded-r-full"
+          style={{ width: `${progressPct}%` }}
+        />
       </div>
 
       {/* Messages */}
@@ -115,10 +116,10 @@ export function ChatContainer({
             <div className="mt-0.5 flex-shrink-0 w-6 h-6 rounded-full bg-brand-light flex items-center justify-center">
               <span className="block w-2 h-2 rounded-full bg-brand" />
             </div>
-            <div className="bg-slate-100 border border-slate-200/80 rounded-2xl rounded-tl-sm px-4 py-3 flex gap-1.5 items-center">
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:0ms]" />
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:150ms]" />
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:300ms]" />
+            <div className="bg-white border border-slate-200 rounded-2xl rounded-tl-sm px-4 py-3 flex gap-1.5 items-center">
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-300 animate-bounce [animation-delay:0ms]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-300 animate-bounce [animation-delay:150ms]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-300 animate-bounce [animation-delay:300ms]" />
             </div>
           </div>
         )}

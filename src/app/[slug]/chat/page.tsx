@@ -162,7 +162,7 @@ export default function Tela2() {
           progressStep={progressStep}
         />
 
-        {/* Quick replies */}
+        {/* Quick replies — match mockup pill style */}
         {showQuickReplies && (
           <div className="px-5 py-3 bg-white border-t border-slate-200 flex flex-wrap gap-2 flex-shrink-0">
             {QUICK_REPLIES.map((reply) => (
@@ -182,7 +182,7 @@ export default function Tela2() {
                   ]);
                   void handleSendMessage(reply, []);
                 }}
-                className="rounded-full border border-brand/30 bg-brand-light px-3.5 min-h-[44px] text-[12px] text-brand-darkest hover:bg-brand hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand transition-colors inline-flex items-center cursor-pointer"
+                className="rounded-full border border-slate-200 bg-white px-3.5 min-h-[44px] text-[12px] text-slate-600 hover:border-brand hover:text-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand transition-colors inline-flex items-center cursor-pointer"
               >
                 {reply}
               </button>

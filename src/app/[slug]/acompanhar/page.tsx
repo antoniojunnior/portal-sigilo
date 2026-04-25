@@ -121,8 +121,8 @@ export default function Tela4() {
     <div className="min-h-dvh bg-[#F8FAFC] flex flex-col">
 
       {/* Topbar */}
-      <header className="bg-white border-b border-slate-200 px-6 py-3.5 flex-shrink-0">
-        <div className="max-w-2xl mx-auto flex items-center gap-4">
+      <header className="bg-white border-b border-slate-200 px-6 flex-shrink-0">
+        <div className="max-w-2xl mx-auto flex items-center gap-4 min-h-[52px]">
           <Link
             href={`/${slug}`}
             className="text-[12px] text-slate-400 hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded transition-colors inline-flex items-center min-h-[44px] pr-2"
@@ -169,7 +169,7 @@ export default function Tela4() {
             {/* Status card */}
             <div className="bg-white border-b border-slate-200 -mx-6 px-6 py-5">
               <div className="flex items-center justify-between mb-3">
-                <span className="font-mono text-[13px] font-bold text-slate-800">
+                <span className="font-mono text-[13px] font-medium text-slate-800">
                   {caseData.protocolo}
                 </span>
                 <span
@@ -192,7 +192,7 @@ export default function Tela4() {
 
               {caseData.historico.length > 0 && (
                 <div className="space-y-1.5">
-                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-2">
+                  <p className="text-[11px] font-medium text-slate-400 uppercase tracking-widest mb-2">
                     Histórico
                   </p>
                   <ol className="space-y-1.5">
@@ -202,7 +202,7 @@ export default function Tela4() {
                         <span className="text-slate-600">
                           {h.detalhes ?? h.acao}
                           {h.timestamp && (
-                            <span className="ml-2 text-[10px] text-slate-400">
+                            <span className="ml-2 text-[11px] text-slate-400">
                               {new Date(h.timestamp).toLocaleDateString("pt-BR")}
                             </span>
                           )}
