@@ -41,7 +41,7 @@ Stack: Next.js 14 + TypeScript + Firebase + Anthropic API + Tailwind + shadcn/ui
 
 ## Estado das fases
 - Fase 1 — Fundação: ✅ concluída
-- Fase 2 — Portal sem IA: pendente
+- Fase 2 — Portal sem IA: ✅ concluída
 - Fase 3 — Chatbot Claude: pendente
 - Fase 4 — Triagem automática: pendente
 - Fase 5 — Dashboard: pendente
