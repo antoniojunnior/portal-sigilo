@@ -118,14 +118,14 @@ export default function Tela4() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
+    <div className="min-h-dvh bg-[#F8FAFC] flex flex-col">
 
       {/* Topbar */}
       <header className="bg-white border-b border-slate-200 px-6 py-3.5 flex-shrink-0">
         <div className="max-w-2xl mx-auto flex items-center gap-4">
           <Link
             href={`/${slug}`}
-            className="text-[12px] text-slate-400 hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded transition-colors"
+            className="text-[12px] text-slate-400 hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded transition-colors inline-flex items-center min-h-[44px] pr-2"
           >
             ←
           </Link>

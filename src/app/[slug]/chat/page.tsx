@@ -122,7 +122,7 @@ export default function Tela2() {
 
   if (!orgId) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] p-4">
+      <div className="min-h-dvh flex items-center justify-center bg-[#F8FAFC] p-4">
         <div className="text-center space-y-4 max-w-xs">
           <div className="w-12 h-12 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto">
             <svg viewBox="0 0 16 16" width="20" height="20" fill="none" stroke="#92400E" strokeWidth="1.5" aria-hidden>
@@ -143,12 +143,12 @@ export default function Tela2() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-[#F8FAFC]">
+    <div className="flex flex-col h-dvh bg-[#F8FAFC]">
       {/* Breadcrumb */}
-      <div className="bg-white border-b border-slate-200 px-5 py-2.5 flex-shrink-0">
+      <div className="bg-white border-b border-slate-200 px-5 flex-shrink-0 flex items-center">
         <Link
           href={`/${slug}`}
-          className="text-[12px] text-slate-400 hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded transition-colors"
+          className="text-[12px] text-slate-400 hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded transition-colors inline-flex items-center min-h-[44px] pr-4"
         >
           ← Voltar
         </Link>
@@ -182,7 +182,7 @@ export default function Tela2() {
                   ]);
                   void handleSendMessage(reply, []);
                 }}
-                className="rounded-full border border-brand/30 bg-brand-light px-3.5 py-1.5 text-[12px] text-brand-darkest hover:bg-brand hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand transition-colors"
+                className="rounded-full border border-brand/30 bg-brand-light px-3.5 min-h-[44px] text-[12px] text-brand-darkest hover:bg-brand hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand transition-colors inline-flex items-center cursor-pointer"
               >
                 {reply}
               </button>

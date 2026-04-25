@@ -56,7 +56,7 @@ export default async function Tela1({ params }: Props) {
     "Este é um espaço seguro para você ser ouvido.";
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
+    <div className="min-h-dvh bg-[#F8FAFC] flex flex-col">
       {/* Persiste org_id em sessionStorage para o client */}
       <SessionOrgId orgId={org.id as string} />
 
@@ -68,6 +68,8 @@ export default async function Tela1({ params }: Props) {
             <img
               src={org.logo as string}
               alt={`Logo ${org.nome as string}`}
+              width={180}
+              height={32}
               className="h-8 max-w-[180px] object-contain"
             />
           ) : (
@@ -84,7 +86,7 @@ export default async function Tela1({ params }: Props) {
           )}
           <Link
             href={`/${slug}/acompanhar`}
-            className="text-[12px] text-slate-500 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded transition-colors"
+            className="text-[12px] text-slate-500 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded transition-colors inline-flex items-center min-h-[44px]"
           >
             Já tem protocolo? Acompanhe
           </Link>
@@ -110,7 +112,7 @@ export default async function Tela1({ params }: Props) {
             <div className="flex items-center justify-center gap-2.5">
               <Link
                 href={`/${slug}/chat`}
-                className="inline-flex items-center justify-center rounded-lg bg-brand px-6 py-2.5 text-[13px] font-semibold text-white hover:bg-brand-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-brand transition-colors"
+                className="inline-flex items-center justify-center rounded-lg bg-brand px-6 min-h-[44px] text-[13px] font-semibold text-white hover:bg-brand-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-brand transition-colors"
               >
                 Fazer uma denúncia
               </Link>

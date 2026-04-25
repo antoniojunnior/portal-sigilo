@@ -67,7 +67,7 @@ export function ChatInput({
           aria-label="Anexar arquivo"
           disabled={disabled || attachments.length >= maxAttachments}
           onClick={() => fileRef.current?.click()}
-          className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand transition-colors"
+          className="flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand transition-colors cursor-pointer"
         >
           <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
             <path d="M14 8.5V11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V5.5A3.5 3.5 0 0 1 5.5 2h.5"/>
@@ -110,7 +110,7 @@ export function ChatInput({
           onClick={onSend}
           disabled={disabled || (!value.trim() && attachments.every((a) => a.error))}
           aria-label="Enviar mensagem"
-          className="flex-shrink-0 w-9 h-9 rounded-xl bg-brand text-white flex items-center justify-center hover:bg-brand-dark disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand transition-colors"
+          className="flex-shrink-0 w-11 h-11 rounded-xl bg-brand text-white flex items-center justify-center hover:bg-brand-dark disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand transition-colors cursor-pointer"
         >
           <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
             <path d="M2 8l12-6-6 12V9L2 8z" />

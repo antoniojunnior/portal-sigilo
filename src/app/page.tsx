@@ -47,7 +47,7 @@ export default function Tela0() {
   const showDropdown = focused && query.trim().length >= 2;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center px-4 py-12">
+    <div className="min-h-dvh bg-[#F8FAFC] flex flex-col items-center justify-center px-4 py-12">
       <div className="w-full max-w-md space-y-10">
 
         {/* Logo */}
@@ -104,7 +104,7 @@ export default function Tela0() {
                 onFocus={() => setFocused(true)}
                 onBlur={() => setTimeout(() => setFocused(false), 150)}
                 placeholder="Buscar empresa…"
-                className="w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-4 py-2.5 text-[13px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:bg-white transition-colors"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-4 py-3 text-[13px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:bg-white transition-colors min-h-[44px]"
                 autoComplete="off"
                 autoFocus
               />
@@ -123,7 +123,7 @@ export default function Tela0() {
                     key={org.id}
                     type="button"
                     onClick={() => selectOrg(org)}
-                    className="w-full flex items-center gap-3 px-6 py-3.5 hover:bg-slate-50 text-left transition-colors focus:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-brand"
+                    className="w-full flex items-center gap-3 px-6 py-3.5 min-h-[44px] hover:bg-slate-50 text-left transition-colors focus:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-brand cursor-pointer"
                   >
                     {org.logo ? (
                       // eslint-disable-next-line @next/next/no-img-element

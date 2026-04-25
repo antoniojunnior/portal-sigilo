@@ -1,9 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export function ComoFuncionaModal() {
   const [open, setOpen] = useState(false);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    closeRef.current?.focus();
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  function handleClose() {
+    setOpen(false);
+    triggerRef.current?.focus();
+  }
 
   const steps = [
     {
@@ -26,9 +43,10 @@ export function ComoFuncionaModal() {
   return (
     <>
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand transition-colors"
+        className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-5 min-h-[44px] text-sm font-medium text-slate-600 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand transition-colors cursor-pointer"
       >
         Como funciona?
       </button>
@@ -42,7 +60,7 @@ export function ComoFuncionaModal() {
         >
           <div
             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-            onClick={() => setOpen(false)}
+            onClick={handleClose}
             aria-hidden
           />
 
@@ -50,9 +68,10 @@ export function ComoFuncionaModal() {
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
               <h2 className="text-base font-semibold text-slate-900">Como funciona</h2>
               <button
+                ref={closeRef}
                 type="button"
-                onClick={() => setOpen(false)}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand transition-colors"
+                onClick={handleClose}
+                className="w-11 h-11 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand transition-colors cursor-pointer"
                 aria-label="Fechar"
               >
                 <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>

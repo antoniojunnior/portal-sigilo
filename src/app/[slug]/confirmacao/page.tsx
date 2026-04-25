@@ -32,7 +32,7 @@ export default async function Tela3({ params, searchParams }: Props) {
   });
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
+    <div className="min-h-dvh bg-[#F8FAFC] flex flex-col">
 
       {/* Topbar */}
       <header className="bg-white border-b border-slate-200 px-6 py-3.5">
@@ -95,7 +95,7 @@ export default async function Tela3({ params, searchParams }: Props) {
         <div className="bg-white -mx-6 px-6 py-5 flex flex-col gap-2.5">
           <Link
             href={`/${slug}/acompanhar?protocolo=${encodeURIComponent(protocolo)}`}
-            className="flex items-center justify-center rounded-lg bg-brand px-6 py-2.5 text-[13px] font-semibold text-white hover:bg-brand-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-brand transition-colors"
+            className="flex items-center justify-center rounded-lg bg-brand px-6 min-h-[44px] text-[13px] font-semibold text-white hover:bg-brand-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-brand transition-colors"
           >
             Acompanhar pelo protocolo
           </Link>
@@ -104,7 +104,7 @@ export default async function Tela3({ params, searchParams }: Props) {
 
           <Link
             href={`/${slug}`}
-            className="flex items-center justify-center rounded-lg border border-slate-200 px-6 py-2.5 text-[13px] font-medium text-slate-600 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand transition-colors"
+            className="flex items-center justify-center rounded-lg border border-slate-200 px-6 min-h-[44px] text-[13px] font-medium text-slate-600 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand transition-colors"
           >
             Voltar ao início
           </Link>

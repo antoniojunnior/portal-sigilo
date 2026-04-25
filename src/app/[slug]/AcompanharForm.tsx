@@ -39,12 +39,12 @@ export function AcompanharForm({ slug }: AcompanharFormProps) {
         onChange={(e) => setProtocolo(formatProtocolo(e.target.value))}
         placeholder="ETK-2026-XXXXXX"
         maxLength={14}
-        className="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-[13px] font-mono text-slate-800 placeholder:text-slate-400 uppercase focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:bg-white transition-colors"
+        className="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-3 min-h-[44px] text-[13px] font-mono text-slate-800 placeholder:text-slate-400 uppercase focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:bg-white transition-colors"
         autoComplete="off"
       />
       <button
         type="submit"
-        className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-[13px] font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand transition-colors whitespace-nowrap"
+        className="rounded-lg border border-slate-300 bg-white px-4 min-h-[44px] text-[13px] font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand transition-colors whitespace-nowrap cursor-pointer"
       >
         Acompanhar
       </button>
