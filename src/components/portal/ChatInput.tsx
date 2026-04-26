@@ -14,6 +14,7 @@ interface ChatInputProps {
   value: string;
   onChange: (v: string) => void;
   onSend: () => void;
+  onReset?: () => void;
   attachments: AttachmentPreview[];
   onAddAttachments: (previews: AttachmentPreview[]) => void;
   onRemoveAttachment: (index: number) => void;
@@ -25,6 +26,7 @@ export function ChatInput({
   value,
   onChange,
   onSend,
+  onReset,
   attachments,
   onAddAttachments,
   onRemoveAttachment,
@@ -48,9 +50,19 @@ export function ChatInput({
   }
 
   return (
-    <div className="border-t border-slate-200 bg-white px-4 py-3 space-y-2">
+    <div
+      className="flex-shrink-0"
+      style={{
+        background: "var(--color-card)",
+        borderTop: "0.5px solid var(--color-border)",
+      }}
+    >
+      {/* Attachment previews */}
       {attachments.length > 0 && (
-        <div className="flex flex-col gap-1 max-h-32 overflow-y-auto">
+        <div
+          className="flex flex-col gap-1 overflow-y-auto"
+          style={{ maxHeight: 128, padding: "0.5rem 1.25rem 0" }}
+        >
           {attachments.map((att, i) => (
             <ChatAttachment
               key={`${att.file.name}-${i}`}
@@ -61,15 +73,115 @@ export function ChatInput({
         </div>
       )}
 
-      <div className="flex items-end gap-2">
+      {/* Input row */}
+      <div
+        className="flex items-center mx-auto w-full"
+        style={{
+          maxWidth: 640,
+          padding: "0.5rem 1.25rem 0.625rem",
+          gap: 8,
+        }}
+      >
+        {/* Reset button */}
+        <button
+          type="button"
+          onClick={onReset}
+          disabled={disabled || !onReset}
+          aria-label="Recomeçar conversa"
+          title="Recomeçar conversa"
+          className="flex-shrink-0 flex items-center justify-center transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] disabled:opacity-30"
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: "var(--radius-md)",
+            border: "0.5px solid var(--color-border)",
+            background: "transparent",
+            color: "var(--color-text-tertiary)",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "var(--color-bg-secondary)";
+            e.currentTarget.style.color = "var(--color-text-secondary)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "transparent";
+            e.currentTarget.style.color = "var(--color-text-tertiary)";
+          }}
+        >
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M1 8a7 7 0 107-7"/>
+            <polyline points="1 1 1 8 8 8"/>
+          </svg>
+        </button>
+
+        {/* Text area */}
+        <label className="sr-only" htmlFor="chat-input">Mensagem</label>
+        <textarea
+          id="chat-input"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={handleKeyDown}
+          disabled={disabled}
+          placeholder="Escreva no seu ritmo..."
+          rows={1}
+          aria-label="Mensagem"
+          className="flex-1 resize-none focus:outline-none transition-colors disabled:opacity-60 overflow-y-auto"
+          style={{
+            minHeight: 40,
+            maxHeight: 128,
+            height: "auto",
+            padding: "0 14px",
+            border: "0.5px solid var(--color-border-strong)",
+            borderRadius: "var(--radius-md)",
+            background: "var(--color-bg-secondary)",
+            fontSize: 13,
+            color: "var(--color-text-primary)",
+            lineHeight: "40px",
+          }}
+          onInput={(e) => {
+            const el = e.currentTarget;
+            el.style.height = "auto";
+            const h = Math.min(el.scrollHeight, 128);
+            el.style.height = `${h}px`;
+            el.style.lineHeight = h > 40 ? "1.6" : "40px";
+            el.style.padding = h > 40 ? "9px 14px" : "0 14px";
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = "#2A6070";
+            e.currentTarget.style.boxShadow = "0 0 0 2px rgba(42,96,112,0.10)";
+            e.currentTarget.style.background = "var(--color-card)";
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = "";
+            e.currentTarget.style.boxShadow = "none";
+            e.currentTarget.style.background = "var(--color-bg-secondary)";
+          }}
+        />
+
+        {/* Attach button */}
         <button
           type="button"
           aria-label="Anexar arquivo"
           disabled={disabled || attachments.length >= maxAttachments}
           onClick={() => fileRef.current?.click()}
-          className="flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand transition-colors cursor-pointer"
+          className="flex-shrink-0 flex items-center justify-center transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] disabled:opacity-30"
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: "var(--radius-md)",
+            border: "0.5px solid var(--color-border)",
+            background: "transparent",
+            color: "var(--color-text-tertiary)",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "var(--color-bg-secondary)";
+            e.currentTarget.style.color = "var(--color-text-secondary)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "transparent";
+            e.currentTarget.style.color = "var(--color-text-tertiary)";
+          }}
         >
-          <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
+          <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
             <path d="M14 8.5V11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V5.5A3.5 3.5 0 0 1 5.5 2h.5"/>
             <path d="M10 1v6M7 4l3-3 3 3"/>
           </svg>
@@ -85,32 +197,23 @@ export function ChatInput({
           />
         </button>
 
-        <label className="sr-only" htmlFor="chat-input">
-          Digite sua mensagem
-        </label>
-        <textarea
-          id="chat-input"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          disabled={disabled}
-          placeholder="Escreva aqui…"
-          rows={1}
-          className="flex-1 resize-none rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-[13px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:bg-white disabled:opacity-60 max-h-32 overflow-y-auto transition-colors"
-          style={{ height: "auto" }}
-          onInput={(e) => {
-            const el = e.currentTarget;
-            el.style.height = "auto";
-            el.style.height = `${Math.min(el.scrollHeight, 128)}px`;
-          }}
-        />
-
+        {/* Send button */}
         <button
           type="button"
           onClick={onSend}
           disabled={disabled || (!value.trim() && attachments.every((a) => a.error))}
           aria-label="Enviar mensagem"
-          className="flex-shrink-0 w-11 h-11 rounded-xl bg-brand text-white flex items-center justify-center hover:bg-brand-dark disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand transition-colors cursor-pointer"
+          className="flex-shrink-0 flex items-center justify-center transition-opacity cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] disabled:opacity-30"
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: "var(--radius-md)",
+            border: "none",
+            background: "#2A6070",
+            color: "white",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.9"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
         >
           <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
             <path d="M2 8l12-6-6 12V9L2 8z" />
@@ -118,9 +221,24 @@ export function ChatInput({
         </button>
       </div>
 
-      <p className="text-[11px] text-slate-400 text-center">
-        Sua identidade não está sendo registrada nesta conversa
-      </p>
+      {/* Anonymity anchor */}
+      <div
+        className="flex items-center justify-center mx-auto w-full"
+        style={{
+          padding: "0 1.25rem 0.75rem",
+          gap: 5,
+          maxWidth: 640,
+        }}
+      >
+        <span
+          className="rounded-full flex-shrink-0"
+          style={{ width: 5, height: 5, background: "var(--color-text-tertiary)" }}
+          aria-hidden
+        />
+        <p style={{ fontSize: 11, color: "var(--color-text-tertiary)" }}>
+          Sua identidade não está sendo registrada nesta conversa
+        </p>
+      </div>
     </div>
   );
 }

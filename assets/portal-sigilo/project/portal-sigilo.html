@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Portal Sigilo — Design System & UX</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    /* ─── Tokens (mirrored from src/styles/tokens.css) ─── */
+    :root {
+      --color-primary:#2A6070; --color-primary-light:#3D8090; --color-primary-dark:#1D4A5A;
+      --color-primary-xdark:#102F3C; --color-primary-surface:#E8F2F5; --color-on-primary:#fff;
+      --color-accent:#C05A4A; --color-accent-light:#D4806E; --color-accent-dark:#9A3F30;
+      --color-accent-surface:#FBE9E7; --color-on-accent:#fff;
+      --color-success:#1A7A5A; --color-success-light:#24A87C; --color-success-surface:#E3F4EE;
+      --color-warning:#B07020; --color-warning-light:#D4932E; --color-warning-surface:#FDF0D8;
+      --color-danger:#B03030; --color-danger-light:#D44040; --color-danger-surface:#FDE9E9;
+      --color-urgency-1:#1A7A5A; --color-urgency-2:#4A8A2A; --color-urgency-3:#B07020;
+      --color-urgency-4:#C05A4A; --color-urgency-5:#9A2020;
+      --color-bg:#fff; --color-bg-secondary:#F7FAFB; --color-bg-tertiary:#EEF3F5;
+      --color-card:#fff; --color-card-hover:#F4F8F9;
+      --color-text-primary:#0F2030; --color-text-secondary:#3D5A6A; --color-text-tertiary:#6A8898;
+      --color-text-disabled:#A8C0C8;
+      --color-border:#D3E3E8; --color-border-strong:#ADC8D0; --color-border-focus:#2A6070;
+      --color-anon-bg:#E8F2F5; --color-anon-text:#1D4A5A; --color-anon-border:#ADC8D0;
+      --color-anon-dot:#2A6070; --color-anon-dot-pulse:rgba(42,96,112,0.3);
+      --font-display:'Calistoga',serif;
+      --font-body:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+      --font-mono:'JetBrains Mono','Fira Code',monospace;
+      --shadow-sm:0 1px 3px rgba(15,32,48,0.07), 0 0 1px rgba(15,32,48,0.04);
+      --shadow-md:0 4px 12px rgba(15,32,48,0.09), 0 0 1px rgba(15,32,48,0.05);
+      --shadow-lg:0 8px 24px rgba(15,32,48,0.11), 0 0 1px rgba(15,32,48,0.06);
+    }
+    *,*::before,*::after { box-sizing: border-box; }
+    html, body { margin:0; padding:0; font-family: var(--font-body); color: var(--color-text-primary); background:#fafbfc; }
+    body { font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+    .portal-bg { background: var(--color-bg-secondary); height:100%; min-height:100%; }
+
+    /* Buttons */
+    .btn-primary { display:inline-flex; align-items:center; justify-content:center; padding:10px 22px; min-height:44px; border-radius:8px; background:var(--color-primary); color:#fff; font-size:13px; font-weight:500; border:none; cursor:pointer; }
+    .btn-primary:hover { background: var(--color-primary-dark); }
+    .btn-secondary { display:inline-flex; align-items:center; justify-content:center; padding:10px 22px; min-height:44px; border-radius:8px; background:var(--color-card); color:var(--color-text-secondary); font-size:13px; font-weight:500; border:1px solid var(--color-border); cursor:pointer; }
+    .btn-ghost { display:inline-flex; align-items:center; justify-content:center; padding:10px 22px; min-height:44px; border-radius:8px; background:transparent; color:var(--color-text-secondary); font-size:13px; font-weight:500; border:1px solid var(--color-border); cursor:pointer; }
+    .btn-secondary-sm { padding:7px 14px; border-radius:6px; background:var(--color-card); color:var(--color-text-secondary); font-size:12px; font-weight:500; border:1px solid var(--color-border); cursor:pointer; white-space:nowrap; }
+    .btn-primary-icon { width:36px; height:36px; border-radius:8px; background:var(--color-primary); color:#fff; border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+    .quick-reply { padding:8px 14px; border-radius:9999px; border:1px solid var(--color-border); background:var(--color-card); font-size:12px; color:var(--color-text-secondary); cursor:pointer; min-height:36px; }
+    .quick-reply:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    .dash-select { padding:7px 28px 7px 12px; border-radius:6px; border:1px solid var(--color-border); background:var(--color-card); font-size:12px; color:var(--color-text-secondary); appearance:none; cursor:pointer; }
+    .page-btn { width:30px; height:30px; border-radius:6px; border:1px solid var(--color-border); background:var(--color-card); font-size:12px; color:var(--color-text-secondary); cursor:pointer; }
+    .page-btn.active { background: var(--color-primary); color:#fff; border-color: var(--color-primary); }
+
+    /* anonymous pulse */
+    @keyframes anonPulse { 0%{ box-shadow: 0 0 0 0 var(--color-anon-dot-pulse);} 70%{ box-shadow: 0 0 0 5px rgba(42,96,112,0);} 100%{ box-shadow: 0 0 0 0 rgba(42,96,112,0);} }
+    .anon-dot { width:6px; height:6px; border-radius:9999px; background: var(--color-anon-dot); animation: anonPulse 2.5s ease-in-out infinite; flex-shrink:0; }
+    @keyframes urgencyPulse { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
+
+    /* canvas chrome */
+    .ds-shell { padding: 56px 40px 96px; max-width: 1280px; margin:0 auto; }
+    .ds-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--color-primary); margin-bottom: 14px; }
+    .ds-display { font-family: var(--font-display); font-size: 44px; line-height: 1.1; color: var(--color-text-primary); margin: 0 0 14px; max-width: 760px; letter-spacing: -0.01em; }
+    .ds-lede { font-size: 16px; color: var(--color-text-secondary); line-height: 1.6; max-width: 620px; margin: 0; }
+    .ds-section-title { font-family: var(--font-display); font-size: 26px; color: var(--color-text-primary); margin: 64px 0 6px; }
+    .ds-section-sub { font-size: 13px; color: var(--color-text-tertiary); margin: 0 0 24px; max-width: 560px; line-height:1.6; }
+
+    .swatch { display:flex; flex-direction:column; gap:8px; }
+    .swatch-chip { height:84px; border-radius:10px; border:1px solid var(--color-border); display:flex; align-items:flex-end; justify-content:space-between; padding:12px; box-shadow: var(--shadow-sm); }
+    .swatch-meta { font-size:11px; color: var(--color-text-tertiary); display:flex; justify-content:space-between; align-items:center; gap:6px; }
+    .swatch-name { font-size:12px; font-weight:600; color: var(--color-text-primary); }
+    .swatch-hex { font-family: var(--font-mono); font-size:10px; color: var(--color-text-tertiary); }
+
+    .grid-4 { display:grid; grid-template-columns: repeat(4, 1fr); gap:14px; }
+    .grid-5 { display:grid; grid-template-columns: repeat(5, 1fr); gap:14px; }
+    .grid-3 { display:grid; grid-template-columns: repeat(3, 1fr); gap:14px; }
+    .grid-2 { display:grid; grid-template-columns: 1fr 1fr; gap:14px; }
+
+    .card { background: var(--color-card); border:1px solid var(--color-border); border-radius: 12px; padding: 20px; }
+    .card-h { font-size:13px; font-weight:600; color: var(--color-text-primary); margin: 0 0 14px; }
+
+    .type-row { display:grid; grid-template-columns: 100px 1fr 110px; align-items:baseline; gap:16px; padding:14px 0; border-bottom:1px solid var(--color-border); }
+    .type-row:last-child{ border-bottom:none; }
+    .type-label { font-size:11px; color: var(--color-text-tertiary); font-family: var(--font-mono); text-transform: uppercase; letter-spacing:0.04em; }
+    .type-meta { font-size:11px; color: var(--color-text-tertiary); font-family: var(--font-mono); text-align:right; }
+
+    /* Brand stripe */
+    .brand-stripe {
+      background: linear-gradient(120deg, var(--color-primary) 0%, var(--color-primary-dark) 60%, var(--color-primary-xdark) 100%);
+      color:#fff; border-radius: 16px; padding: 40px; margin-bottom: 56px; position:relative; overflow:hidden;
+    }
+    .brand-stripe::after {
+      content:""; position:absolute; right:-80px; bottom:-80px; width:340px; height:340px; border-radius:9999px;
+      background: radial-gradient(circle, rgba(192,90,74,0.55), transparent 70%);
+    }
+    .brand-stripe::before {
+      content:""; position:absolute; left:-60px; top:-60px; width:200px; height:200px; border-radius:9999px;
+      background: radial-gradient(circle, rgba(255,255,255,0.10), transparent 70%);
+    }
+    .brand-stripe-inner { position: relative; z-index:1; display:flex; align-items:center; justify-content:space-between; gap:32px; }
+    .brand-tag { font-size:11px; letter-spacing:0.2em; text-transform:uppercase; opacity:0.7; margin-bottom:14px; }
+    .brand-anchors { display:flex; gap:16px; }
+    .brand-anchor { display:flex; flex-direction:column; gap:8px; align-items:flex-start; }
+    .brand-anchor .chip { width:64px; height:64px; border-radius:14px; border:2px solid rgba(255,255,255,0.2); }
+
+    .pill { display:inline-flex; align-items:center; padding:3px 10px; border-radius:9999px; font-size:11px; font-weight:500; border:1px solid; }
+
+    /* Component samples */
+    .demo-row { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+    .input-demo { width:100%; padding:9px 12px; border:1px solid var(--color-border); border-radius:8px; font-size:13px; background:var(--color-card); color: var(--color-text-primary); }
+    .input-demo.focus { border-color: var(--color-border-focus); box-shadow: 0 0 0 3px rgba(42,96,112,0.20); }
+    .input-demo.error { border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(192,90,74,0.20); }
+
+    .scale-bar { display:flex; align-items:flex-end; gap:8px; }
+    .scale-bar > div { background: var(--color-primary-surface); border:1px solid var(--color-border); border-radius:4px; }
+
+    .tag-row { display:flex; flex-wrap:wrap; gap:6px; }
+
+    /* Artboard wrapper for screens */
+    .screen-frame { width:100%; height:100%; overflow:hidden; background: var(--color-bg-secondary); }
+    .browser-bar { display:flex; align-items:center; gap:10px; padding:10px 14px; background:#f0f3f5; border-bottom:1px solid var(--color-border); flex-shrink:0; }
+    .browser-bar .dots { display:flex; gap:5px; }
+    .browser-bar .dots span { width:9px; height:9px; border-radius:9999px; }
+    .browser-bar .url { flex:1; padding:5px 12px; background:#fff; border:1px solid var(--color-border); border-radius:6px; font-size:11px; color: var(--color-text-tertiary); font-family: var(--font-mono); }
+
+    .phone-frame { display:flex; flex-direction:column; height:100%; width:100%; background:#000; padding:8px; border-radius:0; }
+    .phone-screen { flex:1; background: var(--color-bg-secondary); border-radius:0; overflow:hidden; display:flex; flex-direction:column; }
+
+    /* Footer */
+    .ds-footer { margin-top: 80px; padding-top: 32px; border-top:1px solid var(--color-border); display:flex; justify-content: space-between; align-items:center; font-size: 11px; color: var(--color-text-tertiary); }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="screens.jsx"></script>
+
+  <script type="text/babel">
+    const { Tela0Search, Tela1Welcome, Tela2Chat, Tela3Confirm, Tela4Track, MobileTela1Welcome, MobileTela3Confirm, MobileTela4Track, DashOverview, DashOverviewPlus, DashCasos, DashCaseDetail, MobileDashOverview, MobileDashCasos, MobileDashCaseDetail } = window.PortalSigilo;
+
+    // ── Brand hero ──
+    function BrandHero() {
+      return (
+        <div className="brand-stripe">
+          <div className="brand-stripe-inner">
+            <div style={{flex:1}}>
+              <div className="brand-tag">Portal Sigilo · Design System</div>
+              <h1 style={{fontFamily:"var(--font-display)", fontSize:48, lineHeight:1.05, margin:"0 0 14px", maxWidth:640}}>
+                Um canal seguro merece um sistema cuidadoso.
+              </h1>
+              <p style={{fontSize:15, lineHeight:1.65, opacity:0.85, maxWidth:560, margin:0}}>
+                Dois mundos em um produto: um <b>portal acolhedor</b> para quem denuncia, e um <b>painel denso</b> para quem apura. Mesmo DNA, vocabulários distintos — ancorados em <b>Petróleo</b> e <b>Coral</b>.
+              </p>
+            </div>
+            <div className="brand-anchors">
+              <div className="brand-anchor">
+                <div className="chip" style={{background:"#2A6070"}}/>
+                <div style={{fontSize:11, letterSpacing:"0.1em", textTransform:"uppercase", opacity:0.7}}>Petróleo</div>
+                <div style={{fontFamily:"var(--font-mono)", fontSize:11, opacity:0.55}}>#2A6070</div>
+              </div>
+              <div className="brand-anchor">
+                <div className="chip" style={{background:"#C05A4A"}}/>
+                <div style={{fontSize:11, letterSpacing:"0.1em", textTransform:"uppercase", opacity:0.7}}>Coral</div>
+                <div style={{fontFamily:"var(--font-mono)", fontSize:11, opacity:0.55}}>#C05A4A</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Color palette card ──
+    function Swatch({name, hex, fg, surface}) {
+      return (
+        <div className="swatch">
+          <div className="swatch-chip" style={{background:hex}}>
+            <span style={{fontFamily:"var(--font-mono)", fontSize:11, color: fg || "#fff", opacity:0.9}}>{hex}</span>
+            {surface && <span style={{width:24, height:24, borderRadius:6, background: surface, border: "1px solid rgba(255,255,255,0.4)"}}/>}
+          </div>
+          <div className="swatch-meta">
+            <span className="swatch-name">{name}</span>
+          </div>
+        </div>
+      );
+    }
+
+    function ColorsSection() {
+      return (
+        <>
+          <h2 className="ds-section-title">Cores</h2>
+          <p className="ds-section-sub">Petróleo é o âncora institucional — usado em headers, links e estados ativos. Coral é exclusivo para chamadas à ação críticas e destaques. Nunca substituídos.</p>
+
+          <div style={{marginBottom:14, fontSize:12, fontWeight:600, color: "var(--color-text-tertiary)", textTransform:"uppercase", letterSpacing:"0.08em"}}>Marca</div>
+          <div className="grid-4" style={{marginBottom:32}}>
+            <Swatch name="Petróleo · primary" hex="#2A6070"/>
+            <Swatch name="Petróleo dark" hex="#1D4A5A"/>
+            <Swatch name="Petróleo xdark" hex="#102F3C"/>
+            <Swatch name="Petróleo surface" hex="#E8F2F5" fg="#1D4A5A"/>
+            <Swatch name="Coral · accent" hex="#C05A4A"/>
+            <Swatch name="Coral dark" hex="#9A3F30"/>
+            <Swatch name="Coral light" hex="#D4806E"/>
+            <Swatch name="Coral surface" hex="#FBE9E7" fg="#9A3F30"/>
+          </div>
+
+          <div style={{marginBottom:14, fontSize:12, fontWeight:600, color: "var(--color-text-tertiary)", textTransform:"uppercase", letterSpacing:"0.08em"}}>Semântica</div>
+          <div className="grid-3" style={{marginBottom:32}}>
+            <Swatch name="Success" hex="#1A7A5A"/>
+            <Swatch name="Warning" hex="#B07020"/>
+            <Swatch name="Danger" hex="#B03030"/>
+          </div>
+
+          <div style={{marginBottom:14, fontSize:12, fontWeight:600, color: "var(--color-text-tertiary)", textTransform:"uppercase", letterSpacing:"0.08em"}}>Urgência (1 → 5)</div>
+          <div className="grid-5" style={{marginBottom:32}}>
+            <Swatch name="1 — Baixa" hex="#1A7A5A"/>
+            <Swatch name="2 — Moderada" hex="#4A8A2A"/>
+            <Swatch name="3 — Média" hex="#B07020"/>
+            <Swatch name="4 — Alta" hex="#C05A4A"/>
+            <Swatch name="5 — Crítica" hex="#9A2020"/>
+          </div>
+
+          <div style={{marginBottom:14, fontSize:12, fontWeight:600, color: "var(--color-text-tertiary)", textTransform:"uppercase", letterSpacing:"0.08em"}}>Texto & superfícies</div>
+          <div className="grid-4">
+            <Swatch name="text-primary" hex="#0F2030"/>
+            <Swatch name="text-secondary" hex="#3D5A6A"/>
+            <Swatch name="text-tertiary" hex="#6A8898"/>
+            <Swatch name="border" hex="#D3E3E8" fg="#3D5A6A"/>
+          </div>
+        </>
+      );
+    }
+
+    function TypeSection() {
+      return (
+        <>
+          <h2 className="ds-section-title">Tipografia</h2>
+          <p className="ds-section-sub">Calistoga (display) traz calor humano nos momentos de acolhimento. Inter (body/UI) sustenta densidade e legibilidade. JetBrains Mono identifica dados — protocolos, IDs, timestamps.</p>
+
+          <div className="card">
+            <div className="type-row">
+              <span className="type-label">display</span>
+              <span style={{fontFamily:"var(--font-display)", fontSize:44, lineHeight:1.1, color:"var(--color-text-primary)"}}>Você está em um lugar seguro.</span>
+              <span className="type-meta">Calistoga · 44/48</span>
+            </div>
+            <div className="type-row">
+              <span className="type-label">h1</span>
+              <span style={{fontFamily:"var(--font-display)", fontSize:28, lineHeight:1.2, color:"var(--color-text-primary)"}}>Relate o que aconteceu.</span>
+              <span className="type-meta">Calistoga · 28/34</span>
+            </div>
+            <div className="type-row">
+              <span className="type-label">h2</span>
+              <span style={{fontFamily:"var(--font-body)", fontSize:22, fontWeight:600, lineHeight:1.3, color:"var(--color-text-primary)"}}>Casos recentes do mês</span>
+              <span className="type-meta">Inter 600 · 22/28</span>
+            </div>
+            <div className="type-row">
+              <span className="type-label">body-md</span>
+              <span style={{fontFamily:"var(--font-body)", fontSize:15, lineHeight:1.65, color:"var(--color-text-secondary)"}}>Sua identidade é protegida. Nada do que você compartilhar pode ser usado para identificar você ou sua equipe.</span>
+              <span className="type-meta">Inter 400 · 15/25</span>
+            </div>
+            <div className="type-row">
+              <span className="type-label">body-sm</span>
+              <span style={{fontFamily:"var(--font-body)", fontSize:13, lineHeight:1.5, color:"var(--color-text-secondary)"}}>Use o protocolo para acompanhar o caso. Você nunca precisará entrar com login.</span>
+              <span className="type-meta">Inter 400 · 13/20</span>
+            </div>
+            <div className="type-row">
+              <span className="type-label">label</span>
+              <span style={{fontFamily:"var(--font-body)", fontSize:11, fontWeight:500, color:"var(--color-text-tertiary)", textTransform:"uppercase", letterSpacing:"0.1em"}}>HISTÓRICO DO CASO</span>
+              <span className="type-meta">Inter 500 · 11 ↑</span>
+            </div>
+            <div className="type-row">
+              <span className="type-label">mono</span>
+              <span style={{fontFamily:"var(--font-mono)", fontSize:18, fontWeight:600, letterSpacing:"0.04em", color:"var(--color-primary-dark)"}}>ETK-2024-0042</span>
+              <span className="type-meta">JetBrains · 18</span>
+            </div>
+          </div>
+        </>
+      );
+    }
+
+    function SpacingSection() {
+      const steps = [4,8,12,16,24,32,48,64];
+      const radii = [{n:"sm",v:5},{n:"md",v:8},{n:"lg",v:12},{n:"xl",v:16},{n:"2xl",v:24},{n:"full",v:9999}];
+      return (
+        <>
+          <h2 className="ds-section-title">Ritmo & forma</h2>
+          <p className="ds-section-sub">Espaçamento em base 4. Raios suaves no portal (acolhimento), mais firmes no dashboard (densidade). Sombras leves — elevação por cor e densidade, não por profundidade.</p>
+
+          <div className="grid-2">
+            <div className="card">
+              <div className="card-h">Espaçamento (4px base)</div>
+              <div className="scale-bar">
+                {steps.map(s=>(
+                  <div key={s} style={{width:s, height:s, minWidth:6, minHeight:6}} title={`${s}px`}/>
+                ))}
+              </div>
+              <div style={{display:"flex", gap:8, marginTop:8}}>
+                {steps.map(s=><span key={s} style={{flex:1, fontFamily:"var(--font-mono)", fontSize:10, color:"var(--color-text-tertiary)", textAlign:"center"}}>{s}</span>)}
+              </div>
+            </div>
+            <div className="card">
+              <div className="card-h">Raios</div>
+              <div style={{display:"flex", gap:14, alignItems:"flex-end"}}>
+                {radii.map(r=>(
+                  <div key={r.n} style={{display:"flex", flexDirection:"column", alignItems:"center", gap:6, flex:1}}>
+                    <div style={{width:48, height:48, background:"var(--color-primary-surface)", border:"1px solid var(--color-border-strong)", borderRadius: r.v}}/>
+                    <span style={{fontFamily:"var(--font-mono)", fontSize:10, color:"var(--color-text-tertiary)"}}>{r.n}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="card">
+              <div className="card-h">Elevação</div>
+              <div style={{display:"flex", gap:14}}>
+                {["sm","md","lg"].map(s=>(
+                  <div key={s} style={{flex:1, height:64, background:"#fff", border:"1px solid var(--color-border)", borderRadius:10, boxShadow:`var(--shadow-${s})`, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"var(--font-mono)", fontSize:10, color:"var(--color-text-tertiary)"}}>{s}</div>
+                ))}
+              </div>
+            </div>
+            <div className="card">
+              <div className="card-h">Animações</div>
+              <div style={{display:"flex", flexDirection:"column", gap:8, fontSize:12, color:"var(--color-text-secondary)"}}>
+                <div style={{display:"flex", justifyContent:"space-between"}}><span>Fade in</span><span style={{fontFamily:"var(--font-mono)", color:"var(--color-text-tertiary)"}}>200ms · easing-out</span></div>
+                <div style={{display:"flex", justifyContent:"space-between"}}><span>Anonymous pulse</span><span style={{fontFamily:"var(--font-mono)", color:"var(--color-text-tertiary)"}}>2.5s · loop</span></div>
+                <div style={{display:"flex", justifyContent:"space-between"}}><span>Urgency critical</span><span style={{fontFamily:"var(--font-mono)", color:"var(--color-text-tertiary)"}}>2s · alert</span></div>
+                <div style={{display:"flex", justifyContent:"space-between"}}><span>Modal scale-in</span><span style={{fontFamily:"var(--font-mono)", color:"var(--color-text-tertiary)"}}>200ms · spring</span></div>
+              </div>
+            </div>
+          </div>
+        </>
+      );
+    }
+
+    function ComponentsSection() {
+      return (
+        <>
+          <h2 className="ds-section-title">Componentes</h2>
+          <p className="ds-section-sub">Componentes core que aparecem em pelo menos uma das duas faces do produto.</p>
+
+          <div className="grid-2">
+            <div className="card">
+              <div className="card-h">Botões</div>
+              <div className="demo-row">
+                <button className="btn-primary" style={{minHeight:36, padding:"8px 16px"}}>Fazer denúncia</button>
+                <button className="btn-secondary" style={{minHeight:36, padding:"8px 16px"}}>Como funciona</button>
+                <button className="btn-ghost" style={{minHeight:36, padding:"8px 16px"}}>Voltar</button>
+                <button style={{padding:"8px 16px", borderRadius:8, background:"var(--color-accent)", color:"#fff", fontSize:13, fontWeight:500, border:"none"}}>Encerrar caso</button>
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="card-h">Inputs</div>
+              <div style={{display:"flex", flexDirection:"column", gap:10}}>
+                <input className="input-demo" placeholder="Buscar empresa…"/>
+                <input className="input-demo focus" defaultValue="ETK-2024-0042"/>
+                <input className="input-demo error" defaultValue="protocolo inválido"/>
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="card-h">Badges de status</div>
+              <div className="tag-row">
+                <span className="pill" style={{background:"#fef3c7", color:"#a16207", borderColor:"#fde68a"}}>Aguardando triagem</span>
+                <span className="pill" style={{background:"#dbeafe", color:"#1d4ed8", borderColor:"#bfdbfe"}}>Em apuração</span>
+                <span className="pill" style={{background:"#ffedd5", color:"#c2410c", borderColor:"#fed7aa"}}>Pendente de informação</span>
+                <span className="pill" style={{background:"var(--color-primary-surface)", color:"var(--color-primary-dark)", borderColor:"var(--color-border-strong)"}}>Encerrado com ação</span>
+                <span className="pill" style={{background:"var(--color-bg-secondary)", color:"var(--color-text-tertiary)", borderColor:"var(--color-border)"}}>Encerrado — sem infração</span>
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="card-h">Urgência (1 → 5)</div>
+              <div style={{display:"flex", flexDirection:"column", gap:8}}>
+                {[1,2,3,4,5].map(l=>(
+                  <div key={l} style={{display:"flex", alignItems:"center", gap:10, fontSize:12, color:"var(--color-text-secondary)"}}>
+                    <span style={{display:"inline-flex", alignItems:"center", gap:6, width:120}}>
+                      <span style={{width:10, height:10, borderRadius:9999, background:`var(--color-urgency-${l})`, animation: l>=5?"urgencyPulse 2s ease-in-out infinite":"none"}}/>
+                      <span style={{fontWeight:500, color:`var(--color-urgency-${l})`}}>{l}/5</span>
+                    </span>
+                    {["Baixa","Moderada","Média","Alta","Crítica"][l-1]}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="card-h">Canais de origem</div>
+              <div className="tag-row">
+                <span className="pill" style={{background:"#f0f9ff", color:"#0369a1", borderColor:"#bae6fd"}}>Web</span>
+                <span className="pill" style={{background:"#f0fdf4", color:"#15803d", borderColor:"#bbf7d0"}}>WhatsApp</span>
+                <span className="pill" style={{background:"#f5f3ff", color:"#6d28d9", borderColor:"#ddd6fe"}}>App</span>
+                <span className="pill" style={{background:"#fef3c7", color:"#a16207", borderColor:"#fde68a"}}>0800</span>
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="card-h">Anchor de anonimato</div>
+              <p style={{fontSize:12, color:"var(--color-text-tertiary)", margin:"0 0 14px"}}>Visível em toda tela do portal. Pulso lento (2.5s) reforça presença sem distrair em momento vulnerável.</p>
+              <div style={{display:"inline-flex", alignItems:"center", gap:6, padding:"6px 14px", background:"var(--color-anon-bg)", border:"1px solid var(--color-anon-border)", borderRadius:9999}}>
+                <span className="anon-dot"/>
+                <span style={{fontSize:12, fontWeight:500, color:"var(--color-anon-text)"}}>Anônimo</span>
+              </div>
+            </div>
+
+            <div className="card" style={{gridColumn:"1 / -1"}}>
+              <div className="card-h">Protocolo</div>
+              <div style={{display:"flex", gap:24, alignItems:"center", flexWrap:"wrap"}}>
+                <div style={{
+                  fontFamily:"var(--font-mono)", fontSize:22, fontWeight:600, color:"var(--color-primary-dark)",
+                  background:"var(--color-primary-surface)", border:"1px dashed var(--color-primary)",
+                  padding:"14px 24px", borderRadius:8, letterSpacing:"0.04em"
+                }}>ETK-2024-0042</div>
+                <div style={{fontSize:12, color:"var(--color-text-tertiary)", maxWidth:380, lineHeight:1.6}}>
+                  Único elo entre o denunciante e o caso. Tipográfico (mono), com borda tracejada — convida a guardar, não a clicar.
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      );
+    }
+
+    // ── Wrap a screen in a browser-frame artboard helper ──
+    function BrowserFrame({title, url, children}) {
+      return (
+        <div style={{display:"flex", flexDirection:"column", height:"100%", background:"#fff"}}>
+          <div className="browser-bar">
+            <div className="dots">
+              <span style={{background:"#ff5f57"}}/><span style={{background:"#febc2e"}}/><span style={{background:"#28c840"}}/>
+            </div>
+            <div className="url">{url}</div>
+            <span style={{fontSize:10, color:"var(--color-text-tertiary)"}}>{title}</span>
+          </div>
+          <div style={{flex:1, overflow:"hidden"}}>{children}</div>
+        </div>
+      );
+    }
+
+    function PhoneFrame({title, url, children}) {
+      return (
+        <div style={{display:"flex", flexDirection:"column", height:"100%", background:"#fff"}}>
+          <div className="browser-bar">
+            <div className="dots">
+              <span style={{background:"#ff5f57"}}/><span style={{background:"#febc2e"}}/><span style={{background:"#28c840"}}/>
+            </div>
+            <div className="url">{url}</div>
+            <span style={{fontSize:10, color:"var(--color-text-tertiary)"}}>{title}</span>
+          </div>
+          <div style={{flex:1, overflow:"hidden", display:"flex", justifyContent:"center", padding:"20px", background:"#eef2f4"}}>
+            <div style={{width:380, maxWidth:"100%", boxShadow:"var(--shadow-lg)", borderRadius:18, overflow:"hidden", background:"#000", padding:6, display:"flex"}}>
+              <div style={{flex:1, background:"var(--color-bg-secondary)", borderRadius:14, overflow:"hidden", display:"flex", flexDirection:"column"}}>
+                {children}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function App() {
+      const { DesignCanvas, DCSection, DCArtboard } = window;
+      return (
+        <>
+          <div className="ds-shell">
+            <BrandHero/>
+            <ColorsSection/>
+            <TypeSection/>
+            <SpacingSection/>
+            <ComponentsSection/>
+
+            <h2 className="ds-section-title">Fluxos</h2>
+            <p className="ds-section-sub">As duas faces do produto, lado a lado. Acima, o portal público — denso em <i>acolhimento</i>. Abaixo, o painel interno — denso em <i>informação</i>. Arraste para reordenar; clique em uma artboard para abrir em fullscreen.</p>
+          </div>
+
+          <DesignCanvas initialZoom={0.7} background="#f0f3f5" minHeight={1400}>
+            <DCSection id="portal" title="Portal · Fluxo do denunciante">
+              <DCArtboard id="t0" label="Tela 0 — Buscar empresa" width={420} height={780}>
+                <PhoneFrame title="iPhone · 390pt" url="portalsigilo.com.br">
+                  <Tela0Search/>
+                </PhoneFrame>
+              </DCArtboard>
+              <DCArtboard id="t1" label="Tela 1 — Boas-vindas" width={760} height={780}>
+                <BrowserFrame title="Desktop · 1280" url="portalsigilo.com.br/acme">
+                  <Tela1Welcome/>
+                </BrowserFrame>
+              </DCArtboard>
+              <DCArtboard id="t2" label="Tela 2 — Relato (chat)" width={420} height={780}>
+                <PhoneFrame title="Mobile · 390pt" url="portalsigilo.com.br/acme/chat">
+                  <Tela2Chat/>
+                </PhoneFrame>
+              </DCArtboard>
+              <DCArtboard id="t3" label="Tela 3 — Confirmação" width={760} height={780}>
+                <BrowserFrame title="Desktop · 1280" url="portalsigilo.com.br/acme/confirmacao">
+                  <Tela3Confirm/>
+                </BrowserFrame>
+              </DCArtboard>
+              <DCArtboard id="t4" label="Tela 4 — Acompanhar relato" width={760} height={780}>
+                <BrowserFrame title="Desktop · 1280" url="portalsigilo.com.br/acme/acompanhar">
+                  <Tela4Track/>
+                </BrowserFrame>
+              </DCArtboard>
+            </DCSection>
+
+            <DCSection id="portal-mobile" title="Portal · Mobile-first (Telas 1, 3 e 4)">
+              <DCArtboard id="mt1" label="Mobile · Tela 1 — Boas-vindas" width={420} height={780}>
+                <PhoneFrame title="iPhone · 390pt" url="portalsigilo.com.br/acme">
+                  <MobileTela1Welcome/>
+                </PhoneFrame>
+              </DCArtboard>
+              <DCArtboard id="mt3" label="Mobile · Tela 3 — Confirmação" width={420} height={780}>
+                <PhoneFrame title="iPhone · 390pt" url="portalsigilo.com.br/acme/confirmacao">
+                  <MobileTela3Confirm/>
+                </PhoneFrame>
+              </DCArtboard>
+              <DCArtboard id="mt4" label="Mobile · Tela 4 — Acompanhar" width={420} height={780}>
+                <PhoneFrame title="iPhone · 390pt" url="portalsigilo.com.br/acme/acompanhar">
+                  <MobileTela4Track/>
+                </PhoneFrame>
+              </DCArtboard>
+            </DCSection>
+
+            <DCSection id="dashboard" title="Painel · Comitê & operação (desktop)">
+              <DCArtboard id="d1" label="Visão geral · Essencial" width={1280} height={820}>
+                <BrowserFrame title="Desktop · 1440" url="app.portalsigilo.com.br/app">
+                  <DashOverview/>
+                </BrowserFrame>
+              </DCArtboard>
+              <DCArtboard id="d1plus" label="Visão geral · Plus (Heatmap + IA)" width={1280} height={820}>
+                <BrowserFrame title="Desktop · 1440" url="app.portalsigilo.com.br/app">
+                  <DashOverviewPlus/>
+                </BrowserFrame>
+              </DCArtboard>
+              <DCArtboard id="d2" label="Casos — listagem" width={1280} height={820}>
+                <BrowserFrame title="Desktop · 1440" url="app.portalsigilo.com.br/app/casos">
+                  <DashCasos/>
+                </BrowserFrame>
+              </DCArtboard>
+              <DCArtboard id="d3" label="Caso — detalhe" width={1280} height={820}>
+                <BrowserFrame title="Desktop · 1440" url="app.portalsigilo.com.br/app/casos/ETK-2024-0042">
+                  <DashCaseDetail/>
+                </BrowserFrame>
+              </DCArtboard>
+            </DCSection>
+
+            <DCSection id="dashboard-mobile" title="Painel · Mobile-first (responsivo)">
+              <DCArtboard id="m1" label="Mobile · Visão geral · Plus" width={420} height={820}>
+                <PhoneFrame title="iPhone · 390pt" url="app.portalsigilo.com.br">
+                  <MobileDashOverview/>
+                </PhoneFrame>
+              </DCArtboard>
+              <DCArtboard id="m2" label="Mobile · Casos" width={420} height={820}>
+                <PhoneFrame title="iPhone · 390pt" url="app.portalsigilo.com.br/casos">
+                  <MobileDashCasos/>
+                </PhoneFrame>
+              </DCArtboard>
+              <DCArtboard id="m3" label="Mobile · Caso detalhe" width={420} height={820}>
+                <PhoneFrame title="iPhone · 390pt" url="app.portalsigilo.com.br/casos/ETK-2024-0042">
+                  <MobileDashCaseDetail/>
+                </PhoneFrame>
+              </DCArtboard>
+            </DCSection>
+          </DesignCanvas>
+
+          <div className="ds-shell" style={{paddingTop: 32}}>
+            <div className="ds-footer">
+              <span>Portal Sigilo · Design system v1 · Petróleo &nbsp;<span style={{color:"#2A6070"}}>●</span>&nbsp; Coral &nbsp;<span style={{color:"#C05A4A"}}>●</span></span>
+              <span>Lei 14.457/22 · NR-1 · LGPD</span>
+            </div>
+          </div>
+        </>
+      );
+    }
+
+    function mount() {
+      if (!window.DesignCanvas || !window.PortalSigilo) {
+        return setTimeout(mount, 50);
+      }
+      ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+    }
+    mount();
+  </script>
+</body>
+</html>

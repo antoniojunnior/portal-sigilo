@@ -3,13 +3,28 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ChatContainer, type ChatMessage } from "@/components/portal/ChatContainer";
+import { AnonymousBadge } from "@/components/ui/AnonymousBadge";
+import { PortalFooter } from "@/components/layout/PortalFooter";
+import { LogoSigilo } from "@/components/portal/LogoSigilo";
 import Link from "next/link";
 
 const INITIAL_MESSAGE: ChatMessage = {
   id: "sys-0",
   autor: "sistema",
   texto:
-    "Olá. Este é um espaço seguro e confidencial.\n\nVocê pode me contar o que aconteceu com suas próprias palavras, no seu ritmo. Nenhuma informação que identifique você será solicitada ou armazenada.\n\nQuando estiver pronto, pode começar.",
+    "Olá. Este é um espaço seguro e confidencial.\n\nPode me contar o que aconteceu com suas próprias palavras, no seu ritmo. Nenhuma informação que identifique você será solicitada ou armazenada.\n\nQuando quiser, é só começar.",
+  textoJsx: (
+    <>
+      <p>Olá. Este é um espaço seguro e confidencial.</p>
+      <p style={{ marginTop: "0.6rem" }}>
+        Pode me contar o que aconteceu com suas próprias palavras, no seu ritmo.{" "}
+        <strong style={{ fontWeight: 500, color: "var(--color-text-primary)" }}>
+          Nenhuma informação que identifique você será solicitada ou armazenada.
+        </strong>
+      </p>
+      <p style={{ marginTop: "0.6rem" }}>Quando quiser, é só começar.</p>
+    </>
+  ),
   timestamp: new Date().toISOString(),
 };
 
@@ -26,6 +41,7 @@ export default function Tela2() {
   const router = useRouter();
 
   const [orgId, setOrgId] = useState<string | null>(null);
+  const [orgNome, setOrgNome] = useState<string | null>(null);
   const [unitId, setUnitId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
   const [progressStep, setProgressStep] = useState(0);
@@ -34,17 +50,36 @@ export default function Tela2() {
 
   useEffect(() => {
     setOrgId(sessionStorage.getItem("org_id"));
+    setOrgNome(sessionStorage.getItem("org_nome"));
     setUnitId(sessionStorage.getItem("unit_id"));
   }, []);
 
+  function handleReset() {
+    setMessages([INITIAL_MESSAGE]);
+    setProgressStep(0);
+    setShowQuickReplies(true);
+  }
+
   async function handleSendMessage(text: string, _attachments: File[]) {
     if (!text.trim()) return;
+
     setShowQuickReplies(false);
     setProgressStep((prev) => Math.min(prev + 1, 3));
 
-    const messageCount = messages.filter((m) => m.autor === "denunciante").length + 1;
+    const userMsg: ChatMessage = {
+      id: crypto.randomUUID(),
+      autor: "denunciante",
+      texto: text,
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, userMsg]);
 
-    let resposta = "";
+    const prevUserCount = messages.filter((m) => m.autor === "denunciante").length;
+    const messageCount = prevUserCount + 1;
+
+    let resposta: string;
+    let isFinal = false;
+
     if (messageCount === 1) {
       resposta = "Obrigado por compartilhar. Para eu entender melhor: quando isso aconteceu (aproximadamente) e onde foi?";
     } else if (messageCount === 2) {
@@ -53,21 +88,27 @@ export default function Tela2() {
       resposta = "Você tem alguma evidência ou documento relacionado que queira mencionar? Se não, tudo bem — seu relato já é suficiente.";
     } else {
       resposta = "Recebi todas as informações. Vou registrar seu relato agora. Um protocolo único será gerado para você acompanhar.";
-      setTimeout(() => void submitCase(messages, text), 500);
-      return;
+      isFinal = true;
     }
 
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          autor: "sistema",
-          texto: resposta,
-          timestamp: new Date().toISOString(),
-        },
-      ]);
-    }, 700);
+    await new Promise<void>((resolve) => {
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            autor: "sistema",
+            texto: resposta,
+            timestamp: new Date().toISOString(),
+          },
+        ]);
+        resolve();
+      }, 700);
+    });
+
+    if (isFinal) {
+      void submitCase([...messages, userMsg], text);
+    }
   }
 
   async function submitCase(currentMessages: ChatMessage[], lastText: string) {
@@ -122,18 +163,27 @@ export default function Tela2() {
 
   if (!orgId) {
     return (
-      <div className="min-h-dvh flex items-center justify-center bg-[#F8FAFC] p-4">
+      <div data-portal className="min-h-dvh flex items-center justify-center p-4" style={{ background: "var(--color-bg-secondary)" }}>
         <div className="text-center space-y-4 max-w-xs">
-          <div className="w-12 h-12 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto">
-            <svg viewBox="0 0 16 16" width="20" height="20" fill="none" stroke="#92400E" strokeWidth="1.5" aria-hidden>
+          <div className="w-12 h-12 rounded-full bg-[var(--color-warning-surface)] border border-[var(--color-warning)]/20 flex items-center justify-center mx-auto">
+            <svg viewBox="0 0 16 16" width="20" height="20" fill="none" stroke="var(--color-warning)" strokeWidth="1.5" aria-hidden>
               <path d="M8 1L1 13h14L8 1z" strokeLinejoin="round"/>
               <path d="M8 6v3M8 11v.5" strokeLinecap="round"/>
             </svg>
           </div>
-          <p className="text-[13px] text-slate-600">Selecione uma empresa antes de continuar.</p>
+          <p style={{ fontSize: 13, color: "var(--color-text-secondary)" }}>Selecione uma empresa antes de continuar.</p>
           <a
             href="/"
-            className="inline-block rounded-lg bg-brand px-5 py-2.5 text-[13px] font-medium text-white hover:bg-brand-dark transition-colors"
+            className="inline-block focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] transition-colors"
+            style={{
+              borderRadius: "var(--radius-md)",
+              background: "#2A6070",
+              padding: "10px 20px",
+              fontSize: 13,
+              fontWeight: 500,
+              color: "white",
+              textDecoration: "none",
+            }}
           >
             Voltar ao início
           </a>
@@ -143,53 +193,82 @@ export default function Tela2() {
   }
 
   return (
-    <div className="flex flex-col h-dvh bg-[#F8FAFC]">
-      {/* Breadcrumb */}
-      <div className="bg-white border-b border-slate-200 px-5 flex-shrink-0 flex items-center">
-        <Link
-          href={`/${slug}`}
-          className="text-[12px] text-slate-400 hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded transition-colors inline-flex items-center min-h-[44px] pr-4"
+    <div data-portal className="flex flex-col h-dvh" style={{ background: "var(--color-bg-secondary)" }}>
+
+      {/* Topbar */}
+      <header
+        className="bg-[var(--color-card)] flex-shrink-0 sticky top-0 z-[var(--z-sticky)]"
+        style={{
+          minHeight: 52,
+          borderBottom: "0.5px solid var(--color-border)",
+          boxShadow: "var(--shadow-xs)",
+        }}
+      >
+        <div
+          className="mx-auto flex items-center justify-between h-full min-h-[52px] gap-3"
+          style={{ maxWidth: 580, padding: "0 1.25rem" }}
         >
-          ← Voltar
-        </Link>
-      </div>
+          {/* Left: back + logo + divider + org */}
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <Link
+              href={`/${slug}`}
+              className="flex items-center flex-shrink-0 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] rounded"
+              style={{ gap: 5, fontSize: 13, color: "var(--color-text-secondary)", textDecoration: "none" }}
+              aria-label="Voltar para a página do canal"
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden>
+                <path d="M10 3L5 8l5 5"/>
+              </svg>
+              Voltar
+            </Link>
+            <span
+              className="flex-shrink-0"
+              style={{ width: 0.5, height: 20, background: "var(--color-border)" }}
+              aria-hidden
+            />
+            <span className="flex sm:hidden flex-shrink-0">
+              <LogoSigilo variant="icon" iconSize={22} />
+            </span>
+            <span className="hidden sm:flex items-center flex-shrink-0">
+              <LogoSigilo iconSize={22} />
+            </span>
+            <span
+              className="flex-shrink-0"
+              style={{ width: 0.5, height: 20, background: "var(--color-border)" }}
+              aria-hidden
+            />
+            <span
+              className="truncate min-w-0"
+              style={{ fontSize: "var(--text-xs)", color: "var(--color-text-tertiary)" }}
+            >
+              canal de{" "}
+              <span style={{ fontWeight: 600, color: "var(--color-text-secondary)" }}>
+                {orgNome ?? slug}
+              </span>
+            </span>
+          </div>
+
+          {/* Right: badge */}
+          <AnonymousBadge
+            className="flex-shrink-0"
+            aria-label="Conversa anônima — sua identidade não é registrada"
+          />
+        </div>
+      </header>
 
       <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full overflow-hidden">
         <ChatContainer
-          initialMessages={messages}
+          messages={messages}
           onSendMessage={handleSendMessage}
           disabled={submitting}
           progressStep={progressStep}
+          quickReplies={showQuickReplies ? QUICK_REPLIES : []}
+          onQuickReply={() => setShowQuickReplies(false)}
+          onReset={handleReset}
         />
-
-        {/* Quick replies — match mockup pill style */}
-        {showQuickReplies && (
-          <div className="px-5 py-3 bg-white border-t border-slate-200 flex flex-wrap gap-2 flex-shrink-0">
-            {QUICK_REPLIES.map((reply) => (
-              <button
-                key={reply}
-                type="button"
-                onClick={() => {
-                  setShowQuickReplies(false);
-                  setMessages((prev) => [
-                    ...prev,
-                    {
-                      id: crypto.randomUUID(),
-                      autor: "denunciante",
-                      texto: reply,
-                      timestamp: new Date().toISOString(),
-                    },
-                  ]);
-                  void handleSendMessage(reply, []);
-                }}
-                className="rounded-full border border-slate-200 bg-white px-3.5 min-h-[44px] text-[12px] text-slate-600 hover:border-brand hover:text-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand transition-colors inline-flex items-center cursor-pointer"
-              >
-                {reply}
-              </button>
-            ))}
-          </div>
-        )}
       </div>
+
+      <PortalFooter />
     </div>
   );
 }

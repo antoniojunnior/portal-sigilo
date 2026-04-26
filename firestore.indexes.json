@@ -33,6 +33,7 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "case_id", "order": "ASCENDING" },
+        { "fieldPath": "org_id", "order": "ASCENDING" },
         { "fieldPath": "timestamp", "order": "ASCENDING" }
       ]
     },

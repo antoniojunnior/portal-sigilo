@@ -1,0 +1,80 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+.frame{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:16px;font-family:var(--font-sans);}
+.browser-bar{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 12px;display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.dots{display:flex;gap:5px;}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--color-border-secondary);}
+.url-bar{flex:1;background:var(--color-background-secondary);border-radius:4px;padding:4px 10px;font-size:12px;color:var(--color-text-tertiary);}
+.screen{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);overflow:hidden;}
+.topbar{padding:14px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid var(--color-border-tertiary);}
+.logo{font-size:15px;font-weight:500;color:var(--color-text-primary);display:flex;align-items:center;gap:8px;}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:#1D9E75;}
+.confirm-body{padding:40px 40px 32px;text-align:center;}
+.check-circle{width:56px;height:56px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;}
+.check-circle svg{width:28px;height:28px;stroke:#0F6E56;fill:none;stroke-width:2;}
+.confirm-title{font-size:20px;font-weight:500;color:var(--color-text-primary);margin-bottom:8px;}
+.confirm-sub{font-size:14px;color:var(--color-text-secondary);line-height:1.6;max-width:380px;margin:0 auto 28px;}
+.protocol-card{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:20px 24px;max-width:340px;margin:0 auto 24px;}
+.prot-label{font-size:11px;color:var(--color-text-tertiary);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em;}
+.prot-number{font-size:22px;font-weight:500;color:var(--color-text-primary);letter-spacing:0.08em;font-family:var(--font-mono);margin-bottom:12px;}
+.prot-warning{font-size:12px;color:var(--color-text-secondary);line-height:1.5;padding:10px 12px;background:var(--color-background-primary);border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);}
+.steps-row{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:0.5px solid var(--color-border-tertiary);border-bottom:0.5px solid var(--color-border-tertiary);}
+.step-item{padding:16px 14px;text-align:center;border-right:0.5px solid var(--color-border-tertiary);}
+.step-item:last-child{border-right:none;}
+.step-num-badge{width:22px;height:22px;border-radius:50%;background:#E1F5EE;color:#085041;font-size:11px;font-weight:500;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;}
+.step-label{font-size:12px;font-weight:500;color:var(--color-text-primary);margin-bottom:3px;}
+.step-desc{font-size:11px;color:var(--color-text-secondary);line-height:1.4;}
+.actions-row{padding:20px 24px;display:flex;gap:10px;justify-content:center;}
+.btn-prim{background:#1D9E75;color:#E1F5EE;font-size:13px;font-weight:500;padding:10px 22px;border-radius:var(--border-radius-md);border:none;cursor:pointer;}
+.btn-sec{background:transparent;color:var(--color-text-secondary);font-size:13px;padding:10px 18px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);cursor:pointer;}
+.footer-bar{padding:12px 24px;border-top:0.5px solid var(--color-border-tertiary);display:flex;justify-content:center;}
+.footer-txt{font-size:11px;color:var(--color-text-tertiary);}
+</style>
+<div class="frame">
+  <div class="browser-bar">
+    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="url-bar">empresa.eticaapp.com.br/relato/confirmacao</div>
+  </div>
+  <div class="screen">
+    <div class="topbar">
+      <div class="logo"><div class="logo-dot"></div>EticaApp</div>
+    </div>
+    <div class="confirm-body">
+      <div class="check-circle">
+        <svg viewBox="0 0 28 28"><path d="M5 14l6 6L23 8"/></svg>
+      </div>
+      <div class="confirm-title">Relato recebido com sucesso.</div>
+      <div class="confirm-sub">Seu relato foi registrado de forma segura e anônima. O comitê responsável será notificado e a apuração terá início em até 5 dias úteis.</div>
+      <div class="protocol-card">
+        <div class="prot-label">Número de protocolo</div>
+        <div class="prot-number">ETK-2024-7F3A9B</div>
+        <div class="prot-warning">Guarde este número. Ele é a única forma de acompanhar o andamento do seu relato. Nenhum dado seu está vinculado a ele.</div>
+      </div>
+    </div>
+    <div class="steps-row">
+      <div class="step-item">
+        <div class="step-num-badge">1</div>
+        <div class="step-label">Recebido</div>
+        <div class="step-desc">Seu relato foi registrado e está em análise inicial.</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num-badge">2</div>
+        <div class="step-label">Em apuração</div>
+        <div class="step-desc">O comitê conduz a investigação com imparcialidade.</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num-badge">3</div>
+        <div class="step-label">Conclusão</div>
+        <div class="step-desc">Você poderá consultar o resultado pelo protocolo.</div>
+      </div>
+    </div>
+    <div class="actions-row">
+      <button class="btn-prim">Acompanhar pelo protocolo</button>
+      <button class="btn-sec">Voltar ao início</button>
+    </div>
+    <div class="footer-bar">
+      <div class="footer-txt">Este canal é operado pelo EticaApp · Em conformidade com a Lei 14.457/22, NR-1 e LGPD</div>
+    </div>
+  </div>
+</div>

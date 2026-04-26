@@ -1,0 +1,91 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+.frame{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:16px;font-family:var(--font-sans);}
+.browser-bar{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 12px;display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.dots{display:flex;gap:5px;}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--color-border-secondary);}
+.url-bar{flex:1;background:var(--color-background-secondary);border-radius:4px;padding:4px 10px;font-size:12px;color:var(--color-text-tertiary);}
+.screen{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);overflow:hidden;}
+.topbar{padding:14px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid var(--color-border-tertiary);}
+.logo{font-size:15px;font-weight:500;color:var(--color-text-primary);display:flex;align-items:center;gap:8px;}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:#1D9E75;}
+.topbar-link{font-size:12px;color:var(--color-text-secondary);}
+.hero{padding:48px 40px 36px;text-align:center;border-bottom:0.5px solid var(--color-border-tertiary);}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:#E1F5EE;color:#085041;font-size:11px;font-weight:500;padding:4px 12px;border-radius:99px;margin-bottom:20px;}
+.badge-dot{width:6px;height:6px;border-radius:50%;background:#1D9E75;}
+.hero h1{font-size:26px;font-weight:500;color:var(--color-text-primary);line-height:1.3;margin-bottom:12px;max-width:440px;margin-left:auto;margin-right:auto;}
+.hero p{font-size:14px;color:var(--color-text-secondary);line-height:1.6;max-width:380px;margin:0 auto 28px;}
+.btn-primary{display:inline-block;background:#1D9E75;color:#E1F5EE;font-size:14px;font-weight:500;padding:12px 28px;border-radius:var(--border-radius-md);cursor:pointer;border:none;}
+.btn-secondary{display:inline-block;background:transparent;color:var(--color-text-secondary);font-size:13px;padding:10px 20px;border-radius:var(--border-radius-md);cursor:pointer;border:0.5px solid var(--color-border-secondary);margin-left:10px;}
+.guarantees{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-bottom:0.5px solid var(--color-border-tertiary);}
+.guarantee{padding:20px 16px;text-align:center;border-right:0.5px solid var(--color-border-tertiary);}
+.guarantee:last-child{border-right:none;}
+.guar-icon{width:28px;height:28px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;}
+.guar-icon svg{width:14px;height:14px;stroke:#0F6E56;fill:none;stroke-width:2;}
+.guar-title{font-size:12px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px;}
+.guar-desc{font-size:11px;color:var(--color-text-secondary);line-height:1.4;}
+.protocol-row{padding:16px 24px;display:flex;align-items:center;gap:12px;background:var(--color-background-secondary);}
+.protocol-label{font-size:12px;color:var(--color-text-secondary);}
+.protocol-input{flex:1;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 12px;font-size:12px;color:var(--color-text-primary);}
+.btn-track{background:transparent;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:8px 14px;font-size:12px;color:var(--color-text-secondary);cursor:pointer;white-space:nowrap;}
+.footer-bar{padding:12px 24px;display:flex;align-items:center;justify-content:space-between;}
+.footer-txt{font-size:11px;color:var(--color-text-tertiary);}
+.law-pills{display:flex;gap:6px;}
+.law-pill{font-size:10px;padding:2px 7px;border-radius:99px;background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary);}
+</style>
+<div class="frame">
+  <div class="browser-bar">
+    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="url-bar">empresa.eticaapp.com.br</div>
+  </div>
+  <div class="screen">
+    <div class="topbar">
+      <div class="logo"><div class="logo-dot"></div>EticaApp</div>
+      <div class="topbar-link">Já fez uma denúncia? Acompanhe pelo protocolo</div>
+    </div>
+    <div class="hero">
+      <div class="hero-badge"><div class="badge-dot"></div>Canal de denúncias seguro e confidencial</div>
+      <h1>Este é um espaço seguro para você ser ouvido.</h1>
+      <p>Relate situações de assédio, discriminação, fraude ou qualquer irregularidade. Sua identidade é protegida durante todo o processo.</p>
+      <button class="btn-primary">Fazer uma denúncia</button>
+      <button class="btn-secondary">Como funciona?</button>
+    </div>
+    <div class="guarantees">
+      <div class="guarantee">
+        <div class="guar-icon">
+          <svg viewBox="0 0 16 16"><path d="M8 2L4 5v4c0 2.5 1.8 4.7 4 5 2.2-.3 4-2.5 4-5V5L8 2z"/></svg>
+        </div>
+        <div class="guar-title">Anonimato garantido</div>
+        <div class="guar-desc">Nenhum dado que identifique você é coletado ou armazenado.</div>
+      </div>
+      <div class="guarantee">
+        <div class="guar-icon">
+          <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5"/><path d="M8 5v3l2 2"/></svg>
+        </div>
+        <div class="guar-title">Resposta em até 30 dias</div>
+        <div class="guar-desc">Acompanhe o andamento do seu relato pelo número de protocolo.</div>
+      </div>
+      <div class="guarantee">
+        <div class="guar-icon">
+          <svg viewBox="0 0 16 16"><rect x="3" y="6" width="10" height="8" rx="1"/><path d="M5 6V4a3 3 0 016 0v2"/></svg>
+        </div>
+        <div class="guar-title">Gestão independente</div>
+        <div class="guar-desc">Casos são analisados por comitê externo sem conflito de interesse.</div>
+      </div>
+    </div>
+    <div class="protocol-row">
+      <span class="protocol-label">Já tem protocolo?</span>
+      <input class="protocol-input" placeholder="Digite o número de protocolo" readonly/>
+      <button class="btn-track">Acompanhar</button>
+    </div>
+    <div class="footer-bar">
+      <div class="footer-txt">Canal operado pelo EticaApp · LGPD compliant</div>
+      <div class="law-pills">
+        <span class="law-pill">Lei 14.457/22</span>
+        <span class="law-pill">NR-1</span>
+        <span class="law-pill">LGPD</span>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,340 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+.frame{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:16px;font-family:var(--font-sans);}
+.browser-bar{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 12px;display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.dots{display:flex;gap:5px;}.dot{width:10px;height:10px;border-radius:50%;background:var(--color-border-secondary);}
+.url-bar{flex:1;background:var(--color-background-secondary);border-radius:4px;padding:4px 10px;font-size:12px;color:var(--color-text-tertiary);}
+.screen{background:var(--color-background-tertiary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);overflow:hidden;display:grid;grid-template-columns:200px 1fr;grid-template-rows:auto 1fr;min-height:620px;}
+
+.sidebar{grid-row:1/3;background:var(--color-background-primary);border-right:0.5px solid var(--color-border-tertiary);display:flex;flex-direction:column;padding:0;}
+.sb-logo{padding:16px 16px 12px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;gap:8px;}
+.sb-logo-dot{width:8px;height:8px;border-radius:50%;background:#1D9E75;}
+.sb-logo-txt{font-size:14px;font-weight:500;color:var(--color-text-primary);}
+.sb-org{padding:10px 16px;border-bottom:0.5px solid var(--color-border-tertiary);}
+.sb-org-name{font-size:12px;font-weight:500;color:var(--color-text-primary);}
+.sb-org-plan{font-size:11px;color:#1D9E75;}
+.sb-nav{padding:10px 0;flex:1;}
+.sb-section{font-size:10px;color:var(--color-text-tertiary);padding:8px 16px 4px;letter-spacing:0.07em;text-transform:uppercase;}
+.sb-item{display:flex;align-items:center;gap:8px;padding:7px 16px;font-size:12px;color:var(--color-text-secondary);cursor:pointer;}
+.sb-item.active{background:#E1F5EE;color:#085041;font-weight:500;border-right:2px solid #1D9E75;}
+.sb-item svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5;flex-shrink:0;}
+.sb-badge{margin-left:auto;background:#E24B4A;color:#FCEBEB;font-size:10px;padding:1px 6px;border-radius:99px;}
+.sb-badge.ok{background:#E1F5EE;color:#085041;}
+.sb-footer{padding:12px 16px;border-top:0.5px solid var(--color-border-tertiary);}
+.sb-user{display:flex;align-items:center;gap:8px;}
+.sb-avatar{width:26px;height:26px;border-radius:50%;background:#E6F1FB;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:#185FA5;flex-shrink:0;}
+.sb-user-info{flex:1;min-width:0;}
+.sb-user-name{font-size:12px;font-weight:500;color:var(--color-text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-user-role{font-size:10px;color:var(--color-text-tertiary);}
+
+.topbar{background:var(--color-background-primary);border-bottom:0.5px solid var(--color-border-tertiary);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.topbar-title{font-size:14px;font-weight:500;color:var(--color-text-primary);}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.tb-filter{font-size:12px;color:var(--color-text-secondary);padding:5px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:transparent;cursor:pointer;display:flex;align-items:center;gap:5px;}
+.tb-filter svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:1.5;}
+.tb-btn{font-size:12px;font-weight:500;color:#E1F5EE;background:#1D9E75;border:none;border-radius:var(--border-radius-md);padding:5px 12px;cursor:pointer;}
+
+.main{padding:18px 20px;overflow:auto;}
+
+.metrics-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+.metric-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px;}
+.mc-label{font-size:11px;color:var(--color-text-secondary);margin-bottom:6px;}
+.mc-val{font-size:22px;font-weight:500;color:var(--color-text-primary);line-height:1;margin-bottom:4px;}
+.mc-delta{font-size:11px;}
+.mc-delta.up{color:#1D9E75;}.mc-delta.warn{color:#BA7517;}.mc-delta.danger{color:#E24B4A;}
+.mc-bar{height:3px;background:var(--color-border-tertiary);border-radius:2px;margin-top:8px;}
+.mc-bar-fill{height:100%;border-radius:2px;}
+
+.mid-row{display:grid;grid-template-columns:1fr 200px;gap:12px;margin-bottom:16px;}
+
+.cases-panel{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;}
+.panel-header{padding:12px 16px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:space-between;}
+.panel-title{font-size:12px;font-weight:500;color:var(--color-text-primary);}
+.panel-link{font-size:11px;color:#1D9E75;cursor:pointer;}
+.case-row{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:10px;padding:10px 16px;border-bottom:0.5px solid var(--color-border-tertiary);cursor:pointer;}
+.case-row:last-child{border-bottom:none;}
+.case-row:hover{background:var(--color-background-secondary);}
+.urgency{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.u-alta{background:#E24B4A;}.u-media{background:#BA7517;}.u-baixa{background:#1D9E75;}
+.case-info{min-width:0;}
+.case-title{font-size:12px;font-weight:500;color:var(--color-text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.case-meta{font-size:11px;color:var(--color-text-tertiary);}
+.case-status{font-size:10px;padding:2px 7px;border-radius:99px;white-space:nowrap;flex-shrink:0;}
+.s-new{background:#E1F5EE;color:#085041;}
+.s-open{background:#E6F1FB;color:#185FA5;}
+.s-pend{background:#FAEEDA;color:#633806;}
+.s-done{background:var(--color-background-secondary);color:var(--color-text-secondary);}
+.case-date{font-size:11px;color:var(--color-text-tertiary);white-space:nowrap;flex-shrink:0;}
+
+.risk-panel{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;}
+.risk-grid{padding:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;}
+.risk-cell{border-radius:4px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;cursor:pointer;}
+.rc-label{font-size:9px;font-weight:500;text-align:center;line-height:1.2;}
+.rc-count{font-size:14px;font-weight:500;}
+.r0{background:var(--color-background-secondary);}.r0 .rc-label,.r0 .rc-count{color:var(--color-text-tertiary);}
+.r1{background:#EAF3DE;}.r1 .rc-label{color:#3B6D11;}.r1 .rc-count{color:#27500A;}
+.r2{background:#FAEEDA;}.r2 .rc-label{color:#854F0B;}.r2 .rc-count{color:#633806;}
+.r3{background:#FAECE7;}.r3 .rc-label{color:#993C1D;}.r3 .rc-count{color:#712B13;}
+.r4{background:#FCEBEB;}.r4 .rc-label{color:#A32D2D;}.r4 .rc-count{color:#791F1F;}
+
+.bottom-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.chart-panel{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px;}
+.chart-bars{display:flex;align-items:flex-end;gap:6px;height:80px;margin-top:10px;}
+.bar-col{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;}
+.bar{border-radius:3px 3px 0 0;width:100%;}
+.bar-lbl{font-size:9px;color:var(--color-text-tertiary);}
+
+.ai-panel{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;}
+.ai-header{padding:12px 16px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;gap:8px;}
+.ai-dot{width:8px;height:8px;border-radius:50%;background:#1D9E75;}
+.ai-title{font-size:12px;font-weight:500;color:var(--color-text-primary);}
+.ai-body{padding:12px 16px;display:flex;flex-direction:column;gap:8px;}
+.ai-msg{background:var(--color-background-secondary);border-radius:0 8px 8px 8px;padding:8px 10px;font-size:11px;color:var(--color-text-secondary);line-height:1.5;}
+.ai-input-row{display:flex;gap:6px;padding:10px 12px;border-top:0.5px solid var(--color-border-tertiary);}
+.ai-input{flex:1;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:6px 10px;font-size:11px;color:var(--color-text-primary);}
+.ai-send{width:28px;height:28px;border-radius:var(--border-radius-md);background:#1D9E75;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+.ai-send svg{width:12px;height:12px;stroke:#E1F5EE;fill:none;stroke-width:2;}
+</style>
+
+<div class="frame">
+  <div class="browser-bar">
+    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="url-bar">app.eticaapp.com.br/dashboard</div>
+  </div>
+  <div class="screen">
+
+    <div class="sidebar">
+      <div class="sb-logo">
+        <div class="sb-logo-dot"></div>
+        <div class="sb-logo-txt">EticaApp</div>
+      </div>
+      <div class="sb-org">
+        <div class="sb-org-name">Grupo Ventura S.A.</div>
+        <div class="sb-org-plan">Plano Gestão</div>
+      </div>
+      <div class="sb-nav">
+        <div class="sb-section">Principal</div>
+        <div class="sb-item active">
+          <svg viewBox="0 0 14 14"><rect x="1" y="1" width="5" height="5" rx="1"/><rect x="8" y="1" width="5" height="5" rx="1"/><rect x="1" y="8" width="5" height="5" rx="1"/><rect x="8" y="8" width="5" height="5" rx="1"/></svg>
+          Visão geral
+        </div>
+        <div class="sb-item">
+          <svg viewBox="0 0 14 14"><path d="M2 4h10M2 7h10M2 10h6"/></svg>
+          Casos
+          <span class="sb-badge">3</span>
+        </div>
+        <div class="sb-item">
+          <svg viewBox="0 0 14 14"><path d="M7 1v6l3 3"/><circle cx="7" cy="7" r="6"/></svg>
+          Pendências
+          <span class="sb-badge">5</span>
+        </div>
+        <div class="sb-section">Análise</div>
+        <div class="sb-item">
+          <svg viewBox="0 0 14 14"><path d="M2 12V6l3-3 3 3 4-4"/></svg>
+          Mapa de risco
+        </div>
+        <div class="sb-item">
+          <svg viewBox="0 0 14 14"><rect x="1" y="3" width="12" height="9" rx="1"/><path d="M4 3V2M10 3V2"/></svg>
+          Relatórios
+          <span class="sb-badge ok">Novo</span>
+        </div>
+        <div class="sb-section">Configuração</div>
+        <div class="sb-item">
+          <svg viewBox="0 0 14 14"><circle cx="7" cy="7" r="2"/><path d="M7 1v2M7 11v2M1 7h2M11 7h2"/></svg>
+          Configurações
+        </div>
+        <div class="sb-item">
+          <svg viewBox="0 0 14 14"><path d="M6 2H3a1 1 0 00-1 1v8a1 1 0 001 1h8a1 1 0 001-1V8M8 1h5v5M13 1L7 7"/></svg>
+          Capacitações EAD
+        </div>
+      </div>
+      <div class="sb-footer">
+        <div class="sb-user">
+          <div class="sb-avatar">RC</div>
+          <div class="sb-user-info">
+            <div class="sb-user-name">Renata Carvalho</div>
+            <div class="sb-user-role">Compliance · admin</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="topbar">
+      <div class="topbar-title">Visão geral — Abril 2026</div>
+      <div class="topbar-right">
+        <button class="tb-filter">
+          <svg viewBox="0 0 12 12"><path d="M1 3h10M3 6h6M5 9h2"/></svg>
+          Filtrar
+        </button>
+        <button class="tb-filter">
+          <svg viewBox="0 0 12 12"><rect x="1" y="1" width="10" height="10" rx="1"/><path d="M4 1v10M1 4h3"/></svg>
+          Exportar
+        </button>
+        <button class="tb-btn">+ Novo caso manual</button>
+      </div>
+    </div>
+
+    <div class="main">
+
+      <div class="metrics-row">
+        <div class="metric-card">
+          <div class="mc-label">Casos no período</div>
+          <div class="mc-val">14</div>
+          <div class="mc-delta up">+3 vs mês anterior</div>
+          <div class="mc-bar"><div class="mc-bar-fill" style="width:70%;background:#1D9E75;"></div></div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-label">Em aberto</div>
+          <div class="mc-val">5</div>
+          <div class="mc-delta warn">3 próximos do prazo</div>
+          <div class="mc-bar"><div class="mc-bar-fill" style="width:36%;background:#BA7517;"></div></div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-label">Resolvidos</div>
+          <div class="mc-val">9</div>
+          <div class="mc-delta up">64% taxa de resolução</div>
+          <div class="mc-bar"><div class="mc-bar-fill" style="width:64%;background:#1D9E75;"></div></div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-label">Tempo médio (dias)</div>
+          <div class="mc-val">18</div>
+          <div class="mc-delta danger">Acima da meta (14d)</div>
+          <div class="mc-bar"><div class="mc-bar-fill" style="width:82%;background:#E24B4A;"></div></div>
+        </div>
+      </div>
+
+      <div class="mid-row">
+        <div class="cases-panel">
+          <div class="panel-header">
+            <div class="panel-title">Casos recentes</div>
+            <div class="panel-link">Ver todos →</div>
+          </div>
+          <div class="case-row">
+            <div class="urgency u-alta"></div>
+            <div class="case-info">
+              <div class="case-title">Assédio moral — setor comercial</div>
+              <div class="case-meta">ETK-2026-7F3A · Triagem IA: urgência 4/5</div>
+            </div>
+            <div class="case-status s-new">Novo</div>
+            <div class="case-date">hoje</div>
+          </div>
+          <div class="case-row">
+            <div class="urgency u-alta"></div>
+            <div class="case-info">
+              <div class="case-title">Desvio de material — logística</div>
+              <div class="case-meta">ETK-2026-3B8C · Investigação em andamento</div>
+            </div>
+            <div class="case-status s-open">Em apuração</div>
+            <div class="case-date">há 3d</div>
+          </div>
+          <div class="case-row">
+            <div class="urgency u-media"></div>
+            <div class="case-info">
+              <div class="case-title">Discriminação salarial — TI</div>
+              <div class="case-meta">ETK-2026-9D1F · Aguarda documentos</div>
+            </div>
+            <div class="case-status s-pend">Pendente</div>
+            <div class="case-date">há 7d</div>
+          </div>
+          <div class="case-row">
+            <div class="urgency u-baixa"></div>
+            <div class="case-info">
+              <div class="case-title">Conflito de interesse — compras</div>
+              <div class="case-meta">ETK-2026-2A5E · Concluído sem infração</div>
+            </div>
+            <div class="case-status s-done">Encerrado</div>
+            <div class="case-date">há 12d</div>
+          </div>
+          <div class="case-row">
+            <div class="urgency u-media"></div>
+            <div class="case-info">
+              <div class="case-title">Assédio sexual — operações</div>
+              <div class="case-meta">ETK-2026-6C2B · Especialista acionado</div>
+            </div>
+            <div class="case-status s-open">Em apuração</div>
+            <div class="case-date">há 14d</div>
+          </div>
+        </div>
+
+        <div class="risk-panel">
+          <div class="panel-header">
+            <div class="panel-title">Mapa de risco por área</div>
+          </div>
+          <div class="risk-grid">
+            <div class="risk-cell r4"><span class="rc-count">4</span><span class="rc-label">Comercial</span></div>
+            <div class="risk-cell r3"><span class="rc-count">3</span><span class="rc-label">Operações</span></div>
+            <div class="risk-cell r2"><span class="rc-count">2</span><span class="rc-label">Logística</span></div>
+            <div class="risk-cell r2"><span class="rc-count">2</span><span class="rc-label">TI</span></div>
+            <div class="risk-cell r1"><span class="rc-count">1</span><span class="rc-label">Compras</span></div>
+            <div class="risk-cell r1"><span class="rc-count">1</span><span class="rc-label">RH</span></div>
+            <div class="risk-cell r1"><span class="rc-count">1</span><span class="rc-label">Financeiro</span></div>
+            <div class="risk-cell r0"><span class="rc-count">0</span><span class="rc-label">Jurídico</span></div>
+            <div class="risk-cell r0"><span class="rc-count">0</span><span class="rc-label">Diretoria</span></div>
+          </div>
+          <div style="padding:8px 12px;border-top:0.5px solid var(--color-border-tertiary);display:flex;gap:8px;flex-wrap:wrap;">
+            <span style="font-size:10px;color:var(--color-text-tertiary);display:flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;border-radius:2px;background:#EAF3DE;display:inline-block;"></span>Baixo</span>
+            <span style="font-size:10px;color:var(--color-text-tertiary);display:flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;border-radius:2px;background:#FAEEDA;display:inline-block;"></span>Médio</span>
+            <span style="font-size:10px;color:var(--color-text-tertiary);display:flex;align-items:center;gap:3px;"><span style="width:8px;height:8px;border-radius:2px;background:#FCEBEB;display:inline-block;"></span>Alto</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-row">
+        <div class="chart-panel">
+          <div class="panel-header" style="padding:0 0 8px;">
+            <div class="panel-title">Casos por categoria — últimos 6 meses</div>
+          </div>
+          <div class="chart-bars">
+            <div class="bar-col">
+              <div class="bar" style="height:68px;background:#E24B4A;opacity:0.7;"></div>
+              <div class="bar-lbl">Assédio</div>
+            </div>
+            <div class="bar-col">
+              <div class="bar" style="height:40px;background:#BA7517;opacity:0.7;"></div>
+              <div class="bar-lbl">Fraude</div>
+            </div>
+            <div class="bar-col">
+              <div class="bar" style="height:28px;background:#378ADD;opacity:0.7;"></div>
+              <div class="bar-lbl">Discrim.</div>
+            </div>
+            <div class="bar-col">
+              <div class="bar" style="height:20px;background:#7F77DD;opacity:0.7;"></div>
+              <div class="bar-lbl">Conduta</div>
+            </div>
+            <div class="bar-col">
+              <div class="bar" style="height:16px;background:#1D9E75;opacity:0.7;"></div>
+              <div class="bar-lbl">Segurança</div>
+            </div>
+            <div class="bar-col">
+              <div class="bar" style="height:10px;background:#888780;opacity:0.5;"></div>
+              <div class="bar-lbl">Outros</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-panel">
+          <div class="ai-header">
+            <div class="ai-dot"></div>
+            <div class="ai-title">Assistente de compliance</div>
+          </div>
+          <div class="ai-body">
+            <div class="ai-msg">
+              Há 3 casos de assédio moral no setor Comercial nos últimos 30 dias — padrão atípico. Recomendo acionar investigação assistida e verificar se há liderança comum nos relatos.
+            </div>
+            <div class="ai-msg" style="background:var(--color-background-info);color:var(--color-text-info);">
+              O caso ETK-2026-3B8C está a 2 dias do prazo legal de 30 dias. Deseja que eu gere um resumo para a reunião do comitê?
+            </div>
+          </div>
+          <div class="ai-input-row">
+            <input class="ai-input" placeholder="Pergunte ao assistente..." readonly/>
+            <button class="ai-send">
+              <svg viewBox="0 0 12 12"><path d="M1 6l10-5-5 10V7L1 6z"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
