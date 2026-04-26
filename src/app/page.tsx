@@ -29,6 +29,8 @@ export default function Tela0() {
   const [loading, setLoading] = useState(false);
   const [focused, setFocused] = useState(false);
   const [protocolo, setProtocolo] = useState("");
+  const [protocoloResolving, setProtocoloResolving] = useState(false);
+  const [protocoloError, setProtocoloError] = useState<string | null>(null);
   const router = useRouter();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -57,11 +59,25 @@ export default function Tela0() {
     router.push(`/${org.slug}`);
   }
 
-  function handleProtocoloSubmit(e: React.FormEvent) {
+  async function handleProtocoloSubmit(e: React.FormEvent) {
     e.preventDefault();
     const cleaned = protocolo.replace(/\s/g, "");
     if (!cleaned) return;
-    router.push(`/acompanhar?protocolo=${encodeURIComponent(cleaned)}`);
+    setProtocoloError(null);
+    setProtocoloResolving(true);
+    try {
+      const res = await fetch(`/api/cases/resolve?protocolo=${encodeURIComponent(cleaned)}`);
+      const data = await res.json() as { found: boolean; slug?: string };
+      if (!data.found || !data.slug) {
+        setProtocoloError("Protocolo não encontrado. Verifique o número e tente novamente.");
+        return;
+      }
+      router.push(`/${data.slug}/acompanhar?protocolo=${encodeURIComponent(cleaned)}`);
+    } catch {
+      setProtocoloError("Erro ao buscar protocolo. Tente novamente.");
+    } finally {
+      setProtocoloResolving(false);
+    }
   }
 
   const showDropdown = focused && query.trim().length >= 3;
@@ -318,6 +334,7 @@ export default function Tela0() {
             />
             <button
               type="submit"
+              disabled={protocoloResolving}
               className="flex-shrink-0 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
               style={{
                 height: 38,
@@ -329,13 +346,23 @@ export default function Tela0() {
                 border: "1px solid var(--color-border-strong)",
                 borderRadius: "var(--radius-md)",
                 whiteSpace: "nowrap",
+                opacity: protocoloResolving ? 0.6 : 1,
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-bg-tertiary)"; }}
+              onMouseEnter={(e) => { if (!protocoloResolving) e.currentTarget.style.background = "var(--color-bg-tertiary)"; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = "var(--color-bg-secondary)"; }}
             >
-              Ver meu relato
+              {protocoloResolving ? "Buscando…" : "Ver relato"}
             </button>
           </form>
+
+          {protocoloError && (
+            <p
+              role="alert"
+              style={{ fontSize: 12, color: "#b83c3b", marginTop: "0.5rem" }}
+            >
+              {protocoloError}
+            </p>
+          )}
 
           {/* Anonymity banner */}
           <div
