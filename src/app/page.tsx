@@ -295,7 +295,7 @@ export default function Tela0() {
               value={protocolo}
               onChange={(e) => setProtocolo(formatProtocolo(e.target.value))}
               placeholder="ETK-2026-XXXXXX"
-              maxLength={14}
+              maxLength={15}
               autoComplete="off"
               className="flex-1 font-mono uppercase focus:outline-none transition-colors"
               style={{
