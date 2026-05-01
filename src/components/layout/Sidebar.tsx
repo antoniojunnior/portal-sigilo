@@ -4,12 +4,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogoSigilo } from "@/components/portal/LogoSigilo";
+import { useAuth } from "@/hooks/useAuth";
 
 interface NavItem {
   href: string;
   label: string;
   icon: React.ReactNode;
   badge?: string | number;
+  adminOnly?: boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -48,6 +50,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     href: "/app/configuracoes",
     label: "Configurações",
+    adminOnly: true,
     icon: (
       <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
         <circle cx="8" cy="8" r="2.5"/>
@@ -64,6 +67,13 @@ interface SidebarProps {
 export function Sidebar({ className = "" }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
+  const { user } = useAuth();
+
+  const visibleItems = NAV_ITEMS.filter(
+    (item) => !item.adminOnly || user?.role === "admin"
+  );
+
+  const orgInitial = user?.orgName?.charAt(0)?.toUpperCase() ?? "O";
 
   return (
     <nav
@@ -98,41 +108,37 @@ export function Sidebar({ className = "" }: SidebarProps) {
           <p className="text-[9px] font-medium text-[var(--color-text-tertiary)] uppercase tracking-widest mb-2 px-1">
             Workspace
           </p>
-          <button
-            type="button"
-            className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-card-hover)] transition-colors text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
-            aria-label="Trocar workspace"
+          <div
+            className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-left"
           >
             <div
               className="w-7 h-7 rounded-[var(--radius-sm)] flex items-center justify-center flex-shrink-0 text-[var(--text-xs)] font-semibold text-[var(--color-on-primary)]"
               style={{ background: "var(--color-primary)" }}
             >
-              A
+              {orgInitial}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[var(--text-xs)] font-semibold text-[var(--color-text-primary)] truncate leading-tight">
-                ACME Indústrias
+                {user?.orgName ?? "Carregando..."}
               </p>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span
-                  className="text-[9px] font-semibold px-1 py-0.5 rounded leading-none"
-                  style={{ background: "var(--color-accent-surface)", color: "var(--color-accent-dark)" }}
-                >
-                  PLUS
-                </span>
-                <span className="text-[9px] text-[var(--color-text-tertiary)]">· 1.240 colab.</span>
-              </div>
+              {user?.plano && (
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span
+                    className="text-[9px] font-semibold px-1 py-0.5 rounded leading-none uppercase"
+                    style={{ background: "var(--color-accent-surface)", color: "var(--color-accent-dark)" }}
+                  >
+                    {user.plano}
+                  </span>
+                </div>
+              )}
             </div>
-            <svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="var(--color-text-tertiary)" strokeWidth="1.5" aria-hidden>
-              <path d="M3 5l3-3 3 3M3 7l3 3 3-3" strokeLinecap="round" />
-            </svg>
-          </button>
+          </div>
         </div>
       )}
 
       {/* Nav items */}
       <div className="flex-1 py-3 overflow-y-auto overflow-x-hidden">
-        {NAV_ITEMS.map((item) => {
+        {visibleItems.map((item) => {
           const active = pathname === item.href || (item.href !== "/app" && pathname.startsWith(item.href));
           return (
             <Link

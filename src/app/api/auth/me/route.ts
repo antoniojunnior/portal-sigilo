@@ -1,0 +1,22 @@
+import { verifySession } from "@/lib/utils/auth";
+import type { NextRequest } from "next/server";
+
+export async function GET(request: NextRequest) {
+  try {
+    const sessionCookie = request.cookies.get("__session")?.value;
+
+    if (!sessionCookie) {
+      return Response.json({ error: "Não autenticado" }, { status: 401 });
+    }
+
+    const session = await verifySession(sessionCookie);
+    if (!session) {
+      return Response.json({ error: "Sessão inválida" }, { status: 401 });
+    }
+
+    return Response.json(session);
+  } catch (err) {
+    console.error("[GET /api/auth/me]", err);
+    return Response.json({ error: "Erro interno" }, { status: 500 });
+  }
+}

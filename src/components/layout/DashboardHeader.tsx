@@ -1,6 +1,7 @@
 "use client";
 
 import { Avatar } from "@/components/ui/Avatar";
+import { useAuth } from "@/hooks/useAuth";
 
 interface BreadcrumbItem {
   label: string;
@@ -13,7 +14,7 @@ interface DashboardHeaderProps {
   periodLabel?: string;
   /** Unread notification count */
   notifications?: number;
-  /** Current user */
+  /** Current user (overrides auth context if provided) */
   user?: { name: string; avatarUrl?: string };
   onMenuToggle?: () => void;
   className?: string;
@@ -23,10 +24,13 @@ export function DashboardHeader({
   breadcrumbs = [],
   periodLabel,
   notifications,
-  user,
+  user: userProp,
   onMenuToggle,
   className = "",
 }: DashboardHeaderProps) {
+  const { user: authUser, signOut } = useAuth();
+  const displayUser = userProp ?? (authUser ? { name: authUser.nome } : undefined);
+
   return (
     <header
       className={[
@@ -109,13 +113,29 @@ export function DashboardHeader({
           </button>
         )}
 
-        {/* Avatar */}
-        {user && (
-          <Avatar
-            src={user.avatarUrl}
-            name={user.name}
-            size="sm"
-          />
+        {/* User name + logout */}
+        {displayUser && (
+          <div className="flex items-center gap-2">
+            <Avatar
+              src={displayUser.avatarUrl}
+              name={displayUser.name}
+              size="sm"
+            />
+            {authUser && (
+              <button
+                type="button"
+                onClick={signOut}
+                aria-label="Sair"
+                title="Sair"
+                className="w-8 h-8 flex items-center justify-center rounded-[var(--radius-md)] text-[var(--color-text-tertiary)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-danger)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
+              >
+                <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden>
+                  <path d="M6 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" />
+                  <path d="M10 11l3-3-3-3M13 8H6" />
+                </svg>
+              </button>
+            )}
+          </div>
         )}
       </div>
     </header>
