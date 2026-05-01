@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { ChatAttachment, createPreview, type AttachmentPreview } from "./ChatAttachment";
 
 const ACCEPTED_MIME = [
@@ -34,6 +34,11 @@ export function ChatInput({
   maxAttachments = 10,
 }: ChatInputProps) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (!disabled) textareaRef.current?.focus();
+  }, [disabled]);
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -116,6 +121,7 @@ export function ChatInput({
         {/* Text area */}
         <label className="sr-only" htmlFor="chat-input">Mensagem</label>
         <textarea
+          ref={textareaRef}
           id="chat-input"
           value={value}
           onChange={(e) => onChange(e.target.value)}

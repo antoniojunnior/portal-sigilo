@@ -14,13 +14,6 @@ export interface ChatMessage {
   timestamp?: string;
 }
 
-const STEP_LABELS = [
-  "O que aconteceu",
-  "Quando e onde",
-  "Evidências",
-  "Revisão",
-];
-
 interface ChatContainerProps {
   messages: ChatMessage[];
   onSendMessage: (text: string, attachments: File[]) => Promise<void>;
@@ -68,35 +61,41 @@ export function ChatContainer({
     }
   }
 
-  const totalSteps = 4;
-  const progressPct = Math.round(((progressStep + 1) / totalSteps) * 100);
-  const stepLabel = STEP_LABELS[Math.min(progressStep, STEP_LABELS.length - 1)];
+  // Asymptotic progress: advances with each exchange but never hits 100% on its own.
+  // Formula: 100 * (1 - 0.62^(step+1)) — feels like genuine progress without promising an end.
+  const progressPct = progressStep === 0
+    ? 0
+    : Math.min(88, Math.round(100 * (1 - Math.pow(0.62, progressStep))));
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      {/* Progress section */}
+      {/* Progress bar — no step count, avoids anchoring user to a fixed total */}
       <div
         className="flex-shrink-0"
         style={{
           background: "var(--color-card)",
           borderBottom: "0.5px solid var(--color-border)",
-          padding: "0.625rem 1.25rem",
+          padding: "0.5rem 1.25rem",
         }}
         role="progressbar"
-        aria-label={`Etapa ${progressStep + 1} de ${totalSteps}`}
-        aria-valuenow={progressStep + 1}
-        aria-valuemin={1}
-        aria-valuemax={totalSteps}
+        aria-label="Progresso da conversa"
+        aria-valuenow={progressPct}
+        aria-valuemin={0}
+        aria-valuemax={100}
       >
-        <div className="flex items-center justify-between" style={{ marginBottom: "0.5rem" }}>
-          <span style={{ fontSize: 11, fontWeight: 500, color: "#2A6070" }}>
-            Etapa {progressStep + 1} de {totalSteps}
+        <div className="flex items-center justify-between" style={{ marginBottom: "0.375rem" }}>
+          <span style={{ fontSize: 11, color: "var(--color-text-tertiary)" }}>
+            Em andamento
           </span>
-          <span style={{ fontSize: 11, color: "var(--color-text-tertiary)" }}>{stepLabel}</span>
+          {progressStep > 0 && (
+            <span style={{ fontSize: 10, color: "var(--color-text-tertiary)", opacity: 0.7 }}>
+              ●
+            </span>
+          )}
         </div>
         <div
           className="overflow-hidden"
-          style={{ height: 3, background: "var(--color-bg-secondary)", borderRadius: 99 }}
+          style={{ height: 2, background: "var(--color-bg-secondary)", borderRadius: 99 }}
         >
           <div
             style={{
@@ -104,7 +103,7 @@ export function ChatContainer({
               width: `${progressPct}%`,
               background: "#2A6070",
               borderRadius: 99,
-              transition: "width 0.4s ease",
+              transition: "width 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
             }}
           />
         </div>

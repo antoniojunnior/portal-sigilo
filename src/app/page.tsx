@@ -27,7 +27,9 @@ export default function Tela0() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<OrgResult[]>([]);
   const [loading, setLoading] = useState(false);
-  const [focused, setFocused] = useState(false);
+  // true from the start because autoFocus fires before React hydration and onFocus never runs
+  const [focused, setFocused] = useState(true);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
   const [protocolo, setProtocolo] = useState("");
   const [protocoloResolving, setProtocoloResolving] = useState(false);
   const [protocoloError, setProtocoloError] = useState<string | null>(null);
@@ -67,11 +69,12 @@ export default function Tela0() {
     setProtocoloResolving(true);
     try {
       const res = await fetch(`/api/cases/resolve?protocolo=${encodeURIComponent(cleaned)}`);
-      const data = await res.json() as { found: boolean; slug?: string };
-      if (!data.found || !data.slug) {
+      const data = await res.json() as { found: boolean; slug?: string; org_id?: string };
+      if (!data.found || !data.slug || !data.org_id) {
         setProtocoloError("Protocolo não encontrado. Verifique o número e tente novamente.");
         return;
       }
+      sessionStorage.setItem("org_id", data.org_id);
       router.push(`/${data.slug}/acompanhar?protocolo=${encodeURIComponent(cleaned)}`);
     } catch {
       setProtocoloError("Erro ao buscar protocolo. Tente novamente.");
@@ -198,86 +201,95 @@ export default function Tela0() {
             <strong> sem se identificar</strong>.
           </p>
 
-          {/* Search field */}
-          <div className="relative mb-1.5">
-            <div
-              className="absolute inset-y-0 left-3 flex items-center pointer-events-none"
-              style={{ color: "var(--color-text-tertiary)" }}
-            >
-              {loading ? (
-                <Spinner size="xs" className="text-[var(--color-primary)]" />
-              ) : (
-                <svg viewBox="0 0 15 15" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-                  <circle cx="6.5" cy="6.5" r="4.5" />
-                  <path d="M10 10l3.5 3.5" strokeLinecap="round" />
-                </svg>
-              )}
+          {/* Search field + dropdown — container handles focus tracking together */}
+          <div
+            ref={searchContainerRef}
+            className="mb-1.5"
+            onBlur={(e) => {
+              if (!searchContainerRef.current?.contains(e.relatedTarget as Node)) {
+                setFocused(false);
+              }
+            }}
+            onFocus={() => setFocused(true)}
+          >
+            <div className="relative">
+              <div
+                className="absolute inset-y-0 left-3 flex items-center pointer-events-none"
+                style={{ color: "var(--color-text-tertiary)" }}
+              >
+                {loading ? (
+                  <Spinner size="xs" className="text-[var(--color-primary)]" />
+                ) : (
+                  <svg viewBox="0 0 15 15" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
+                    <circle cx="6.5" cy="6.5" r="4.5" />
+                    <path d="M10 10l3.5 3.5" strokeLinecap="round" />
+                  </svg>
+                )}
+              </div>
+              <label className="sr-only" htmlFor="empresa-search">Nome da sua empresa</label>
+              <input
+                id="empresa-search"
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onFocus={(e) => {
+                  e.currentTarget.style.border = "1px solid #2A6070";
+                  e.currentTarget.style.boxShadow = "0 0 0 2px rgba(42,96,112,0.12)";
+                  e.currentTarget.style.background = "var(--color-card)";
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.border = "1px solid var(--color-border)";
+                  e.currentTarget.style.boxShadow = "none";
+                  e.currentTarget.style.background = "var(--color-bg-secondary)";
+                }}
+                placeholder="Nome da sua empresa..."
+                autoComplete="off"
+                autoFocus
+                className="w-full transition-colors focus:outline-none"
+                style={{
+                  height: 44,
+                  paddingLeft: 40,
+                  paddingRight: 12,
+                  border: "1px solid var(--color-border)",
+                  borderRadius: "var(--radius-md)",
+                  background: "var(--color-bg-secondary)",
+                  fontSize: "var(--text-sm)",
+                  color: "var(--color-text-primary)",
+                }}
+              />
             </div>
-            <label className="sr-only" htmlFor="empresa-search">Nome da sua empresa</label>
-            <input
-              id="empresa-search"
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onFocus={(e) => {
-                setFocused(true);
-                e.currentTarget.style.border = "1px solid #2A6070";
-                e.currentTarget.style.boxShadow = "0 0 0 2px rgba(42,96,112,0.12)";
-                e.currentTarget.style.background = "var(--color-card)";
-              }}
-              onBlur={(e) => {
-                setTimeout(() => setFocused(false), 150);
-                e.currentTarget.style.border = "1px solid var(--color-border)";
-                e.currentTarget.style.boxShadow = "none";
-                e.currentTarget.style.background = "var(--color-bg-secondary)";
-              }}
-              placeholder="Nome da sua empresa..."
-              autoComplete="off"
-              autoFocus
-              className="w-full transition-colors focus:outline-none"
-              style={{
-                height: 44,
-                paddingLeft: 40,
-                paddingRight: 12,
-                border: "1px solid var(--color-border)",
-                borderRadius: "var(--radius-md)",
-                background: "var(--color-bg-secondary)",
-                fontSize: "var(--text-sm)",
-                color: "var(--color-text-primary)",
-              }}
-            />
-          </div>
 
-          {/* Dropdown */}
-          {showDropdown && (
-            <div
-              className="mb-1.5 overflow-hidden"
-              style={{
-                border: "1px solid var(--color-border)",
-                borderRadius: "var(--radius-md)",
-                background: "var(--color-card)",
-              }}
-            >
-              {results.length === 0 && !loading ? (
-                <EmptyState
-                  illustration="search"
-                  title="Nenhuma empresa encontrada"
-                  description="Verifique o nome e tente novamente."
-                  className="py-5"
-                />
-              ) : (
-                <div className="divide-y divide-[var(--color-border)]">
-                  {results.map((org) => (
-                    <CompanySearchResult
-                      key={org.id}
-                      org={org}
-                      onSelect={() => selectOrg(org)}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+            {/* Dropdown — inside same container for focus tracking */}
+            {showDropdown && (
+              <div
+                className="mt-1 overflow-hidden"
+                style={{
+                  border: "1px solid var(--color-border)",
+                  borderRadius: "var(--radius-md)",
+                  background: "var(--color-card)",
+                }}
+              >
+                {results.length === 0 && !loading ? (
+                  <EmptyState
+                    illustration="search"
+                    title="Nenhuma empresa encontrada"
+                    description="Verifique o nome e tente novamente."
+                    className="py-5"
+                  />
+                ) : (
+                  <div className="divide-y divide-[var(--color-border)]">
+                    {results.map((org) => (
+                      <CompanySearchResult
+                        key={org.id}
+                        org={org}
+                        onSelect={() => selectOrg(org)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Helper text */}
           <p

@@ -5,16 +5,17 @@ export async function GET(request: NextRequest) {
   const protocolo = request.nextUrl.searchParams.get("protocolo")?.trim();
   const org_id = request.nextUrl.searchParams.get("org_id")?.trim();
 
-  if (!protocolo || !org_id) {
-    return Response.json({ error: "protocolo e org_id obrigatórios" }, { status: 400 });
+  if (!protocolo) {
+    return Response.json({ error: "protocolo obrigatório" }, { status: 400 });
   }
 
-  const snapshot = await adminDb
-    .collection("cases")
-    .where("org_id", "==", org_id)
-    .where("protocolo", "==", protocolo)
-    .limit(1)
-    .get();
+  // Query by protocol + org_id when available (uses composite index); fall back to
+  // protocol-only when org_id is absent (e.g. direct URL access after Tela 0 lookup).
+  const query = org_id
+    ? adminDb.collection("cases").where("org_id", "==", org_id).where("protocolo", "==", protocolo)
+    : adminDb.collection("cases").where("protocolo", "==", protocolo);
+
+  const snapshot = await query.limit(1).get();
 
   if (snapshot.empty) {
     // Não revelar se o protocolo existe ou não — mensagem genérica

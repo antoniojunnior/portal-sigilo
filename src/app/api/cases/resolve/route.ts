@@ -28,5 +28,5 @@ export async function GET(request: NextRequest) {
 
   const slug = orgDoc.data()?.slug as string;
 
-  return Response.json({ found: true, slug });
+  return Response.json({ found: true, slug, org_id: orgId });
 }

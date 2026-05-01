@@ -275,8 +275,8 @@ async function main(): Promise<void> {
       projectId: PROJECT_ID,
       firestore: {
         rules: fs.readFileSync(rulesPath, "utf8"),
-        host: "localhost",
-        port: 8080,
+        host: (process.env["FIRESTORE_EMULATOR_HOST"] ?? "127.0.0.1:8181").split(":")[0],
+        port: parseInt((process.env["FIRESTORE_EMULATOR_HOST"] ?? "127.0.0.1:8181").split(":")[1] ?? "8181", 10),
       },
     });
 

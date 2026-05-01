@@ -50,6 +50,17 @@ function GestorAvatar() {
   );
 }
 
+// Parses **bold** markers → <strong>. Splits by capturing group: odd indices are bold.
+function renderText(text: string): React.ReactNode {
+  const parts = text.split(/\*\*(.+?)\*\*/g);
+  if (parts.length === 1) return text;
+  return parts.map((part, i) =>
+    i % 2 === 1
+      ? <strong key={i} style={{ fontWeight: 600 }}>{part}</strong>
+      : part
+  );
+}
+
 export function ChatBubble({ autor, texto, textoJsx, timestamp }: ChatBubbleProps) {
   const isUser = autor === "denunciante";
 
@@ -109,7 +120,7 @@ export function ChatBubble({ autor, texto, textoJsx, timestamp }: ChatBubbleProp
                   }),
           }}
         >
-          {textoJsx ?? texto}
+          {textoJsx ?? renderText(texto)}
         </div>
       </div>
     </div>

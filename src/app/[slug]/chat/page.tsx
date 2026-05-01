@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ChatContainer, type ChatMessage } from "@/components/portal/ChatContainer";
 import { AnonymousBadge } from "@/components/ui/AnonymousBadge";
 import { PortalFooter } from "@/components/layout/PortalFooter";
 import { LogoSigilo } from "@/components/portal/LogoSigilo";
 import Link from "next/link";
+import { UX_CONFIG } from "@/lib/config/ux";
 
 const INITIAL_MESSAGE: ChatMessage = {
   id: "sys-0",
@@ -28,12 +29,19 @@ const INITIAL_MESSAGE: ChatMessage = {
   timestamp: new Date().toISOString(),
 };
 
-const QUICK_REPLIES = [
-  "Ambiente de trabalho",
-  "Relação com gestor",
-  "Processo ou contrato",
-  "Outro assunto",
-];
+// Mensagem inicial que abre o histórico do Claude
+const ASSISTANT_OPENING = INITIAL_MESSAGE.texto;
+
+interface ClaudeMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+type SSEEvent =
+  | { type: "token"; content: string }
+  | { type: "case_created"; protocolo: string }
+  | { type: "done" }
+  | { type: "error"; message: string };
 
 export default function Tela2() {
   const params = useParams();
@@ -43,10 +51,41 @@ export default function Tela2() {
   const [orgId, setOrgId] = useState<string | null>(null);
   const [orgNome, setOrgNome] = useState<string | null>(null);
   const [unitId, setUnitId] = useState<string | null>(null);
+
+  // UI messages (shown in chat bubbles)
   const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
+  // History sent to Claude (excludes the static opening bubble)
+  const claudeHistory = useRef<ClaudeMessage[]>([]);
+
   const [progressStep, setProgressStep] = useState(0);
-  const [submitting, setSubmitting] = useState(false);
-  const [showQuickReplies, setShowQuickReplies] = useState(true);
+  const [locked, setLocked] = useState(false);
+
+  // Character-drain queue — simulates human typing cadence (~30ms/char ≈ 200 WPM)
+  const pendingCharsRef = useRef<string[]>([]);
+  const drainIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const drainDisplayRef = useRef<string>("");
+
+  function stopDrain() {
+    if (drainIntervalRef.current) {
+      clearInterval(drainIntervalRef.current);
+      drainIntervalRef.current = null;
+    }
+    pendingCharsRef.current = [];
+    drainDisplayRef.current = "";
+  }
+
+  function startDrain(assistantId: string) {
+    if (drainIntervalRef.current) return;
+    drainIntervalRef.current = setInterval(() => {
+      const char = pendingCharsRef.current.shift();
+      if (char === undefined) return;
+      drainDisplayRef.current += char;
+      const snapshot = drainDisplayRef.current;
+      setMessages((prev) =>
+        prev.map((m) => (m.id === assistantId ? { ...m, texto: snapshot } : m))
+      );
+    }, UX_CONFIG.CHAT_TYPING_INTERVAL_MS);
+  }
 
   useEffect(() => {
     setOrgId(sessionStorage.getItem("org_id"));
@@ -55,17 +94,20 @@ export default function Tela2() {
   }, []);
 
   function handleReset() {
+    stopDrain();
     setMessages([INITIAL_MESSAGE]);
+    claudeHistory.current = [];
     setProgressStep(0);
-    setShowQuickReplies(true);
+    setLocked(false);
   }
 
-  async function handleSendMessage(text: string, _attachments: File[]) {
-    if (!text.trim()) return;
+  async function handleSendMessage(text: string, attachments: File[]) {
+    if (!text.trim() || locked) return;
 
-    setShowQuickReplies(false);
-    setProgressStep((prev) => Math.min(prev + 1, 3));
+    setLocked(true);
+    setProgressStep((prev) => prev + 1);
 
+    // Add user bubble
     const userMsg: ChatMessage = {
       id: crypto.randomUUID(),
       autor: "denunciante",
@@ -74,90 +116,152 @@ export default function Tela2() {
     };
     setMessages((prev) => [...prev, userMsg]);
 
-    const prevUserCount = messages.filter((m) => m.autor === "denunciante").length;
-    const messageCount = prevUserCount + 1;
-
-    let resposta: string;
-    let isFinal = false;
-
-    if (messageCount === 1) {
-      resposta = "Obrigado por compartilhar. Para eu entender melhor: quando isso aconteceu (aproximadamente) e onde foi?";
-    } else if (messageCount === 2) {
-      resposta = "Entendido. Há mais detalhes que você queira acrescentar? Por exemplo, se havia outras pessoas presentes ou se isso já aconteceu antes?";
-    } else if (messageCount === 3) {
-      resposta = "Você tem alguma evidência ou documento relacionado que queira mencionar? Se não, tudo bem — seu relato já é suficiente.";
-    } else {
-      resposta = "Recebi todas as informações. Vou registrar seu relato agora. Um protocolo único será gerado para você acompanhar.";
-      isFinal = true;
+    // Upload attachments and collect references for context
+    let attachmentContext = "";
+    if (attachments.length > 0) {
+      const uploaded: string[] = [];
+      for (const file of attachments) {
+        try {
+          const fd = new FormData();
+          fd.append("file", file);
+          fd.append("org_id", orgId ?? "");
+          const res = await fetch("/api/upload-attachment", { method: "POST", body: fd });
+          if (res.ok) {
+            const data = await res.json() as { filename: string; mime_type: string };
+            uploaded.push(`${data.filename} (${data.mime_type})`);
+          }
+        } catch {
+          // Upload failure doesn't block the conversation
+        }
+      }
+      if (uploaded.length > 0) {
+        attachmentContext = `\n\n[Arquivos enviados: ${uploaded.join(", ")}]`;
+      }
     }
 
-    await new Promise<void>((resolve) => {
-      setTimeout(() => {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: crypto.randomUUID(),
-            autor: "sistema",
-            texto: resposta,
-            timestamp: new Date().toISOString(),
-          },
-        ]);
-        resolve();
-      }, 700);
-    });
-
-    if (isFinal) {
-      void submitCase([...messages, userMsg], text);
-    }
-  }
-
-  async function submitCase(currentMessages: ChatMessage[], lastText: string) {
-    if (submitting) return;
-    setSubmitting(true);
-
-    const allMessages = [
-      ...currentMessages,
-      {
-        id: crypto.randomUUID(),
-        autor: "denunciante" as const,
-        texto: lastText,
-        timestamp: new Date().toISOString(),
-      },
+    // Add user message to Claude history
+    claudeHistory.current = [
+      ...claudeHistory.current,
+      { role: "user", content: text + attachmentContext },
     ];
 
+    // Placeholder bubble for Claude's streaming response
+    const assistantId = crypto.randomUUID();
+    stopDrain();
+    drainDisplayRef.current = "";
+    setMessages((prev) => [
+      ...prev,
+      { id: assistantId, autor: "sistema", texto: "", timestamp: new Date().toISOString() },
+    ]);
+
+    // Build history sent to Claude — prepend assistant opening as first assistant turn
+    const historyToSend: ClaudeMessage[] =
+      claudeHistory.current.length === 1
+        ? [
+            { role: "assistant", content: ASSISTANT_OPENING },
+            ...claudeHistory.current,
+          ]
+        : claudeHistory.current;
+
     try {
-      const res = await fetch("/api/cases", {
+      const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          messages: historyToSend,
           org_id: orgId,
           unit_id: unitId ?? undefined,
-          canal_origem: "web",
-          mensagens: allMessages
-            .filter((m) => m.autor !== "sistema" || m.id === "sys-0")
-            .map((m) => ({ autor: m.autor, texto: m.texto })),
         }),
       });
 
-      const data = await res.json() as { protocolo?: string; error?: string };
-
-      if (!res.ok || !data.protocolo) {
-        throw new Error(data.error ?? "Erro ao registrar o relato.");
+      if (!response.ok || !response.body) {
+        throw new Error("Falha na conexão com o servidor.");
       }
 
-      router.push(`/${slug}/confirmacao?protocolo=${encodeURIComponent(data.protocolo)}`);
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let assistantText = "";
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const raw = line.slice(6).trim();
+          if (!raw) continue;
+
+          let event: SSEEvent;
+          try {
+            event = JSON.parse(raw) as SSEEvent;
+          } catch {
+            continue;
+          }
+
+          if (event.type === "token") {
+            assistantText += event.content;
+            // Push chars to drain queue; drain interval controls display speed
+            pendingCharsRef.current.push(...event.content.split(""));
+            startDrain(assistantId);
+          } else if (event.type === "case_created") {
+            // Drain remaining chars immediately then redirect
+            stopDrain();
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === assistantId ? { ...m, texto: assistantText } : m
+              )
+            );
+            claudeHistory.current = [
+              ...claudeHistory.current,
+              { role: "assistant", content: assistantText },
+            ];
+            router.push(`/${slug}/confirmacao?protocolo=${encodeURIComponent(event.protocolo)}`);
+            return;
+          } else if (event.type === "error") {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === assistantId
+                  ? { ...m, texto: event.message }
+                  : m
+              )
+            );
+            setLocked(false);
+            return;
+          }
+        }
+      }
+
+      // Wait for drain queue to empty before saving history and unlocking
+      await new Promise<void>((resolve) => {
+        const check = () => {
+          if (pendingCharsRef.current.length === 0) { resolve(); }
+          else { setTimeout(check, 40); }
+        };
+        check();
+      });
+      stopDrain();
+
+      claudeHistory.current = [
+        ...claudeHistory.current,
+        { role: "assistant", content: assistantText },
+      ];
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro desconhecido";
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          autor: "sistema",
-          texto: `Ocorreu um erro: ${msg} Por favor, tente novamente.`,
-          timestamp: new Date().toISOString(),
-        },
-      ]);
-      setSubmitting(false);
+      stopDrain();
+      const msg = err instanceof Error ? err.message : "Erro desconhecido.";
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === assistantId
+            ? { ...m, texto: `Ocorreu um erro: ${msg} Tente novamente.` }
+            : m
+        )
+      );
+    } finally {
+      setLocked(false);
     }
   }
 
@@ -208,7 +312,6 @@ export default function Tela2() {
           className="mx-auto flex items-center justify-between h-full min-h-[52px] gap-3"
           style={{ maxWidth: 580, padding: "0 1.25rem" }}
         >
-          {/* Left: back + logo + divider + org */}
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <Link
               href={`/${slug}`}
@@ -248,7 +351,6 @@ export default function Tela2() {
             </span>
           </div>
 
-          {/* Right: badge */}
           <AnonymousBadge
             className="flex-shrink-0"
             aria-label="Conversa anônima — sua identidade não é registrada"
@@ -260,10 +362,8 @@ export default function Tela2() {
         <ChatContainer
           messages={messages}
           onSendMessage={handleSendMessage}
-          disabled={submitting}
+          disabled={locked}
           progressStep={progressStep}
-          quickReplies={showQuickReplies ? QUICK_REPLIES : []}
-          onQuickReply={() => setShowQuickReplies(false)}
           onReset={handleReset}
         />
       </div>

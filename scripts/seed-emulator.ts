@@ -6,9 +6,11 @@
  */
 
 // Conecta ao emulador ANTES de qualquer import do firebase-admin.
-process.env["FIRESTORE_EMULATOR_HOST"] = "localhost:8080";
-process.env["FIREBASE_AUTH_EMULATOR_HOST"] = "localhost:9099";
-process.env["FIREBASE_STORAGE_EMULATOR_HOST"] = "localhost:9199";
+// Respeita variáveis de ambiente já definidas (ex: FIRESTORE_EMULATOR_HOST=localhost:XXXX npm run seed).
+// Fallback: valores definidos em firebase.json.
+if (!process.env["FIRESTORE_EMULATOR_HOST"])        process.env["FIRESTORE_EMULATOR_HOST"]        = "127.0.0.1:8181";
+if (!process.env["FIREBASE_AUTH_EMULATOR_HOST"])    process.env["FIREBASE_AUTH_EMULATOR_HOST"]    = "127.0.0.1:9099";
+if (!process.env["FIREBASE_STORAGE_EMULATOR_HOST"]) process.env["FIREBASE_STORAGE_EMULATOR_HOST"] = "127.0.0.1:9199";
 
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
@@ -53,6 +55,7 @@ async function seedOrgs(): Promise<void> {
   await db.collection("orgs").doc(ORG_GESTAO_ID).set({
     id: ORG_GESTAO_ID,
     nome: "Acme Corporação",
+    nome_lower: "acme corporação",
     slug: "acme",
     plano_ativo: "gestao",
     url_canal: "http://localhost:3000/acme",
@@ -77,6 +80,7 @@ async function seedOrgs(): Promise<void> {
   await db.collection("orgs").doc(ORG_ENTRADA_ID).set({
     id: ORG_ENTRADA_ID,
     nome: "Startup Veloz",
+    nome_lower: "startup veloz",
     slug: "startup-veloz",
     plano_ativo: "entrada",
     url_canal: "http://localhost:3000/startup-veloz",
@@ -342,6 +346,7 @@ async function seedMessages(): Promise<void> {
       org_id: ORG_GESTAO_ID,
       autor: msg.autor,
       texto: msg.texto,
+      seq: i,
       timestamp: Timestamp.fromMillis(baseMs + msg.offsetMin * 60 * 1000),
       anexos: [],
     });
@@ -418,7 +423,7 @@ async function seedAuditLogs(): Promise<void> {
 async function main(): Promise<void> {
   console.log("\n🌱 Seed — Firestore Emulator — Portal Sigilo");
   console.log("─────────────────────────────────────────────");
-  console.log("Host: localhost:8080\n");
+  console.log(`Host: ${process.env["FIRESTORE_EMULATOR_HOST"]}\n`);
 
   try {
     await seedOrgs();

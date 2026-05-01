@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
       id: doc.id,
       autor: d.autor as string,
       texto: d.texto as string,
+      seq: typeof d.seq === "number" ? d.seq : null,
       timestamp: (d.timestamp as { toDate?: () => Date } | null)?.toDate?.()?.toISOString() ?? null,
     };
   });

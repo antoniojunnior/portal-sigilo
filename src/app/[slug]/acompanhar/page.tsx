@@ -57,6 +57,7 @@ interface MessageData {
   id: string;
   autor: string;
   texto: string;
+  seq: number | null;
   timestamp: string | null;
 }
 
@@ -92,14 +93,27 @@ export default function Tela4() {
         setCaseData(null);
         return;
       }
-      setCaseData(data.case!);
+      // Sort chronologically — seq tiebreaks equal timestamps, nulls go last
+      const sortByTimestamp = <T extends { timestamp: string | null; seq?: number | null }>(arr: T[]): T[] =>
+        [...arr].sort((a, b) => {
+          const ta = a.timestamp ? new Date(a.timestamp).getTime() : Infinity;
+          const tb = b.timestamp ? new Date(b.timestamp).getTime() : Infinity;
+          if (ta !== tb) return ta - tb;
+          return (a.seq ?? 0) - (b.seq ?? 0);
+        });
+
+      const caseWithSortedHistory: CaseData = {
+        ...data.case!,
+        historico: sortByTimestamp(data.case!.historico),
+      };
+      setCaseData(caseWithSortedHistory);
       setError(null);
 
       const msgRes = await fetch(
         `/api/messages?case_id=${encodeURIComponent(data.case!.id)}&org_id=${encodeURIComponent(oId)}`
       );
       const msgData = await msgRes.json() as { messages: MessageData[] };
-      setMessages(msgData.messages ?? []);
+      setMessages(sortByTimestamp(msgData.messages ?? []));
     } catch {
       setError("Erro ao carregar. Tente novamente.");
     }
