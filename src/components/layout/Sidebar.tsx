@@ -68,7 +68,7 @@ interface SidebarProps {
 export function Sidebar({ className = "", onClose }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
 
   const visibleItems = NAV_ITEMS.filter(
     (item) => !item.adminOnly || user?.role === "admin"
@@ -188,8 +188,30 @@ export function Sidebar({ className = "", onClose }: SidebarProps) {
         })}
       </div>
 
-      {/* Collapse toggle */}
-      <div className="border-t border-[var(--color-border)] p-2">
+      {/* Footer: logout + collapse */}
+      <div className="border-t border-[var(--color-border)] p-2 space-y-0.5">
+        <button
+          type="button"
+          onClick={signOut}
+          aria-label="Sair"
+          className={[
+            "w-full flex items-center rounded-[var(--radius-md)] text-[var(--color-text-tertiary)]",
+            "hover:bg-[var(--color-danger-surface)] hover:text-[var(--color-danger)] transition-colors",
+            "focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]",
+            collapsed ? "justify-center py-2.5" : "gap-2 px-3 py-2.5",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden>
+            <path d="M6 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" />
+            <path d="M10 11l3-3-3-3M13 8H6" />
+          </svg>
+          {!collapsed && (
+            <span className="text-[var(--text-xs)] whitespace-nowrap">Sair</span>
+          )}
+        </button>
+
         <button
           type="button"
           onClick={() => setCollapsed((v) => !v)}
