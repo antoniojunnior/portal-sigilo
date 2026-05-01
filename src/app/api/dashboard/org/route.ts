@@ -3,6 +3,32 @@ import { verifySession } from "@/lib/utils/auth";
 import { logAudit } from "@/lib/utils/audit";
 import type { NextRequest } from "next/server";
 
+export async function GET(request: NextRequest) {
+  try {
+    const sessionCookie = request.cookies.get("__session")?.value;
+    if (!sessionCookie) return Response.json({ error: "Não autenticado" }, { status: 401 });
+
+    const session = await verifySession(sessionCookie);
+    if (!session) return Response.json({ error: "Sessão inválida" }, { status: 401 });
+
+    const orgDoc = await adminDb.collection("orgs").doc(session.orgId).get();
+    if (!orgDoc.exists) return Response.json({ error: "Organização não encontrada" }, { status: 404 });
+
+    const data = orgDoc.data()!;
+    return Response.json({
+      id: orgDoc.id,
+      nome: data.nome,
+      slug: data.slug,
+      plano_ativo: data.plano_ativo,
+      logo: data.logo ?? null,
+      configuracoes: data.configuracoes ?? {},
+    });
+  } catch (err) {
+    console.error("[GET /api/dashboard/org]", err);
+    return Response.json({ error: "Erro interno" }, { status: 500 });
+  }
+}
+
 export async function PATCH(request: NextRequest) {
   try {
     const sessionCookie = request.cookies.get("__session")?.value;

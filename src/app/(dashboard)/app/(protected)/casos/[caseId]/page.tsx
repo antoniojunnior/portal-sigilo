@@ -69,7 +69,7 @@ const STATUS_OPTIONS: { value: CaseStatus | ""; label: string }[] = [
 ];
 
 function buildTimelineSteps(status: CaseStatus) {
-  const steps = [
+  return [
     {
       label: "Recebido",
       desc: "Relato registrado e triagem iniciada.",
@@ -89,23 +89,27 @@ function buildTimelineSteps(status: CaseStatus) {
       active: status === "encerrado_sem_infracao" || status === "encerrado_com_acao",
     },
   ];
-  return steps;
 }
 
+const ACAO_LABELS: Record<string, string> = {
+  case_viewed: "Caso visualizado",
+  case_status_changed: "Status alterado",
+  case_responsavel_changed: "Responsável alterado",
+  message_sent: "Mensagem enviada",
+  mencionado_adicionado: "Parte identificada adicionada",
+  case_criado: "Caso criado",
+};
+
 function formatAuditAction(acao: string, detalhes?: Record<string, unknown>): string {
-  const map: Record<string, string> = {
-    case_viewed: "Caso visualizado",
-    case_status_changed: "Status alterado",
-    case_responsavel_changed: "Responsável alterado",
-    message_sent: "Mensagem enviada",
-    mencionado_adicionado: "Parte identificada adicionada",
-    case_criado: "Caso criado",
-  };
-  let label = map[acao] ?? acao;
+  let label = ACAO_LABELS[acao] ?? acao;
   if (acao === "case_status_changed" && detalhes?.from && detalhes?.to) {
     label += `: ${detalhes.from} → ${detalhes.to}`;
   }
   return label;
+}
+
+function diasEmAberto(createdAt: string): number {
+  return Math.floor((Date.now() - new Date(createdAt).getTime()) / (24 * 60 * 60 * 1000));
 }
 
 export default function CaseDetailPage({ params }: Props) {
@@ -135,6 +139,7 @@ export default function CaseDetailPage({ params }: Props) {
   const [mencionadoUserId, setMencionadoUserId] = useState("");
   const [addingMencionado, setAddingMencionado] = useState(false);
 
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchCase = useCallback(async () => {
@@ -153,7 +158,7 @@ export default function CaseDetailPage({ params }: Props) {
         setPrazoValue(new Date(data.prazo).toISOString().split("T")[0]);
       }
     } catch (err) {
-      console.error("[CaseDetailPage] fetchCase:", err);
+      console.error("[CaseDetail] fetchCase:", err);
     } finally {
       setLoading(false);
     }
@@ -166,7 +171,7 @@ export default function CaseDetailPage({ params }: Props) {
       const data = await res.json() as { messages: MessageData[] };
       setMessages(data.messages ?? []);
     } catch (err) {
-      console.error("[CaseDetailPage] fetchMessages:", err);
+      console.error("[CaseDetail] fetchMessages:", err);
     }
   }, [caseId]);
 
@@ -177,7 +182,7 @@ export default function CaseDetailPage({ params }: Props) {
       const data = await res.json() as { logs: AuditLogData[] };
       setAuditLogs(data.logs ?? []);
     } catch (err) {
-      console.error("[CaseDetailPage] fetchAudit:", err);
+      console.error("[CaseDetail] fetchAudit:", err);
     }
   }, [caseId]);
 
@@ -187,9 +192,7 @@ export default function CaseDetailPage({ params }: Props) {
       if (!res.ok) return;
       const data = await res.json() as { users: UserOption[] };
       setUsers(data.users ?? []);
-    } catch {
-      // Non-critical
-    }
+    } catch { /* non-critical */ }
   }, []);
 
   useEffect(() => {
@@ -198,15 +201,14 @@ export default function CaseDetailPage({ params }: Props) {
     fetchAudit();
     fetchUsers();
 
-    // Poll messages every 30 seconds
-    pollTimerRef.current = setInterval(() => {
-      fetchMessages();
-    }, 30_000);
-
-    return () => {
-      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
-    };
+    pollTimerRef.current = setInterval(() => { fetchMessages(); }, 30_000);
+    return () => { if (pollTimerRef.current) clearInterval(pollTimerRef.current); };
   }, [fetchCase, fetchMessages, fetchAudit, fetchUsers]);
+
+  // Scroll messages to bottom on update
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   async function handleSendMessage() {
     if (!newMessage.trim()) return;
@@ -223,7 +225,7 @@ export default function CaseDetailPage({ params }: Props) {
         await fetchAudit();
       }
     } catch (err) {
-      console.error("[CaseDetailPage] sendMessage:", err);
+      console.error("[CaseDetail] sendMessage:", err);
     } finally {
       setSendingMessage(false);
     }
@@ -243,7 +245,7 @@ export default function CaseDetailPage({ params }: Props) {
         await fetchAudit();
       }
     } catch (err) {
-      console.error("[CaseDetailPage] statusChange:", err);
+      console.error("[CaseDetail] statusChange:", err);
     } finally {
       setUpdatingStatus(false);
     }
@@ -262,7 +264,7 @@ export default function CaseDetailPage({ params }: Props) {
         await fetchAudit();
       }
     } catch (err) {
-      console.error("[CaseDetailPage] responsavelChange:", err);
+      console.error("[CaseDetail] responsavelChange:", err);
     } finally {
       setUpdatingResponsavel(false);
     }
@@ -277,7 +279,7 @@ export default function CaseDetailPage({ params }: Props) {
         body: JSON.stringify({ notas_internas: notesValue }),
       });
     } catch (err) {
-      console.error("[CaseDetailPage] saveNotes:", err);
+      console.error("[CaseDetail] saveNotes:", err);
     } finally {
       setSavingNotes(false);
     }
@@ -293,7 +295,7 @@ export default function CaseDetailPage({ params }: Props) {
       });
       setCaseData((prev) => prev ? { ...prev, prazo: new Date(prazoValue).toISOString() } : prev);
     } catch (err) {
-      console.error("[CaseDetailPage] savePrazo:", err);
+      console.error("[CaseDetail] savePrazo:", err);
     }
   }
 
@@ -314,13 +316,14 @@ export default function CaseDetailPage({ params }: Props) {
         setMencionadoUserId("");
       }
     } catch (err) {
-      console.error("[CaseDetailPage] addMencionado:", err);
+      console.error("[CaseDetail] addMencionado:", err);
     } finally {
       setAddingMencionado(false);
     }
   }
 
-  // Users available as responsavel (not in mencionados)
+  const userMap = Object.fromEntries(users.map((u) => [u.id, u]));
+
   const availableResponsavelOptions = [
     { value: "", label: "Sem responsável" },
     ...users
@@ -328,7 +331,6 @@ export default function CaseDetailPage({ params }: Props) {
       .map((u) => ({ value: u.id, label: `${u.nome} (${u.role})` })),
   ];
 
-  // Users available to add as mencionado (not already mencionado, not current user)
   const availableMencionadoOptions = [
     { value: "", label: "Selecionar usuário" },
     ...users
@@ -340,27 +342,21 @@ export default function CaseDetailPage({ params }: Props) {
   const prazoNearby = prazoDate
     ? (prazoDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000) < 5
     : false;
+  const prazoVencido = prazoDate ? prazoDate.getTime() < Date.now() : false;
 
-  // Access error
   if (accessError) {
     return (
       <div className="min-h-dvh flex items-center justify-center p-4">
         <div className="text-center max-w-sm">
-          <div className="w-16 h-16 rounded-full bg-[var(--color-danger-surface)] flex items-center justify-center mx-auto mb-4">
-            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="var(--color-danger)" strokeWidth="1.5" aria-hidden>
+          <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "var(--color-danger-surface)" }}>
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="var(--color-danger)" strokeWidth="1.5" aria-hidden>
               <path d="M12 9v4M12 17h.01" strokeLinecap="round" strokeLinejoin="round"/>
               <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" strokeLinejoin="round"/>
             </svg>
           </div>
-          <h1 className="text-[var(--text-lg)] font-semibold text-[var(--color-text-primary)] mb-2">
-            Acesso restrito
-          </h1>
-          <p className="text-[var(--text-sm)] text-[var(--color-text-secondary)] mb-6">
-            {accessError}
-          </p>
-          <Button variant="secondary" onClick={() => router.push("/app/casos")}>
-            ← Voltar aos casos
-          </Button>
+          <h1 className="text-[var(--text-lg)] font-semibold text-[var(--color-text-primary)] mb-2">Acesso restrito</h1>
+          <p className="text-[var(--text-sm)] text-[var(--color-text-secondary)] mb-6">{accessError}</p>
+          <Button variant="secondary" onClick={() => router.push("/app/casos")}>← Voltar aos casos</Button>
         </div>
       </div>
     );
@@ -369,10 +365,7 @@ export default function CaseDetailPage({ params }: Props) {
   if (loading || !caseData) {
     return (
       <>
-        <DashboardHeader
-          breadcrumbs={[{ label: "Casos", href: "/app/casos" }, { label: "Carregando..." }]}
-          user={{ name: user?.nome ?? "..." }}
-        />
+        <DashboardHeader breadcrumbs={[{ label: "Casos", href: "/app/casos" }, { label: "Carregando..." }]} />
         <PageContainer>
           <div className="space-y-4">
             <Skeleton height="120px" rounded="lg" />
@@ -383,210 +376,212 @@ export default function CaseDetailPage({ params }: Props) {
     );
   }
 
+  const dias = diasEmAberto(caseData.created_at);
+
   return (
     <>
       <DashboardHeader
-        breadcrumbs={[
-          { label: "Casos", href: "/app/casos" },
-          { label: caseData.protocolo },
-        ]}
-        user={{ name: user?.nome ?? "..." }}
+        breadcrumbs={[{ label: "Casos", href: "/app/casos" }, { label: caseData.protocolo }]}
       />
 
       <PageContainer className="overflow-y-auto">
-        <div className="flex flex-col lg:flex-row gap-5">
-          {/* Main column */}
-          <div className="flex-1 min-w-0 space-y-5">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-5">
+          {/* ── Main column ── */}
+          <div className="flex-1 min-w-0 space-y-4">
+
             {/* Case header card */}
-            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-5">
-              <div className="flex items-start justify-between gap-4 mb-4">
-                <div>
+            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 sm:p-5">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+                <div className="min-w-0">
                   <p className="font-mono text-[var(--text-xs)] text-[var(--color-text-tertiary)] mb-1">
                     {caseData.protocolo}
                   </p>
-                  <h1 className="text-[var(--text-lg)] font-semibold text-[var(--color-text-primary)]">
+                  <h1 className="text-[var(--text-lg)] font-semibold text-[var(--color-text-primary)] leading-snug">
                     {caseData.categoria ?? "Categoria não classificada"}
                   </h1>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
                   {caseData.urgencia && <UrgencyIndicator level={caseData.urgencia} showLabel />}
                   <ChannelBadge channel={caseData.canal_origem} />
                 </div>
               </div>
 
               {caseData.triagem_ia?.recomendacao && (
-                <p className="text-[var(--text-sm)] text-[var(--color-text-secondary)] leading-relaxed mb-4">
+                <p className="text-[var(--text-sm)] text-[var(--color-text-secondary)] leading-relaxed mb-3">
                   {caseData.triagem_ia.recomendacao}
                 </p>
               )}
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <Badge variant="status" status={caseData.status} />
                 <span className="text-[var(--text-xs)] text-[var(--color-text-tertiary)]">
-                  Registrado em{" "}
-                  {new Date(caseData.created_at).toLocaleDateString("pt-BR", {
-                    day: "2-digit",
-                    month: "long",
-                    year: "numeric",
-                  })}
+                  Aberto em{" "}
+                  {new Date(caseData.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
+                </span>
+                <span
+                  className="text-[var(--text-xs)] font-medium px-2 py-0.5 rounded-full"
+                  style={{
+                    background: dias > 30 ? "var(--color-danger-surface)" : "var(--color-bg-tertiary)",
+                    color: dias > 30 ? "var(--color-danger)" : "var(--color-text-secondary)",
+                  }}
+                >
+                  {dias}d em aberto
                 </span>
               </div>
             </div>
 
             {/* IA triage card */}
             {caseData.triagem_ia && (
-              <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-5">
-                <h2 className="text-[var(--text-sm)] font-semibold text-[var(--color-text-primary)] mb-3">
-                  Triagem por IA
-                </h2>
-                <dl className="grid grid-cols-2 gap-3">
+              <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 sm:p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <div
+                    className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ background: "linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%)" }}
+                    aria-hidden
+                  >
+                    <svg viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="#fff" strokeWidth="1.6" aria-hidden>
+                      <path d="M8 2l1.5 3 3.5.5-2.5 2.5.5 3.5L8 10l-3 1.5.5-3.5L3 5.5 6.5 5 8 2z" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <h2 className="text-[var(--text-sm)] font-semibold text-[var(--color-text-primary)]">Triagem por IA</h2>
+                </div>
+                <dl className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {caseData.triagem_ia.categoria && (
                     <div>
-                      <dt className="text-[var(--text-xs)] text-[var(--color-text-tertiary)]">Categoria</dt>
-                      <dd className="text-[var(--text-sm)] text-[var(--color-text-primary)]">
-                        {caseData.triagem_ia.categoria}
-                      </dd>
+                      <dt className="text-[var(--text-xs)] text-[var(--color-text-tertiary)] mb-0.5">Categoria</dt>
+                      <dd className="text-[var(--text-sm)] text-[var(--color-text-primary)]">{caseData.triagem_ia.categoria}</dd>
+                    </div>
+                  )}
+                  {caseData.triagem_ia.subcategoria && (
+                    <div>
+                      <dt className="text-[var(--text-xs)] text-[var(--color-text-tertiary)] mb-0.5">Subcategoria</dt>
+                      <dd className="text-[var(--text-sm)] text-[var(--color-text-primary)]">{caseData.triagem_ia.subcategoria}</dd>
                     </div>
                   )}
                   {caseData.triagem_ia.lei_aplicavel && (
                     <div>
-                      <dt className="text-[var(--text-xs)] text-[var(--color-text-tertiary)]">Lei aplicável</dt>
-                      <dd className="text-[var(--text-sm)] text-[var(--color-text-primary)]">
-                        {caseData.triagem_ia.lei_aplicavel}
-                      </dd>
+                      <dt className="text-[var(--text-xs)] text-[var(--color-text-tertiary)] mb-0.5">Lei aplicável</dt>
+                      <dd className="text-[var(--text-sm)] text-[var(--color-text-primary)]">{caseData.triagem_ia.lei_aplicavel}</dd>
+                    </div>
+                  )}
+                  {caseData.triagem_ia.area_risco && (
+                    <div>
+                      <dt className="text-[var(--text-xs)] text-[var(--color-text-tertiary)] mb-0.5">Área de risco</dt>
+                      <dd className="text-[var(--text-sm)] text-[var(--color-text-primary)]">{caseData.triagem_ia.area_risco}</dd>
                     </div>
                   )}
                   {caseData.triagem_ia.urgencia && (
                     <div>
-                      <dt className="text-[var(--text-xs)] text-[var(--color-text-tertiary)]">Urgência IA</dt>
-                      <dd>
-                        <UrgencyIndicator level={caseData.triagem_ia.urgencia} showLabel />
-                      </dd>
+                      <dt className="text-[var(--text-xs)] text-[var(--color-text-tertiary)] mb-0.5">Urgência IA</dt>
+                      <dd><UrgencyIndicator level={caseData.triagem_ia.urgencia} showLabel /></dd>
                     </div>
                   )}
                 </dl>
               </div>
             )}
 
-            {/* Chat / messages */}
-            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-5">
+            {/* Messages / chat */}
+            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 sm:p-5">
               <h2 className="text-[var(--text-sm)] font-semibold text-[var(--color-text-primary)] mb-4">
-                Mensagens
+                Mensagens com o denunciante
               </h2>
 
-              <div className="space-y-3 mb-4 max-h-80 overflow-y-auto">
+              <div className="space-y-3 mb-4 max-h-72 overflow-y-auto">
                 {messages.length === 0 ? (
                   <p className="text-[var(--text-sm)] text-[var(--color-text-tertiary)] text-center py-4">
-                    Nenhuma mensagem ainda.
+                    Nenhuma mensagem ainda. Inicie a conversa com o denunciante.
                   </p>
                 ) : (
                   messages.map((msg) => (
                     <div
                       key={msg.id}
-                      className={[
-                        "flex",
-                        msg.autor === "gestor" ? "justify-end" : "justify-start",
-                      ].join(" ")}
+                      className={["flex", msg.autor === "gestor" ? "justify-end" : "justify-start"].join(" ")}
                     >
-                      <div
-                        className={[
-                          "max-w-[75%] rounded-[var(--radius-lg)] px-3.5 py-2.5",
-                          msg.autor === "gestor"
-                            ? "bg-[var(--color-primary)] text-white"
-                            : msg.autor === "sistema"
-                            ? "bg-[var(--color-bg-secondary)] text-[var(--color-text-tertiary)] text-center w-full max-w-full"
-                            : "bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]",
-                        ].join(" ")}
-                      >
-                        {msg.autor !== "gestor" && msg.autor !== "sistema" && (
-                          <p className="text-[var(--text-xs)] font-semibold mb-1 opacity-70">
-                            Denunciante
+                      {msg.autor === "sistema" ? (
+                        <div className="w-full text-center">
+                          <span className="inline-block text-[var(--text-xs)] text-[var(--color-text-tertiary)] bg-[var(--color-bg-secondary)] rounded-full px-3 py-1">
+                            {msg.texto}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="max-w-[78%] space-y-1">
+                          <p className="text-[var(--text-2xs)] font-semibold px-1"
+                            style={{ color: msg.autor === "gestor" ? "var(--color-primary)" : "var(--color-text-tertiary)" }}>
+                            {msg.autor === "gestor" ? "Você" : "Denunciante"}
                           </p>
-                        )}
-                        <p className="text-[var(--text-sm)]">{msg.texto}</p>
-                        <p
-                          className={[
-                            "text-[var(--text-2xs)] mt-1",
-                            msg.autor === "gestor" ? "text-white/70 text-right" : "text-[var(--color-text-tertiary)]",
-                          ].join(" ")}
-                        >
-                          {new Date(msg.timestamp).toLocaleString("pt-BR", {
-                            day: "2-digit",
-                            month: "2-digit",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </p>
-                      </div>
+                          <div
+                            className="rounded-[var(--radius-lg)] px-3.5 py-2.5"
+                            style={{
+                              background: msg.autor === "gestor" ? "var(--color-primary)" : "var(--color-bg-secondary)",
+                              color: msg.autor === "gestor" ? "#fff" : "var(--color-text-primary)",
+                            }}
+                          >
+                            <p className="text-[var(--text-sm)] leading-relaxed">{msg.texto}</p>
+                            <p className="text-[var(--text-2xs)] mt-1 opacity-60 text-right">
+                              {new Date(msg.timestamp).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))
                 )}
+                <div ref={messagesEndRef} />
               </div>
 
               <div className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="Escrever mensagem para o denunciante..."
+                  placeholder="Escrever mensagem ao denunciante…"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage();
-                    }
-                  }}
+                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void handleSendMessage(); } }}
                   disabled={sendingMessage}
                   className="flex-1 min-h-[44px] rounded-[var(--radius-md)] border border-[var(--color-border)] px-3.5 py-2 bg-[var(--color-bg)] text-[var(--color-text-primary)] text-[var(--text-base)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] disabled:opacity-50"
                 />
-                <Button
-                  variant="primary"
-                  size="md"
-                  loading={sendingMessage}
-                  disabled={!newMessage.trim()}
-                  onClick={handleSendMessage}
-                >
+                <Button variant="primary" size="md" loading={sendingMessage} disabled={!newMessage.trim()} onClick={handleSendMessage}>
                   Enviar
                 </Button>
               </div>
             </div>
 
             {/* Audit log */}
-            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-5">
+            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 sm:p-5">
               <h2 className="text-[var(--text-sm)] font-semibold text-[var(--color-text-primary)] mb-4">
                 Log de auditoria
               </h2>
               {auditLogs.length === 0 ? (
-                <p className="text-[var(--text-sm)] text-[var(--color-text-tertiary)]">
-                  Nenhum registro ainda.
-                </p>
+                <p className="text-[var(--text-sm)] text-[var(--color-text-tertiary)]">Nenhum registro ainda.</p>
               ) : (
-                auditLogs.map((entry) => (
-                  <AuditEntry
-                    key={entry.id}
-                    action={formatAuditAction(entry.acao, entry.detalhes)}
-                    user={entry.user_id}
-                    timestamp={entry.timestamp}
-                  />
-                ))
+                <div className="space-y-0.5">
+                  {auditLogs.map((entry) => {
+                    const actor = userMap[entry.user_id];
+                    return (
+                      <AuditEntry
+                        key={entry.id}
+                        action={formatAuditAction(entry.acao, entry.detalhes)}
+                        user={actor ? `${actor.nome} (${actor.role})` : entry.user_id}
+                        timestamp={entry.timestamp}
+                      />
+                    );
+                  })}
+                </div>
               )}
             </div>
           </div>
 
-          {/* Sidebar column */}
-          <div className="w-full lg:w-64 xl:w-72 flex-shrink-0 space-y-5">
+          {/* ── Sidebar column ── */}
+          <div className="w-full lg:w-60 xl:w-64 flex-shrink-0 space-y-4">
+
             {/* Timeline */}
-            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-5">
-              <h2 className="text-[var(--text-sm)] font-semibold text-[var(--color-text-primary)] mb-4">
-                Progresso
-              </h2>
+            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 sm:p-5">
+              <h2 className="text-[var(--text-sm)] font-semibold text-[var(--color-text-primary)] mb-4">Progresso</h2>
               <StatusTimeline steps={buildTimelineSteps(caseData.status)} />
             </div>
 
             {/* Status change */}
-            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-5">
-              <h2 className="text-[var(--text-sm)] font-semibold text-[var(--color-text-primary)] mb-3">
-                Alterar status
-              </h2>
+            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 sm:p-5">
+              <h2 className="text-[var(--text-sm)] font-semibold text-[var(--color-text-primary)] mb-3">Alterar status</h2>
               <Select
                 label="Status"
                 srOnly
@@ -597,16 +592,14 @@ export default function CaseDetailPage({ params }: Props) {
               />
             </div>
 
-            {/* AI button */}
+            {/* AI assistant */}
             <Button
               variant="secondary"
               fullWidth
               onClick={() => setAiOpen(true)}
               iconLeft={
                 <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-                  <circle cx="8" cy="8" r="5" />
-                  <path d="M6 8a2 2 0 0 1 4 0" strokeLinecap="round" />
-                  <path d="M8 13v1M3 8H2M14 8h-1" strokeLinecap="round" />
+                  <path d="M8 2l1.5 3 3.5.5-2.5 2.5.5 3.5L8 10l-3 1.5.5-3.5L3 5.5 6.5 5 8 2z" strokeLinejoin="round" />
                 </svg>
               }
             >
@@ -614,10 +607,8 @@ export default function CaseDetailPage({ params }: Props) {
             </Button>
 
             {/* Responsible */}
-            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-5">
-              <h2 className="text-[var(--text-sm)] font-semibold text-[var(--color-text-primary)] mb-3">
-                Responsável
-              </h2>
+            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 sm:p-5">
+              <h2 className="text-[var(--text-sm)] font-semibold text-[var(--color-text-primary)] mb-3">Responsável</h2>
               <Select
                 label="Responsável"
                 srOnly
@@ -629,10 +620,8 @@ export default function CaseDetailPage({ params }: Props) {
             </div>
 
             {/* Deadline */}
-            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-5">
-              <h2 className="text-[var(--text-sm)] font-semibold text-[var(--color-text-primary)] mb-3">
-                Prazo
-              </h2>
+            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 sm:p-5">
+              <h2 className="text-[var(--text-sm)] font-semibold text-[var(--color-text-primary)] mb-3">Prazo</h2>
               <input
                 type="date"
                 value={prazoValue}
@@ -640,55 +629,56 @@ export default function CaseDetailPage({ params }: Props) {
                 onBlur={handleSavePrazo}
                 className="w-full min-h-[44px] rounded-[var(--radius-md)] border border-[var(--color-border)] px-3.5 py-2 bg-[var(--color-bg)] text-[var(--color-text-primary)] text-[var(--text-base)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
               />
-              {prazoNearby && prazoValue && (
-                <p className="text-[var(--text-xs)] text-[var(--color-danger)] mt-1.5">
-                  Prazo em menos de 5 dias!
-                </p>
+              {prazoVencido && prazoValue && (
+                <p className="text-[var(--text-xs)] text-[var(--color-danger)] mt-1.5">Prazo vencido!</p>
+              )}
+              {!prazoVencido && prazoNearby && prazoValue && (
+                <p className="text-[var(--text-xs)] text-[var(--color-warning)] mt-1.5">Prazo em menos de 5 dias.</p>
               )}
             </div>
 
             {/* Internal notes */}
-            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-5">
-              <h2 className="text-[var(--text-sm)] font-semibold text-[var(--color-text-primary)] mb-3">
-                Notas internas
-              </h2>
+            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 sm:p-5">
+              <h2 className="text-[var(--text-sm)] font-semibold text-[var(--color-text-primary)] mb-3">Notas internas</h2>
               <Textarea
                 label="Notas internas"
                 srOnly
                 value={notesValue}
                 onChange={(e) => setNotesValue(e.target.value)}
-                placeholder="Registre observações internas sobre este caso..."
+                placeholder="Registre observações internas sobre este caso…"
                 rows={4}
               />
               <div className="mt-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  loading={savingNotes}
-                  onClick={handleSaveNotes}
-                >
+                <Button variant="secondary" size="sm" loading={savingNotes} onClick={handleSaveNotes}>
                   Salvar notas
                 </Button>
               </div>
             </div>
 
-            {/* Add mencionado */}
+            {/* Mentioned parties */}
             {(user?.role === "admin" || user?.role === "gestor") && (
-              <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-5">
-                <h2 className="text-[var(--text-sm)] font-semibold text-[var(--color-text-primary)] mb-3">
-                  Partes identificadas
-                </h2>
-                {caseData.mencionados.length > 0 && (
-                  <p className="text-[var(--text-xs)] text-[var(--color-text-tertiary)] mb-3">
-                    {caseData.mencionados.length} identificado(s)
-                  </p>
-                )}
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  fullWidth
-                  onClick={() => setMencionadoModalOpen(true)}
-                >
+              <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 sm:p-5">
+                <h2 className="text-[var(--text-sm)] font-semibold text-[var(--color-text-primary)] mb-3">Partes identificadas</h2>
+                {caseData.mencionados.length > 0 ? (
+                  <ul className="space-y-1.5 mb-3">
+                    {caseData.mencionados.map((uid) => {
+                      const u = userMap[uid];
+                      return (
+                        <li key={uid} className="flex items-center gap-2 text-[var(--text-xs)]">
+                          <span
+                            className="w-2 h-2 rounded-full flex-shrink-0"
+                            style={{ background: "var(--color-accent)" }}
+                            aria-hidden
+                          />
+                          <span className="text-[var(--color-text-secondary)]">
+                            {u ? `${u.nome} (${u.role})` : uid}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : null}
+                <Button variant="secondary" size="sm" fullWidth onClick={() => setMencionadoModalOpen(true)}>
                   + Adicionar parte
                 </Button>
               </div>
@@ -709,16 +699,8 @@ export default function CaseDetailPage({ params }: Props) {
         title="Adicionar parte identificada"
         footer={
           <div className="flex justify-end gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setMencionadoModalOpen(false)}>
-              Cancelar
-            </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              loading={addingMencionado}
-              disabled={!mencionadoUserId}
-              onClick={handleAddMencionado}
-            >
+            <Button variant="ghost" size="sm" onClick={() => setMencionadoModalOpen(false)}>Cancelar</Button>
+            <Button variant="primary" size="sm" loading={addingMencionado} disabled={!mencionadoUserId} onClick={handleAddMencionado}>
               Adicionar
             </Button>
           </div>

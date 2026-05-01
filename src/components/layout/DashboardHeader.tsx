@@ -2,6 +2,7 @@
 
 import { Avatar } from "@/components/ui/Avatar";
 import { useAuth } from "@/hooks/useAuth";
+import { useMobileMenu } from "@/contexts/MobileMenuContext";
 
 interface BreadcrumbItem {
   label: string;
@@ -29,7 +30,9 @@ export function DashboardHeader({
   className = "",
 }: DashboardHeaderProps) {
   const { user: authUser, signOut } = useAuth();
+  const { toggle: toggleMobileMenu } = useMobileMenu();
   const displayUser = userProp ?? (authUser ? { name: authUser.nome } : undefined);
+  const handleMenuToggle = onMenuToggle ?? toggleMobileMenu;
 
   return (
     <header
@@ -43,19 +46,17 @@ export function DashboardHeader({
         .join(" ")}
       style={{ minHeight: "var(--dashboard-header-height)" }}
     >
-      {/* Mobile menu toggle */}
-      {onMenuToggle && (
-        <button
-          type="button"
-          onClick={onMenuToggle}
-          aria-label="Abrir menu"
-          className="lg:hidden w-9 h-9 flex items-center justify-center rounded-[var(--radius-md)] text-[var(--color-text-tertiary)] hover:bg-[var(--color-bg-secondary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
-        >
-          <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden>
-            <path d="M2 4h12M2 8h12M2 12h12" />
-          </svg>
-        </button>
-      )}
+      {/* Mobile menu toggle — always visible on mobile */}
+      <button
+        type="button"
+        onClick={handleMenuToggle}
+        aria-label="Abrir menu"
+        className="lg:hidden w-9 h-9 flex items-center justify-center rounded-[var(--radius-md)] text-[var(--color-text-tertiary)] hover:bg-[var(--color-bg-secondary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
+      >
+        <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden>
+          <path d="M2 4h12M2 8h12M2 12h12" />
+        </svg>
+      </button>
 
       {/* Breadcrumbs */}
       {breadcrumbs.length > 0 && (

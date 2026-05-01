@@ -62,9 +62,10 @@ const NAV_ITEMS: NavItem[] = [
 
 interface SidebarProps {
   className?: string;
+  onClose?: () => void;
 }
 
-export function Sidebar({ className = "" }: SidebarProps) {
+export function Sidebar({ className = "", onClose }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
   const { user } = useAuth();
@@ -95,10 +96,24 @@ export function Sidebar({ className = "" }: SidebarProps) {
         className="flex items-center px-4 border-b border-[var(--color-border)] flex-shrink-0 overflow-hidden"
         style={{ minHeight: "var(--dashboard-header-height)" }}
       >
-        {collapsed ? (
-          <LogoSigilo variant="icon" iconSize={24} />
-        ) : (
-          <LogoSigilo iconSize={28} />
+        <div className="flex-1 overflow-hidden">
+          {collapsed ? (
+            <LogoSigilo variant="icon" iconSize={24} />
+          ) : (
+            <LogoSigilo iconSize={28} />
+          )}
+        </div>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fechar menu"
+            className="ml-2 w-8 h-8 flex items-center justify-center rounded-[var(--radius-md)] text-[var(--color-text-tertiary)] hover:bg-[var(--color-bg-secondary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
+          >
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+              <path d="M4 4l8 8M12 4l-8 8" />
+            </svg>
+          </button>
         )}
       </div>
 
@@ -144,6 +159,7 @@ export function Sidebar({ className = "" }: SidebarProps) {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onClose}
               aria-label={collapsed ? item.label : undefined}
               className={[
                 "flex items-center gap-3 mx-2 mb-0.5 rounded-[var(--radius-md)] transition-colors",

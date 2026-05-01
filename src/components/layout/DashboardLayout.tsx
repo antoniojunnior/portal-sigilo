@@ -1,27 +1,23 @@
 "use client";
 
-import { useState } from "react";
 import { Sidebar } from "./Sidebar";
+import { MobileMenuProvider, useMobileMenu } from "@/contexts/MobileMenuContext";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
-/**
- * Root wrapper for all authenticated dashboard screens.
- * Sidebar fixed on lg+, drawer on md-.
- */
-export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+function DashboardLayoutInner({ children }: DashboardLayoutProps) {
+  const { open, close } = useMobileMenu();
 
   return (
     <div className="flex h-dvh overflow-hidden bg-[var(--color-bg-secondary)]">
       {/* Mobile drawer overlay */}
-      {mobileMenuOpen && (
+      {open && (
         <div
           className="fixed inset-0 z-[var(--z-overlay)] bg-[var(--color-overlay)] lg:hidden"
           aria-hidden
-          onClick={() => setMobileMenuOpen(false)}
+          onClick={close}
         />
       )}
 
@@ -30,12 +26,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         className={[
           "fixed top-0 left-0 bottom-0 z-[var(--z-modal)] lg:hidden",
           "transition-transform duration-[var(--duration-slow)] ease-[var(--easing-out)]",
-          mobileMenuOpen ? "translate-x-0" : "-translate-x-full",
+          open ? "translate-x-0" : "-translate-x-full",
         ]
           .filter(Boolean)
           .join(" ")}
       >
-        <Sidebar className="!flex h-full" />
+        <Sidebar className="!flex h-full" onClose={close} />
       </div>
 
       {/* Desktop sidebar */}
@@ -43,9 +39,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Main content */}
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        {/* Inject mobile menu toggle into child DashboardHeader via context — simplified: pass handler via children clone is complex, so children handle their own header */}
         {children}
       </div>
     </div>
+  );
+}
+
+export function DashboardLayout({ children }: DashboardLayoutProps) {
+  return (
+    <MobileMenuProvider>
+      <DashboardLayoutInner>{children}</DashboardLayoutInner>
+    </MobileMenuProvider>
   );
 }

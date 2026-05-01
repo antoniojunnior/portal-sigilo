@@ -9,6 +9,7 @@ interface CaseRowProps {
   status: StatusValue;
   /** ISO date string for deadline */
   deadline?: string;
+  diasEmAberto?: number;
   onClick?: () => void;
   className?: string;
 }
@@ -36,6 +37,7 @@ export function CaseRow({
   category,
   status,
   deadline,
+  diasEmAberto,
   onClick,
   className = "",
 }: CaseRowProps) {
@@ -83,6 +85,17 @@ export function CaseRow({
         <Badge variant="status" status={status} />
       </td>
 
+      {/* Days open */}
+      <td className="px-4 py-3 text-right w-20">
+        {diasEmAberto != null ? (
+          <span className="text-[var(--text-xs)] tabular-nums text-[var(--color-text-tertiary)]">
+            {diasEmAberto}d
+          </span>
+        ) : (
+          <span className="text-[var(--text-xs)] text-[var(--color-text-tertiary)]">—</span>
+        )}
+      </td>
+
       {/* Deadline */}
       <td className="px-4 py-3 text-right w-20">
         {deadlineInfo ? (
@@ -91,7 +104,9 @@ export function CaseRow({
               "text-[var(--text-xs)] font-medium tabular-nums",
               deadlineInfo.overdue
                 ? "text-[var(--color-danger)]"
-                : "text-[var(--color-text-tertiary)]",
+                : (deadlineInfo.label !== "Hoje" && deadlineInfo.label !== "Amanhã")
+                  ? "text-[var(--color-text-tertiary)]"
+                  : "text-[var(--color-warning)]",
             ]
               .filter(Boolean)
               .join(" ")}

@@ -179,8 +179,9 @@ export default function Tela0() {
           <h1
             className="text-center mb-2"
             style={{
-              fontSize: 20,
-              fontWeight: 500,
+              fontFamily: "var(--font-display)",
+              fontSize: "var(--text-xl)",
+              fontWeight: "var(--weight-medium)",
               color: "var(--color-text-primary)",
               lineHeight: 1.3,
             }}
