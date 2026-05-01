@@ -14,9 +14,11 @@ if (!process.env["FIREBASE_STORAGE_EMULATOR_HOST"]) process.env["FIREBASE_STORAG
 
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getAuth } from "firebase-admin/auth";
 
 initializeApp({ projectId: "portal-sigilo" });
 const db = getFirestore();
+const auth = getAuth();
 
 // ─── IDs fixos para referência cruzada ───────────────────────────────────────
 
@@ -97,10 +99,36 @@ async function seedOrgs(): Promise<void> {
   console.log("  ✓ 2 orgs");
 }
 
-// ─── 2. Users ─────────────────────────────────────────────────────────────────
+// ─── 2. Auth Users ────────────────────────────────────────────────────────────
+
+const AUTH_USERS = [
+  { uid: USER_ADMIN_GESTAO_ID,  email: "ana.souza@acme.com",       password: "Acme@2026" },
+  { uid: USER_GESTOR_ID,        email: "carlos.lima@acme.com",     password: "Acme@2026" },
+  { uid: USER_ADMIN_ENTRADA_ID, email: "marina@startupveloz.com",  password: "Startup@2026" },
+] as const;
+
+async function seedAuthUsers(): Promise<void> {
+  console.log("→ Criando contas Firebase Auth...");
+
+  for (const u of AUTH_USERS) {
+    try {
+      await auth.createUser({ uid: u.uid, email: u.email, password: u.password, emailVerified: true });
+    } catch (err: unknown) {
+      if ((err as { code?: string }).code === "auth/uid-already-exists") {
+        await auth.updateUser(u.uid, { password: u.password });
+      } else {
+        throw err;
+      }
+    }
+  }
+
+  console.log("  ✓ 3 contas Auth criadas/atualizadas");
+}
+
+// ─── 3. Users (Firestore) ─────────────────────────────────────────────────────
 
 async function seedUsers(): Promise<void> {
-  console.log("→ Criando usuários...");
+  console.log("→ Criando documentos users...");
 
   await db.collection("users").doc(USER_ADMIN_GESTAO_ID).set({
     id: USER_ADMIN_GESTAO_ID,
@@ -132,7 +160,7 @@ async function seedUsers(): Promise<void> {
     criado_em: daysAgo(30),
   });
 
-  console.log("  ✓ 3 usuários");
+  console.log("  ✓ 3 documentos users");
 }
 
 // ─── 3. Cases ─────────────────────────────────────────────────────────────────
@@ -426,6 +454,7 @@ async function main(): Promise<void> {
   console.log(`Host: ${process.env["FIRESTORE_EMULATOR_HOST"]}\n`);
 
   try {
+    await seedAuthUsers();
     await seedOrgs();
     await seedUsers();
     await seedCases();
@@ -434,11 +463,16 @@ async function main(): Promise<void> {
 
     console.log("\n✅ Seed completo!");
     console.log("\nDados:");
+    console.log("  Auth    : 3  contas criadas");
     console.log("  Orgs    : 2  (acme/gestao · startup-veloz/entrada)");
     console.log("  Users   : 3  (admin-gestao · gestor · admin-entrada)");
     console.log("  Cases   : 5  (acme) — case-5 tem mencionado para testar rules");
     console.log("  Messages: 10 (em case-assedio-moral)");
     console.log("  Logs    : 5");
+    console.log("\nCredenciais:");
+    console.log("  ana.souza@acme.com       /  Acme@2026    (admin  · acme)");
+    console.log("  carlos.lima@acme.com     /  Acme@2026    (gestor · acme)");
+    console.log("  marina@startupveloz.com  /  Startup@2026 (admin  · startup-veloz)");
     console.log("\nUI: http://localhost:4000/firestore\n");
   } catch (err) {
     console.error("\n❌ Erro durante o seed:", err);

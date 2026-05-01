@@ -53,7 +53,7 @@ const GUARANTEES = [
   },
 ];
 
-export default async function Tela1({ params }: Props) {
+export default async function OrgHomePage({ params }: Props) {
   const { slug } = await params;
   const org = await getOrgBySlug(slug);
   if (!org) notFound();
