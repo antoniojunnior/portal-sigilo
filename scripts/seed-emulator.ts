@@ -107,21 +107,29 @@ const AUTH_USERS = [
   { uid: USER_ADMIN_ENTRADA_ID, email: "marina@startupveloz.com",  password: "Startup@2026" },
 ] as const;
 
-async function seedAuthUsers(): Promise<void> {
-  console.log("→ Criando contas Firebase Auth...");
-
-  for (const u of AUTH_USERS) {
-    try {
+async function upsertAuthUser(u: { uid: string; email: string; password: string }): Promise<void> {
+  try {
+    await auth.createUser({ uid: u.uid, email: u.email, password: u.password, emailVerified: true });
+  } catch (err: unknown) {
+    const code = (err as { code?: string }).code;
+    if (code === "auth/uid-already-exists") {
+      await auth.updateUser(u.uid, { email: u.email, password: u.password });
+    } else if (code === "auth/email-already-exists") {
+      // Email exists under a different UID — delete stale account, recreate with correct UID
+      const existing = await auth.getUserByEmail(u.email);
+      await auth.deleteUser(existing.uid);
       await auth.createUser({ uid: u.uid, email: u.email, password: u.password, emailVerified: true });
-    } catch (err: unknown) {
-      if ((err as { code?: string }).code === "auth/uid-already-exists") {
-        await auth.updateUser(u.uid, { password: u.password });
-      } else {
-        throw err;
-      }
+    } else {
+      throw err;
     }
   }
+}
 
+async function seedAuthUsers(): Promise<void> {
+  console.log("→ Criando contas Firebase Auth...");
+  for (const u of AUTH_USERS) {
+    await upsertAuthUser(u);
+  }
   console.log("  ✓ 3 contas Auth criadas/atualizadas");
 }
 
