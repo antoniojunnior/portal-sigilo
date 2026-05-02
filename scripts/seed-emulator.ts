@@ -74,6 +74,14 @@ async function seedOrgs(): Promise<void> {
         "violacao_lgpd",
         "outro",
       ],
+      departamentos: [
+        "Operações",
+        "RH",
+        "TI",
+        "Atendimento",
+        "Financeiro",
+        "Jurídico",
+      ],
       boas_vindas: "Este é um espaço seguro para você ser ouvido.",
       prazo_padrao_dias: 30,
     },
@@ -91,6 +99,12 @@ async function seedOrgs(): Promise<void> {
     criado_em: daysAgo(30),
     configuracoes: {
       categorias: ["assedio_moral", "fraude", "outro"],
+      departamentos: [
+        "Produto",
+        "Engenharia",
+        "Comercial",
+        "Operações",
+      ],
       boas_vindas: "Fale com segurança. Somos todos ouvidos.",
       prazo_padrao_dias: 30,
     },

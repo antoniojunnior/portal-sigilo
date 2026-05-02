@@ -102,15 +102,20 @@ export async function GET(request: NextRequest) {
 
     const { orgId, uid } = session;
 
+    const periodDays = Math.min(
+      365,
+      Math.max(1, parseInt(request.nextUrl.searchParams.get("period") ?? "30", 10))
+    );
+
     const snapshot = await adminDb
       .collection("cases")
       .where("org_id", "==", orgId)
       .get();
 
     const now = Date.now();
-    const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
-    const currentStart = now - thirtyDaysMs;
-    const prevStart = now - 2 * thirtyDaysMs;
+    const periodMs = periodDays * 24 * 60 * 60 * 1000;
+    const currentStart = now - periodMs;
+    const prevStart = now - 2 * periodMs;
 
     const current = computeStats(snapshot.docs, uid, currentStart, now);
     const prev = computeStats(snapshot.docs, uid, prevStart, currentStart);

@@ -135,7 +135,7 @@ export default function RelatoriosPage() {
     if (user.plano === "entrada") { setLoading(false); return; }
 
     Promise.all([
-      fetch("/api/dashboard/metrics").then((r) => r.ok ? r.json() as Promise<MetricsData> : null),
+      fetch("/api/dashboard/metrics?period=90").then((r) => r.ok ? r.json() as Promise<MetricsData> : null),
       fetch("/api/dashboard/heatmap").then((r) => r.ok ? r.json() as Promise<HeatmapData> : null),
     ])
       .then(([m, h]) => { if (m) setMetrics(m); if (h) setHeatmap(h); })

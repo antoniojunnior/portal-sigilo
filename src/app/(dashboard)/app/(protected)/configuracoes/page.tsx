@@ -31,6 +31,7 @@ interface OrgData {
     boas_vindas?: string;
     prazo_padrao_dias?: number;
     categorias?: string[];
+    departamentos?: string[];
   };
 }
 
@@ -55,6 +56,8 @@ export default function ConfiguracoesPage() {
   const [orgNome, setOrgNome] = useState("");
   const [boasVindas, setBoasVindas] = useState("");
   const [prazoPadrao, setPrazoPadrao] = useState("");
+  const [departamentos, setDepartamentos] = useState<string[]>([]);
+  const [novoDept, setNovoDept] = useState("");
   const [savingOrg, setSavingOrg] = useState(false);
   const [orgSaved, setOrgSaved] = useState(false);
   const [orgError, setOrgError] = useState<string | null>(null);
@@ -84,6 +87,7 @@ export default function ConfiguracoesPage() {
       setOrgNome(data.nome ?? "");
       setBoasVindas(data.configuracoes?.boas_vindas ?? "");
       setPrazoPadrao(String(data.configuracoes?.prazo_padrao_dias ?? "30"));
+      setDepartamentos(data.configuracoes?.departamentos ?? []);
     } catch (err) {
       console.error("[Configuracoes] fetchOrg:", err);
     } finally {
@@ -122,6 +126,7 @@ export default function ConfiguracoesPage() {
       payload.configuracoes = {
         boas_vindas: boasVindas,
         prazo_padrao_dias: parseInt(prazoPadrao, 10) || 30,
+        departamentos,
       };
 
       const res = await fetch("/api/dashboard/org", {
@@ -304,6 +309,72 @@ export default function ConfiguracoesPage() {
                     onChange={(e) => setPrazoPadrao(e.target.value)}
                     className="w-28 min-h-[44px] rounded-[var(--radius-md)] border border-[var(--color-border)] px-3.5 py-2 bg-[var(--color-bg)] text-[var(--color-text-primary)] text-[var(--text-base)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
                   />
+                </div>
+
+                {/* Departments — used as heatmap rows */}
+                <div>
+                  <label className="block text-[var(--text-sm)] font-medium text-[var(--color-text-primary)] mb-1">
+                    Departamentos
+                  </label>
+                  <p className="text-[var(--text-xs)] text-[var(--color-text-tertiary)] mb-2">
+                    Define as linhas do mapa de concentração por departamento.
+                  </p>
+
+                  {departamentos.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {departamentos.map((dept) => (
+                        <span
+                          key={dept}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[var(--text-xs)] font-medium"
+                          style={{ background: "var(--color-bg-tertiary)", color: "var(--color-text-secondary)" }}
+                        >
+                          {dept}
+                          <button
+                            type="button"
+                            onClick={() => setDepartamentos((prev) => prev.filter((d) => d !== dept))}
+                            className="ml-0.5 text-[var(--color-text-tertiary)] hover:text-[var(--color-danger)] transition-colors focus:outline-none"
+                            aria-label={`Remover ${dept}`}
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Nome do departamento"
+                      value={novoDept}
+                      onChange={(e) => setNovoDept(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          const trimmed = novoDept.trim();
+                          if (trimmed && !departamentos.includes(trimmed)) {
+                            setDepartamentos((prev) => [...prev, trimmed]);
+                          }
+                          setNovoDept("");
+                        }
+                      }}
+                      className="flex-1 min-h-[40px] rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 py-2 bg-[var(--color-bg)] text-[var(--color-text-primary)] text-[var(--text-sm)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
+                    />
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => {
+                        const trimmed = novoDept.trim();
+                        if (trimmed && !departamentos.includes(trimmed)) {
+                          setDepartamentos((prev) => [...prev, trimmed]);
+                        }
+                        setNovoDept("");
+                      }}
+                      disabled={!novoDept.trim() || departamentos.includes(novoDept.trim())}
+                    >
+                      Adicionar
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-3 pt-1">
