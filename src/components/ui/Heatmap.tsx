@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Skeleton } from "./Skeleton";
 
 interface HeatmapRow {
@@ -97,9 +97,8 @@ export function Heatmap() {
 
             {/* Data rows */}
             {data.rows.map((row) => (
-              <>
+              <React.Fragment key={row.dept}>
                 <div
-                  key={`label-${row.dept}`}
                   className="text-[var(--text-xs)] text-[var(--color-text-secondary)] flex items-center py-1 px-1 truncate"
                   title={row.dept}
                 >
@@ -126,7 +125,7 @@ export function Heatmap() {
                     {v > 0 ? v : ""}
                   </div>
                 ))}
-              </>
+              </React.Fragment>
             ))}
           </div>
         </div>
