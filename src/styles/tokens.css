@@ -280,11 +280,37 @@
 
 /* Portal always keeps light mode (emotional safety context) */
 [data-portal] {
+  color-scheme: light;
+
   --color-bg: #FFFFFF;
   --color-bg-secondary: #F7FAFB;
   --color-bg-tertiary: #EEF3F5;
   --color-card: #FFFFFF;
+  --color-card-hover: #F4F8F9;
+  --color-overlay: rgba(10, 25, 35, 0.45);
+
   --color-text-primary: #0F2030;
   --color-text-secondary: #3D5A6A;
+  --color-text-tertiary: #6A8898;
+  --color-text-disabled: #A8C0C8;
+
   --color-border: #D3E3E8;
+  --color-border-strong: #ADC8D0;
+  --color-border-focus: #2A6070;
+
+  --color-primary-surface: #E8F2F5;
+  --color-accent-surface: #FBE9E7;
+  --color-success-surface: #E3F4EE;
+  --color-warning-surface: #FDF0D8;
+  --color-danger-surface: #FDE9E9;
+
+  --color-anon-bg: #E8F2F5;
+  --color-anon-border: #ADC8D0;
+
+  --shadow-xs: 0 1px 2px rgba(15, 32, 48, 0.06);
+  --shadow-sm: 0 1px 3px rgba(15, 32, 48, 0.07), 0 0 1px rgba(15, 32, 48, 0.04);
+  --shadow-md: 0 4px 12px rgba(15, 32, 48, 0.09), 0 0 1px rgba(15, 32, 48, 0.05);
+  --shadow-lg: 0 8px 24px rgba(15, 32, 48, 0.11), 0 0 1px rgba(15, 32, 48, 0.06);
+  --shadow-xl: 0 16px 48px rgba(15, 32, 48, 0.14), 0 0 2px rgba(15, 32, 48, 0.07);
+  --shadow-modal: 0 24px 80px rgba(15, 32, 48, 0.20), 0 0 2px rgba(15, 32, 48, 0.08);
 }
