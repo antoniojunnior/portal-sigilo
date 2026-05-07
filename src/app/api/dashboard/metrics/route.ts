@@ -120,10 +120,15 @@ export async function GET(request: NextRequest) {
     const current = computeStats(snapshot.docs, uid, currentStart, now);
     const prev = computeStats(snapshot.docs, uid, prevStart, currentStart);
 
-    function pctChange(cur: number, pre: number): string | null {
-      if (pre === 0) return cur > 0 ? "+100%" : null;
+    function getTrend(cur: number, pre: number): { value: number; direction: "up" | "down" | "stable"; label: string } | null {
+      if (pre === 0 && cur === 0) return null;
+      if (pre === 0) return { value: 100, direction: "up", label: "vs. período anterior" };
       const delta = ((cur - pre) / pre) * 100;
-      return (delta >= 0 ? "+" : "") + delta.toFixed(0) + "%";
+      return {
+        value: Math.abs(Math.round(delta)),
+        direction: delta > 0 ? "up" : delta < 0 ? "down" : "stable",
+        label: "vs. período anterior"
+      };
     }
 
     return Response.json({
@@ -135,10 +140,10 @@ export async function GET(request: NextRequest) {
       byUrgency: current.byUrgency,
       byChannel: current.byChannel,
       semRespostaUrgente: current.semRespostaUrgente,
-      // comparison
-      totalTrend: pctChange(current.total, prev.total),
-      emApuracaoTrend: pctChange(current.emApuracao, prev.emApuracao),
-      resolvidosTrend: pctChange(current.resolvidos, prev.resolvidos),
+      // structured trends
+      totalTrend: getTrend(current.total, prev.total),
+      emApuracaoTrend: getTrend(current.emApuracao, prev.emApuracao),
+      resolvidosTrend: getTrend(current.resolvidos, prev.resolvidos),
     });
   } catch (err) {
     console.error("[GET /api/dashboard/metrics]", err);

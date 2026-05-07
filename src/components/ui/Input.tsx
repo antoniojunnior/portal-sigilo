@@ -11,6 +11,10 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   error?: string;
   iconLeft?: React.ReactNode;
   iconRight?: React.ReactNode;
+  /** Accepted but not forwarded to <input> — use <textarea> if you need multiline */
+  multiline?: boolean;
+  /** Accepted but not forwarded to <input> (textarea-only attribute) */
+  rows?: number;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
@@ -25,6 +29,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       id,
       className = "",
       disabled,
+      multiline: _multiline,
+      rows: _rows,
       ...props
     },
     ref

@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Calistoga, JetBrains_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, Calistoga, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
+const plusJakartaSans = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
   display: "swap",
@@ -41,11 +41,18 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${inter.variable} ${calistoga.variable} ${jetbrainsMono.variable} h-full`}
+      data-theme="auto"
+      className={`${plusJakartaSans.variable} ${calistoga.variable} ${jetbrainsMono.variable} h-full`}
     >
+      {/* Restore persisted theme before first paint to avoid FOUC */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `(function(){var t=localStorage.getItem('theme');if(t==='light'||t==='dark'||t==='auto')document.documentElement.setAttribute('data-theme',t);})()`,
+        }}
+      />
       <body
         className="min-h-full flex flex-col"
-        style={{ fontFamily: "var(--font-inter, var(--font-body))" }}
+        style={{ fontFamily: "var(--font-jakarta, var(--font-body))" }}
       >
         {children}
       </body>

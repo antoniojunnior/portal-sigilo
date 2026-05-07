@@ -1,14 +1,17 @@
 interface SkeletonProps {
   width?: string;
   height?: string;
-  rounded?: "sm" | "md" | "lg" | "full";
+  rounded?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "full";
   className?: string;
 }
 
 const ROUNDED: Record<NonNullable<SkeletonProps["rounded"]>, string> = {
-  sm: "rounded-[var(--radius-sm)]",
-  md: "rounded-[var(--radius-md)]",
-  lg: "rounded-[var(--radius-lg)]",
+  xs:  "rounded-[var(--radius-xs)]",
+  sm:  "rounded-[var(--radius-sm)]",
+  md:  "rounded-[var(--radius-md)]",
+  lg:  "rounded-[var(--radius-lg)]",
+  xl:  "rounded-[var(--radius-xl)]",
+  "2xl": "rounded-[var(--radius-2xl)]",
   full: "rounded-full",
 };
 

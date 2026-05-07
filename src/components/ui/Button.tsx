@@ -3,7 +3,7 @@
 import { forwardRef } from "react";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger";
-type Size = "sm" | "md" | "lg";
+type Size = "xs" | "sm" | "md" | "lg";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   /** Visual style */
@@ -18,6 +18,8 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   iconLeft?: React.ReactNode;
   /** Right-side icon */
   iconRight?: React.ReactNode;
+  /** Accepted for API compatibility but not forwarded to <button> */
+  asChild?: boolean;
 }
 
 const BASE =
@@ -35,6 +37,7 @@ const VARIANTS: Record<Variant, string> = {
 };
 
 const SIZES: Record<Size, string> = {
+  xs: "px-2 min-h-[28px] text-[var(--text-2xs)]",
   sm: "px-3 min-h-[32px] text-[var(--text-xs)]",
   md: "px-5 min-h-[44px] text-[var(--text-sm)] font-semibold",
   lg: "px-7 min-h-[52px] text-[var(--text-base)] font-semibold",
@@ -77,6 +80,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       disabled,
       children,
       className = "",
+      asChild: _asChild,
       ...props
     },
     ref

@@ -2,34 +2,49 @@
 
 import { useEffect, useState } from "react";
 import { Skeleton } from "./Skeleton";
+import { LucideIcon } from "lucide-react";
+
+function useCountUp(target: number, active: boolean, duration = 800): number {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (!active || target === 0) { setCount(active ? 0 : 0); return; }
+    let rafId: number;
+    const start = Date.now();
+    const tick = () => {
+      const elapsed = Date.now() - start;
+      if (elapsed >= duration) { setCount(target); return; }
+      setCount(Math.round((elapsed / duration) * target));
+      rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [target, active, duration]);
+  return count;
+}
+
+interface TrendInfo {
+  value: number;
+  direction: "up" | "down" | "stable";
+  label: string;
+}
 
 interface MetricCardProps {
   label: string;
   value: string | number;
-  /** Percentage or count comparison, e.g. "+12%" */
-  trendValue?: string;
-  trend?: "up" | "down" | "neutral";
-  compareLabel?: string;
+  trend?: string | TrendInfo;
   loading?: boolean;
-  /** Icon displayed in the card corner */
-  icon?: React.ReactNode;
+  icon: LucideIcon;
+  tone?: "primary" | "danger" | "success";
   className?: string;
 }
-
-const TREND_CLASSES: Record<NonNullable<MetricCardProps["trend"]>, string> = {
-  up: "text-[var(--color-success)]",
-  down: "text-[var(--color-danger)]",
-  neutral: "text-[var(--color-text-tertiary)]",
-};
 
 export function MetricCard({
   label,
   value,
-  trendValue,
-  trend = "neutral",
-  compareLabel,
+  trend,
   loading = false,
-  icon,
+  icon: Icon,
+  tone = "primary",
   className = "",
 }: MetricCardProps) {
   const [visible, setVisible] = useState(false);
@@ -44,56 +59,77 @@ export function MetricCard({
 
   if (loading) {
     return (
-      <div className={`bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-5 space-y-3 ${className}`}>
-        <Skeleton height="12px" width="60%" />
-        <Skeleton height="28px" width="40%" />
-        <Skeleton height="10px" width="50%" />
+      <div className={`rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-[var(--shadow-sm)] ${className}`}>
+        <Skeleton height="44px" width="44px" className="mb-4 rounded-xl" />
+        <Skeleton height="12px" width="60%" className="mb-3" />
+        <Skeleton height="28px" width="40%" className="mb-3" />
+        <Skeleton height="12px" width="50%" />
       </div>
     );
   }
 
+  const numericValue = typeof value === "number" ? value : null;
+  const countedValue = useCountUp(numericValue ?? 0, visible);
+  const displayValue = numericValue !== null ? countedValue : value;
+
+  const toneClasses = {
+    primary: "bg-[var(--color-primary-surface)] text-[var(--color-primary-dark)]",
+    danger: "bg-[var(--color-danger-surface)] text-[var(--color-danger)]",
+    success: "bg-[var(--color-success-surface)] text-[var(--color-success)]",
+  };
+
+  const renderTrend = () => {
+    if (!trend) return null;
+
+    if (typeof trend === "string") {
+      return (
+        <p className={`mt-3 text-xs font-bold ${tone === "danger" ? "text-[var(--color-danger)]" : "text-[var(--color-success)]"}`}>
+          {trend}
+        </p>
+      );
+    }
+
+    const isUp = trend.direction === "up";
+    const isDown = trend.direction === "down";
+    
+    // In metrics, UP can be bad (more cases) or good (more resolutions)
+    // We'll use the 'tone' prop to determine the primary intent of the card
+    const trendColorClass = 
+      trend.direction === "stable" ? "text-[var(--color-text-tertiary)]" :
+      tone === "danger" 
+        ? (isUp ? "text-[var(--color-danger)]" : "text-[var(--color-success)]")
+        : tone === "success"
+          ? (isUp ? "text-[var(--color-success)]" : "text-[var(--color-danger)]")
+          : "text-[var(--color-primary)]";
+
+    return (
+      <div className={`mt-3 flex items-center gap-1.5 text-xs font-bold ${trendColorClass}`}>
+        {isUp && <span className="text-[10px]">▲</span>}
+        {isDown && <span className="text-[10px]">▼</span>}
+        <span>{trend.value}%</span>
+        <span className="text-[10px] opacity-60 font-medium ml-0.5">{trend.label}</span>
+      </div>
+    );
+  };
+
   return (
-    <div
+    <section
       className={[
-        "bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-5",
-        "transition-shadow duration-[var(--duration-normal)] hover:shadow-[var(--shadow-sm)]",
+        "rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 sm:p-5 shadow-[var(--shadow-sm)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)]",
         visible ? "animate-fade-in" : "opacity-0",
         className,
       ]
         .filter(Boolean)
         .join(" ")}
     >
-      <div className="flex items-start justify-between mb-3">
-        <p className="text-[var(--text-xs)] font-medium text-[var(--color-text-tertiary)] uppercase tracking-[var(--tracking-wide)]">
-          {label}
-        </p>
-        {icon && (
-          <span className="text-[var(--color-text-tertiary)] opacity-60" aria-hidden>
-            {icon}
-          </span>
-        )}
-      </div>
-
-      <p className="text-[28px] font-bold text-[var(--color-text-primary)] leading-none mb-2 tabular-nums">
-        {value}
-      </p>
-
-      {(trendValue || compareLabel) && (
-        <div className="flex items-center gap-1.5">
-          {trendValue && (
-            <span className={`text-[var(--text-xs)] font-semibold ${TREND_CLASSES[trend]}`}>
-              {trend === "up" && "↑ "}
-              {trend === "down" && "↓ "}
-              {trendValue}
-            </span>
-          )}
-          {compareLabel && (
-            <span className="text-[var(--text-xs)] text-[var(--color-text-tertiary)]">
-              {compareLabel}
-            </span>
-          )}
+      <div className="mb-3 sm:mb-4">
+        <div className={`flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-xl ${toneClasses[tone]}`}>
+          <Icon size={20} className="sm:w-[22px] sm:h-[22px]" strokeWidth={1.8} />
         </div>
-      )}
-    </div>
+      </div>
+      <p className="text-xs font-semibold text-[var(--color-text-secondary)]">{label}</p>
+      <p className="mt-1 text-3xl font-semibold tracking-tight text-[var(--color-text-primary)]">{displayValue}</p>
+      {renderTrend()}
+    </section>
   );
 }

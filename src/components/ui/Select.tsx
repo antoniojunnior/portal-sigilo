@@ -1,6 +1,7 @@
 "use client";
 
 import { forwardRef } from "react";
+import { ChevronDown } from "lucide-react";
 
 interface SelectOption {
   value: string;
@@ -60,7 +61,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             aria-invalid={error ? "true" : undefined}
             aria-describedby={describedBy}
             className={[
-              "w-full min-h-[44px] rounded-[var(--radius-md)] border px-3.5 py-2 pr-10 appearance-none",
+              "w-full min-h-[44px] rounded-2xl border px-3.5 py-2 pr-10 appearance-none",
               "bg-[var(--color-bg)] text-[var(--color-text-primary)] text-[var(--text-base)]",
               "transition-colors duration-[var(--duration-fast)] cursor-pointer",
               "focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]",
@@ -90,9 +91,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-tertiary)]"
             aria-hidden
           >
-            <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-              <path d="M4 6l4 4 4-4" />
-            </svg>
+            <ChevronDown size={16} strokeWidth={1.5} />
           </span>
         </div>
 

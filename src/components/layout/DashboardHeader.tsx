@@ -1,143 +1,240 @@
 "use client";
 
-import { Avatar } from "@/components/ui/Avatar";
+import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
-import { useMobileMenu } from "@/contexts/MobileMenuContext";
+import { Bell, X, LogOut } from "lucide-react";
+import { Avatar } from "@/components/ui/Avatar";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { LogoSigilo } from "@/components/portal/LogoSigilo";
+import useSWR from "swr";
 
-interface BreadcrumbItem {
-  label: string;
-  href?: string;
-}
+const ROLE_LABELS: Record<string, string> = {
+  admin: "Admin",
+  gestor: "Gestor",
+  auditor: "Auditor",
+};
 
 interface DashboardHeaderProps {
-  breadcrumbs?: BreadcrumbItem[];
-  /** ISO date range label, e.g. "Últimos 30 dias" */
+  breadcrumbs?: { label: string; href?: string }[];
   periodLabel?: string;
-  /** Unread notification count */
   notifications?: number;
-  /** Current user (overrides auth context if provided) */
   user?: { name: string; avatarUrl?: string };
+  /** Kept for API compatibility; no-op in current layout */
   onMenuToggle?: () => void;
   className?: string;
 }
 
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
 export function DashboardHeader({
   breadcrumbs = [],
   periodLabel,
-  notifications,
+  notifications: initialNotifications = 0,
   user: userProp,
-  onMenuToggle,
   className = "",
 }: DashboardHeaderProps) {
   const { user: authUser, signOut } = useAuth();
-  const { toggle: toggleMobileMenu } = useMobileMenu();
   const displayUser = userProp ?? (authUser ? { name: authUser.nome } : undefined);
-  const handleMenuToggle = onMenuToggle ?? toggleMobileMenu;
+
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  const { data: notificationData } = useSWR<{ unreadCount: number }>(
+    authUser ? "/api/dashboard/notifications/count" : null,
+    fetcher,
+    { refreshInterval: 30000, fallbackData: { unreadCount: initialNotifications } }
+  );
+
+  const unreadCount = notificationData?.unreadCount ?? initialNotifications;
+
+  useEffect(() => {
+    function handleOutside(e: MouseEvent) {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileOpen(false);
+      }
+    }
+    if (profileOpen) document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, [profileOpen]);
 
   return (
     <header
-      className={[
-        "sticky top-0 z-[var(--z-sticky)]",
-        "bg-[var(--color-card)] border-b border-[var(--color-border)]",
-        "px-5 flex-shrink-0 flex items-center gap-4",
-        className,
-      ]
-        .filter(Boolean)
-        .join(" ")}
-      style={{ minHeight: "var(--dashboard-header-height)" }}
+      className={`sticky top-0 z-30 flex h-[var(--dashboard-header-height)] items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-card)]/92 px-4 backdrop-blur-md md:px-6 ${className}`}
     >
-      {/* Mobile menu toggle — always visible on mobile */}
-      <button
-        type="button"
-        onClick={handleMenuToggle}
-        aria-label="Abrir menu"
-        className="lg:hidden w-9 h-9 flex items-center justify-center rounded-[var(--radius-md)] text-[var(--color-text-tertiary)] hover:bg-[var(--color-bg-secondary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
-      >
-        <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden>
-          <path d="M2 4h12M2 8h12M2 12h12" />
-        </svg>
-      </button>
+      {/* Left — logo (mobile) | org + breadcrumbs (desktop) */}
+      <div className="flex items-center gap-3">
+        <Link
+          href="/app"
+          className="lg:hidden outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-surface)] rounded-xl"
+        >
+          <LogoSigilo variant="full" iconSize={28} />
+        </Link>
 
-      {/* Breadcrumbs */}
-      {breadcrumbs.length > 0 && (
-        <nav aria-label="Navegação por trilha" className="flex-1 min-w-0">
-          <ol className="flex items-center gap-1.5 flex-wrap">
-            {breadcrumbs.map((crumb, i) => (
-              <li key={crumb.label} className="flex items-center gap-1.5">
-                {i > 0 && (
-                  <span className="text-[var(--color-text-tertiary)] text-[var(--text-xs)]" aria-hidden>
-                    /
+        <div className="hidden lg:block">
+          <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+            {authUser?.orgName || "Portal Sigilo"}
+          </p>
+          {breadcrumbs.length > 0 ? (
+            <div className="flex items-center gap-2">
+              <nav
+                aria-label="Breadcrumb"
+                className="flex items-center gap-1 text-xs text-[var(--color-text-secondary)]"
+              >
+                {breadcrumbs.map((b, i) => (
+                  <span key={i} className="flex items-center gap-1">
+                    {i > 0 && <span className="opacity-40">›</span>}
+                    {b.href ? (
+                      <Link
+                        href={b.href}
+                        className="transition-colors hover:text-[var(--color-text-primary)]"
+                      >
+                        {b.label}
+                      </Link>
+                    ) : (
+                      <span className="font-semibold text-[var(--color-text-primary)]">
+                        {b.label}
+                      </span>
+                    )}
                   </span>
-                )}
-                {crumb.href && i < breadcrumbs.length - 1 ? (
-                  <a
-                    href={crumb.href}
-                    className="text-[var(--text-sm)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] transition-colors truncate max-w-[120px]"
-                  >
-                    {crumb.label}
-                  </a>
-                ) : (
-                  <span
-                    aria-current="page"
-                    className="text-[var(--text-sm)] font-medium text-[var(--color-text-primary)] truncate max-w-[160px]"
-                  >
-                    {crumb.label}
-                  </span>
-                )}
-              </li>
-            ))}
-          </ol>
-        </nav>
-      )}
+                ))}
+              </nav>
+              {periodLabel && (
+                <span className="rounded-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-2 py-0.5 text-[10px] font-bold text-[var(--color-text-tertiary)]">
+                  {periodLabel}
+                </span>
+              )}
+            </div>
+          ) : (
+            <p className="flex items-center gap-2 text-xs text-[var(--color-text-secondary)]">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--color-primary)]" />
+              Ambiente de produção
+            </p>
+          )}
+        </div>
+      </div>
 
-      <div className="ml-auto flex items-center gap-2 flex-shrink-0">
-        {/* Period label */}
-        {periodLabel && (
-          <span className="hidden sm:inline text-[var(--text-xs)] text-[var(--color-text-tertiary)] border border-[var(--color-border)] rounded-[var(--radius-sm)] px-2.5 py-1">
-            {periodLabel}
-          </span>
-        )}
+      {/* Right — theme + notifications + profile */}
+      <div className="flex items-center gap-3">
+        <ThemeToggle />
 
         {/* Notifications */}
-        {notifications !== undefined && (
+        <div className="relative">
           <button
             type="button"
-            aria-label={`${notifications} notificações não lidas`}
-            className="relative w-9 h-9 flex items-center justify-center rounded-[var(--radius-md)] text-[var(--color-text-tertiary)] hover:bg-[var(--color-bg-secondary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
+            aria-label="Notificações"
+            onClick={() => setNotifOpen((o) => !o)}
+            className="relative rounded-lg p-2 text-[var(--color-text-secondary)] transition hover:bg-[var(--color-card-hover)] focus-visible:shadow-[var(--shadow-focus)]"
           >
-            <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-              <path d="M8 2a5 5 0 0 0-5 5v2l-1 2h12l-1-2V7a5 5 0 0 0-5-5zM6 13a2 2 0 0 0 4 0" strokeLinecap="round"/>
-            </svg>
-            {notifications > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[var(--color-accent)]" aria-hidden />
+            <Bell size={20} />
+            {unreadCount > 0 && (
+              <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-danger)] px-1 text-[10px] font-bold text-white ring-2 ring-[var(--color-card)]">
+                {unreadCount}
+              </span>
             )}
           </button>
-        )}
 
-        {/* User name + logout */}
-        {displayUser && (
-          <div className="flex items-center gap-2">
-            <Avatar
-              src={displayUser.avatarUrl}
-              name={displayUser.name}
-              size="sm"
-            />
-            {authUser && (
-              <button
-                type="button"
-                onClick={signOut}
-                aria-label="Sair"
-                title="Sair"
-                className="w-8 h-8 flex items-center justify-center rounded-[var(--radius-md)] text-[var(--color-text-tertiary)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-danger)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
-              >
-                <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden>
-                  <path d="M6 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" />
-                  <path d="M10 11l3-3-3-3M13 8H6" />
-                </svg>
-              </button>
+          {notifOpen && (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                aria-hidden
+                onClick={() => setNotifOpen(false)}
+              />
+              <div className="absolute right-0 top-full z-50 mt-2 w-72 animate-in fade-in slide-in-from-top-2 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-[var(--shadow-lg)] duration-200">
+                <div className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-4">
+                  <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
+                    Notificações
+                  </h3>
+                  <button
+                    onClick={() => setNotifOpen(false)}
+                    className="rounded-lg p-1 text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-card-hover)]"
+                    aria-label="Fechar"
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
+                <div className="px-5 py-6 text-center">
+                  {unreadCount > 0 ? (
+                    <p className="text-sm text-[var(--color-text-secondary)]">
+                      Você tem{" "}
+                      <span className="font-bold text-[var(--color-text-primary)]">
+                        {unreadCount}
+                      </span>{" "}
+                      notificação{unreadCount !== 1 ? "ões" : ""} não lida
+                      {unreadCount !== 1 ? "s" : ""}.
+                    </p>
+                  ) : (
+                    <p className="text-sm text-[var(--color-text-tertiary)]">
+                      Nenhuma notificação nova.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Profile dropdown */}
+        <div
+          ref={profileRef}
+          className="relative flex items-center gap-3 border-l border-[var(--color-border)] pl-3"
+        >
+          <button
+            type="button"
+            onClick={() => setProfileOpen((o) => !o)}
+            aria-label="Menu do usuário"
+            aria-expanded={profileOpen}
+            className="flex items-center gap-3 rounded-xl p-1 outline-none transition hover:bg-[var(--color-card-hover)] focus-visible:shadow-[var(--shadow-focus)]"
+          >
+            {displayUser && (
+              <>
+                <Avatar
+                  src={displayUser.avatarUrl}
+                  name={displayUser.name}
+                  size="sm"
+                  className="ring-2 ring-[var(--color-primary-surface)]"
+                />
+                <div className="hidden text-left sm:block">
+                  <p className="text-sm font-semibold leading-none text-[var(--color-text-primary)]">
+                    {displayUser.name.split(" ")[0]}
+                  </p>
+                  <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)]">
+                    {ROLE_LABELS[authUser?.role ?? ""] ?? "Usuário"}
+                  </p>
+                </div>
+              </>
             )}
-          </div>
-        )}
+          </button>
+
+          {profileOpen && (
+            <div className="absolute right-0 top-full z-50 mt-2 w-52 animate-in fade-in slide-in-from-top-2 overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-[var(--shadow-lg)] duration-200">
+              {displayUser && (
+                <div className="border-b border-[var(--color-border)] px-4 py-3">
+                  <p className="truncate text-sm font-semibold text-[var(--color-text-primary)]">
+                    {displayUser.name}
+                  </p>
+                  <p className="text-[11px] text-[var(--color-text-tertiary)]">
+                    {ROLE_LABELS[authUser?.role ?? ""] ?? "Usuário"}
+                  </p>
+                </div>
+              )}
+              <div className="p-2">
+                <button
+                  onClick={() => {
+                    setProfileOpen(false);
+                    signOut();
+                  }}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-[var(--color-danger)] outline-none transition hover:bg-[var(--color-danger-surface)] focus-visible:shadow-[var(--shadow-focus)]"
+                >
+                  <LogOut size={15} strokeWidth={2} />
+                  Sair da conta
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );

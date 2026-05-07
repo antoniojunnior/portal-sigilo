@@ -19,14 +19,14 @@ export function LogoSigilo({ variant = "full", className = "", iconSize = 32 }: 
       {/* Shackle (lock arch) — petróleo: segurança */}
       <path
         d="M10 22V14C10 8.477 14.477 4 20 4s10 4.477 10 10v8"
-        stroke="#2A6070"
+        stroke="var(--color-primary)"
         strokeWidth="4.5"
         strokeLinecap="round"
       />
       {/* Bubble body — coral: conversa humana */}
       <path
         d="M4 20h32c2.209 0 4 1.791 4 4v16c0 2.209-1.791 4-4 4H18L8 50l2-6H4c-2.209 0-4-1.791-4-4V24c0-2.209 1.791-4 4-4z"
-        fill="#C05A4A"
+        fill="var(--color-accent)"
       />
       {/* Text lines */}
       <rect x="8" y="28" width="24" height="2.5" rx="1.25" fill="white" fillOpacity="0.95" />
@@ -41,8 +41,8 @@ export function LogoSigilo({ variant = "full", className = "", iconSize = 32 }: 
     <span className={`flex items-center gap-2 ${className}`}>
       {icon}
       <span className="font-bold leading-none tracking-tight" style={{ fontSize: Math.max(13, Math.round(iconSize * 0.58)) }}>
-        <span style={{ color: "#2A6070" }}>portal</span>
-        <span style={{ color: "#C05A4A" }}>sigilo</span>
+        <span style={{ color: "var(--color-primary)" }}>portal</span>
+        <span style={{ color: "var(--color-accent)" }}>sigilo</span>
       </span>
     </span>
   );

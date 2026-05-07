@@ -110,7 +110,7 @@ export default function Tela0() {
               label: "Anônimo",
               icon: (
                 /* eye-off */
-                <svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="#2A6070" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="var(--color-primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <path d="M1 1l12 12M5.5 5.6A2 2 0 0 0 8.4 8.5M3 3.3C1.7 4.3 1 6 1 6s2 4 6 4c1.1 0 2-.3 2.8-.7M6 2.1C6.3 2 6.7 2 7 2c4 0 6 4 6 4s-.5 1-1.4 2" />
                 </svg>
               ),
@@ -119,7 +119,7 @@ export default function Tela0() {
               label: "Sigiloso",
               icon: (
                 /* lock */
-                <svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="#2A6070" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="var(--color-primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <rect x="2" y="6" width="10" height="7" rx="1.5" />
                   <path d="M4.5 6V4a2.5 2.5 0 0 1 5 0v2" />
                 </svg>
@@ -129,7 +129,7 @@ export default function Tela0() {
               label: "Sem rastreamento",
               icon: (
                 /* shield-off / no-track */
-                <svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="#2A6070" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="var(--color-primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <path d="M7 1L2 3v4c0 3 2.3 5 5 6 1-.3 2-.8 2.8-1.5M12 8.1V3L9 2" />
                   <path d="M1 1l12 12" />
                 </svg>
@@ -145,7 +145,7 @@ export default function Tela0() {
                 />
               )}
               {item.icon}
-              <span className="text-xs font-medium" style={{ color: "#2A6070" }}>
+              <span className="text-xs font-medium" style={{ color: "var(--color-primary)" }}>
                 {item.label}
               </span>
             </span>
@@ -169,7 +169,7 @@ export default function Tela0() {
               fontSize: 11,
               letterSpacing: "0.10em",
               textTransform: "uppercase",
-              color: "#C05A4A",
+              color: "var(--color-accent)",
             }}
           >
             Canal de escuta segura
@@ -234,8 +234,8 @@ export default function Tela0() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onFocus={(e) => {
-                  e.currentTarget.style.border = "1px solid #2A6070";
-                  e.currentTarget.style.boxShadow = "0 0 0 2px rgba(42,96,112,0.12)";
+                  e.currentTarget.style.border = "1px solid var(--color-primary)";
+                  e.currentTarget.style.boxShadow = "var(--shadow-focus)";
                   e.currentTarget.style.background = "var(--color-card)";
                 }}
                 onBlur={(e) => {
@@ -337,8 +337,8 @@ export default function Tela0() {
                 background: "var(--color-bg-secondary)",
               }}
               onFocus={(e) => {
-                e.currentTarget.style.border = "1px solid #2A6070";
-                e.currentTarget.style.boxShadow = "0 0 0 2px rgba(42,96,112,0.12)";
+                e.currentTarget.style.border = "1px solid var(--color-primary)";
+                e.currentTarget.style.boxShadow = "var(--shadow-focus)";
               }}
               onBlur={(e) => {
                 e.currentTarget.style.border = "1px solid var(--color-border)";
@@ -381,8 +381,8 @@ export default function Tela0() {
           <div
             className="flex items-center gap-2.5 mt-5"
             style={{
-              background: "rgba(42,96,112,0.06)",
-              border: "1px solid rgba(42,96,112,0.2)",
+              background: "var(--color-primary-surface)",
+              border: "1px solid var(--color-border)",
               borderRadius: "var(--radius-md)",
               padding: "0.625rem 0.875rem",
             }}
@@ -391,10 +391,10 @@ export default function Tela0() {
           >
             <span
               className="animate-pulse-slow flex-shrink-0 rounded-full"
-              style={{ width: 8, height: 8, background: "#2A6070", display: "block" }}
+              style={{ width: 8, height: 8, background: "var(--color-primary)", display: "block" }}
               aria-hidden
             />
-            <p style={{ fontSize: 12, color: "#2A6070", lineHeight: 1.4, margin: 0 }}>
+            <p style={{ fontSize: 12, color: "var(--color-primary)", lineHeight: 1.4, margin: 0 }}>
               <strong>Sua identidade não é registrada</strong> em nenhuma etapa deste canal.
             </p>
           </div>

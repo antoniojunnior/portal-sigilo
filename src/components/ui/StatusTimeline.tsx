@@ -1,3 +1,5 @@
+import { Check } from "lucide-react";
+
 interface TimelineStep {
   label: string;
   desc?: string;
@@ -20,12 +22,12 @@ export function StatusTimeline({ steps, className = "" }: StatusTimelineProps) {
         const isLast = i === steps.length - 1;
 
         return (
-          <li key={step.label} className="flex gap-3">
+          <li key={step.label} className="flex gap-4">
             {/* Timeline track */}
             <div className="flex flex-col items-center flex-shrink-0">
               <div
                 className={[
-                  "w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-[var(--text-xs)] font-semibold",
+                  "w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-[12px] font-semibold transition-all duration-200",
                   step.done
                     ? "bg-[var(--color-success)] text-[var(--color-on-success)]"
                     : step.active
@@ -36,9 +38,7 @@ export function StatusTimeline({ steps, className = "" }: StatusTimelineProps) {
                   .join(" ")}
               >
                 {step.done ? (
-                  <svg viewBox="0 0 10 10" width="9" height="9" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
-                    <path d="M2 5l2.5 2.5L8 2.5" />
-                  </svg>
+                  <Check size={14} strokeWidth={3} />
                 ) : (
                   <span>{i + 1}</span>
                 )}
@@ -47,7 +47,7 @@ export function StatusTimeline({ steps, className = "" }: StatusTimelineProps) {
               {!isLast && (
                 <div
                   className={[
-                    "w-px flex-1 mt-1 mb-1 min-h-[20px]",
+                    "w-0.5 flex-1 mt-1 mb-1 min-h-[24px] transition-all duration-300",
                     step.done
                       ? "bg-[var(--color-success)]"
                       : "bg-[var(--color-border)]",
@@ -60,10 +60,10 @@ export function StatusTimeline({ steps, className = "" }: StatusTimelineProps) {
             </div>
 
             {/* Step content */}
-            <div className={["pb-4", isLast ? "pb-0" : ""].filter(Boolean).join(" ")}>
+            <div className={["pb-6", isLast ? "pb-0" : ""].filter(Boolean).join(" ")}>
               <p
                 className={[
-                  "text-[var(--text-sm)] font-medium leading-snug",
+                  "text-[13px] font-semibold leading-tight",
                   step.done || step.active
                     ? "text-[var(--color-text-primary)]"
                     : "text-[var(--color-text-tertiary)]",
@@ -74,7 +74,7 @@ export function StatusTimeline({ steps, className = "" }: StatusTimelineProps) {
                 {step.label}
               </p>
               {step.desc && (
-                <p className="mt-0.5 text-[var(--text-xs)] text-[var(--color-text-tertiary)] leading-relaxed">
+                <p className="mt-1 text-[12px] text-[var(--color-text-secondary)] leading-relaxed">
                   {step.desc}
                 </p>
               )}
@@ -85,3 +85,4 @@ export function StatusTimeline({ steps, className = "" }: StatusTimelineProps) {
     </ol>
   );
 }
+

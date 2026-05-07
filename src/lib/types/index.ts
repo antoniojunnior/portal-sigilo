@@ -64,7 +64,7 @@ export interface TriagemIA {
   categoria: string;
   subcategoria?: string;
   urgencia: UrgenciaNivel;
-  lei_aplicavel?: string;
+  lei_aplicavel?: string | string[];
   area_risco?: string;
   recomendacao?: string;
   gerado_em: Timestamp;

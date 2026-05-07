@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, use, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -16,10 +17,18 @@ import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Modal } from "@/components/ui/Modal";
+import { Lock, Sparkles, Plus, ArrowLeft, Send, MessageSquare, History, Calendar, User, ShieldCheck, AlertCircle, Check, Paperclip, Download } from "lucide-react";
 import type { CaseStatus, UrgenciaNivel, CanalOrigem, TriagemIA } from "@/lib/types";
 
 interface Props {
   params: Promise<{ caseId: string }>;
+}
+
+interface AnexoData {
+  id: string;
+  nome: string;
+  tipo: string;
+  url?: string;
 }
 
 interface CaseData {
@@ -35,6 +44,7 @@ interface CaseData {
   responsavel_id?: string;
   notas_internas?: string;
   prazo?: string;
+  anexos?: AnexoData[];
 }
 
 interface MessageData {
@@ -349,14 +359,13 @@ export default function CaseDetailPage({ params }: Props) {
       <div className="min-h-dvh flex items-center justify-center p-4">
         <div className="text-center max-w-sm">
           <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "var(--color-danger-surface)" }}>
-            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="var(--color-danger)" strokeWidth="1.5" aria-hidden>
-              <path d="M12 9v4M12 17h.01" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" strokeLinejoin="round"/>
-            </svg>
+            <Lock size={26} strokeWidth={1.5} color="var(--color-danger)" />
           </div>
           <h1 className="text-[var(--text-lg)] font-semibold text-[var(--color-text-primary)] mb-2">Acesso restrito</h1>
           <p className="text-[var(--text-sm)] text-[var(--color-text-secondary)] mb-6">{accessError}</p>
-          <Button variant="secondary" onClick={() => router.push("/app/casos")}>← Voltar aos casos</Button>
+          <Button variant="secondary" onClick={() => router.push("/app/casos")} iconLeft={<ArrowLeft size={14} strokeWidth={1.5} />}>
+            Voltar aos casos
+          </Button>
         </div>
       </div>
     );
@@ -390,13 +399,15 @@ export default function CaseDetailPage({ params }: Props) {
           <div className="flex-1 min-w-0 space-y-4">
 
             {/* Case header card */}
-            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 sm:p-5">
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-6 sm:p-7 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
                 <div className="min-w-0">
-                  <p className="font-mono text-[var(--text-xs)] text-[var(--color-text-tertiary)] mb-1">
-                    {caseData.protocolo}
-                  </p>
-                  <h1 className="text-[var(--text-lg)] font-semibold text-[var(--color-text-primary)] leading-snug">
+                  <div className="flex items-center gap-2 mb-2">
+                    <p className="font-mono text-[var(--text-xs)] text-[var(--color-text-tertiary)] bg-[var(--color-bg-secondary)] px-2 py-0.5 rounded-lg border border-[var(--color-border)]">
+                      {caseData.protocolo}
+                    </p>
+                  </div>
+                  <h1 className="text-[var(--text-2xl)] font-bold text-[var(--color-text-primary)] leading-tight tracking-tight">
                     {caseData.categoria ?? "Categoria não classificada"}
                   </h1>
                 </div>
@@ -407,72 +418,83 @@ export default function CaseDetailPage({ params }: Props) {
               </div>
 
               {caseData.triagem_ia?.recomendacao && (
-                <p className="text-[var(--text-sm)] text-[var(--color-text-secondary)] leading-relaxed mb-3">
-                  {caseData.triagem_ia.recomendacao}
-                </p>
+                <div className="bg-[var(--color-primary-surface)]/30 border-l-4 border-[var(--color-primary)] p-4 mb-6 rounded-r-xl">
+                   <p className="text-[var(--text-sm)] text-[var(--color-text-secondary)] leading-relaxed italic">
+                    "{caseData.triagem_ia.recomendacao}"
+                  </p>
+                </div>
               )}
 
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center gap-4 pt-6 border-t border-[var(--color-border)]">
                 <Badge variant="status" status={caseData.status} />
-                <span className="text-[var(--text-xs)] text-[var(--color-text-tertiary)]">
-                  Aberto em{" "}
-                  {new Date(caseData.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
-                </span>
+                <div className="flex items-center gap-2 text-[var(--text-xs)] text-[var(--color-text-tertiary)]">
+                  <Calendar size={14} strokeWidth={1.5} />
+                  <span>
+                    Aberto em{" "}
+                    {new Date(caseData.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
+                  </span>
+                </div>
                 <span
-                  className="text-[var(--text-xs)] font-medium px-2 py-0.5 rounded-full"
+                  className="text-[var(--text-xs)] font-semibold px-3 py-1 rounded-full flex items-center gap-1.5"
                   style={{
                     background: dias > 30 ? "var(--color-danger-surface)" : "var(--color-bg-tertiary)",
                     color: dias > 30 ? "var(--color-danger)" : "var(--color-text-secondary)",
                   }}
                 >
-                  {dias}d em aberto
+                  {dias > 30 ? <AlertCircle size={12} /> : null}
+                  {dias} dias em aberto
                 </span>
               </div>
             </div>
 
             {/* IA triage card */}
             {caseData.triagem_ia && (
-              <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 sm:p-5">
-                <div className="flex items-center gap-2 mb-3">
+              <div className="relative overflow-hidden bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-6 sm:p-7 shadow-sm">
+                {/* Subtle background decoration */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[var(--color-primary)]/5 to-transparent rounded-bl-full pointer-events-none" />
+                
+                <div className="flex items-center gap-2.5 mb-6">
                   <div
-                    className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                    className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md"
                     style={{ background: "linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%)" }}
                     aria-hidden
                   >
-                    <svg viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="#fff" strokeWidth="1.6" aria-hidden>
-                      <path d="M8 2l1.5 3 3.5.5-2.5 2.5.5 3.5L8 10l-3 1.5.5-3.5L3 5.5 6.5 5 8 2z" strokeLinejoin="round" />
-                    </svg>
+                    <Sparkles size={16} strokeWidth={2} color="#fff" />
                   </div>
-                  <h2 className="text-[var(--text-sm)] font-semibold text-[var(--color-text-primary)]">Triagem por IA</h2>
+                  <h2 className="text-[var(--text-base)] font-bold text-[var(--color-text-primary)]">Triagem por Inteligência Artificial</h2>
                 </div>
-                <dl className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <dl className="grid grid-cols-2 sm:grid-cols-3 gap-y-6 gap-x-4">
                   {caseData.triagem_ia.categoria && (
-                    <div>
-                      <dt className="text-[var(--text-xs)] text-[var(--color-text-tertiary)] mb-0.5">Categoria</dt>
-                      <dd className="text-[var(--text-sm)] text-[var(--color-text-primary)]">{caseData.triagem_ia.categoria}</dd>
+                    <div className="space-y-1">
+                      <dt className="text-[var(--text-xs)] uppercase tracking-wider font-bold text-[var(--color-text-tertiary)]">Categoria sugerida</dt>
+                      <dd className="text-[var(--text-sm)] font-medium text-[var(--color-text-primary)]">{caseData.triagem_ia.categoria}</dd>
                     </div>
                   )}
                   {caseData.triagem_ia.subcategoria && (
-                    <div>
-                      <dt className="text-[var(--text-xs)] text-[var(--color-text-tertiary)] mb-0.5">Subcategoria</dt>
-                      <dd className="text-[var(--text-sm)] text-[var(--color-text-primary)]">{caseData.triagem_ia.subcategoria}</dd>
+                    <div className="space-y-1">
+                      <dt className="text-[var(--text-xs)] uppercase tracking-wider font-bold text-[var(--color-text-tertiary)]">Subcategoria</dt>
+                      <dd className="text-[var(--text-sm)] font-medium text-[var(--color-text-primary)]">{caseData.triagem_ia.subcategoria}</dd>
                     </div>
                   )}
                   {caseData.triagem_ia.lei_aplicavel && (
-                    <div>
-                      <dt className="text-[var(--text-xs)] text-[var(--color-text-tertiary)] mb-0.5">Lei aplicável</dt>
-                      <dd className="text-[var(--text-sm)] text-[var(--color-text-primary)]">{caseData.triagem_ia.lei_aplicavel}</dd>
+                    <div className="space-y-1">
+                      <dt className="text-[var(--text-xs)] uppercase tracking-wider font-bold text-[var(--color-text-tertiary)]">Lei aplicável</dt>
+                      <dd className="text-[var(--text-sm)] font-medium text-[var(--color-text-primary)]">
+                        {Array.isArray(caseData.triagem_ia.lei_aplicavel)
+                          ? caseData.triagem_ia.lei_aplicavel.join(", ")
+                          : caseData.triagem_ia.lei_aplicavel}
+                      </dd>
                     </div>
                   )}
                   {caseData.triagem_ia.area_risco && (
-                    <div>
-                      <dt className="text-[var(--text-xs)] text-[var(--color-text-tertiary)] mb-0.5">Área de risco</dt>
-                      <dd className="text-[var(--text-sm)] text-[var(--color-text-primary)]">{caseData.triagem_ia.area_risco}</dd>
+                    <div className="space-y-1">
+                      <dt className="text-[var(--text-xs)] uppercase tracking-wider font-bold text-[var(--color-text-tertiary)]">Área de risco</dt>
+                      <dd className="text-[var(--text-sm)] font-medium text-[var(--color-text-primary)]">{caseData.triagem_ia.area_risco}</dd>
                     </div>
                   )}
                   {caseData.triagem_ia.urgencia && (
-                    <div>
-                      <dt className="text-[var(--text-xs)] text-[var(--color-text-tertiary)] mb-0.5">Urgência IA</dt>
+                    <div className="space-y-1">
+                      <dt className="text-[var(--text-xs)] uppercase tracking-wider font-bold text-[var(--color-text-tertiary)]">Urgência IA</dt>
                       <dd><UrgencyIndicator level={caseData.triagem_ia.urgencia} showLabel /></dd>
                     </div>
                   )}
@@ -481,45 +503,65 @@ export default function CaseDetailPage({ params }: Props) {
             )}
 
             {/* Messages / chat */}
-            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 sm:p-5">
-              <h2 className="text-[var(--text-sm)] font-semibold text-[var(--color-text-primary)] mb-4">
-                Mensagens com o denunciante
-              </h2>
+            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-6 sm:p-7 shadow-sm">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2">
+                  <MessageSquare size={18} className="text-[var(--color-primary)]" />
+                  <h2 className="text-[var(--text-base)] font-bold text-[var(--color-text-primary)]">
+                    Mensagens com o denunciante
+                  </h2>
+                </div>
+                <div className="text-[var(--text-xs)] text-[var(--color-text-tertiary)] flex items-center gap-1.5 bg-[var(--color-bg-secondary)] px-2 py-1 rounded-lg">
+                  <ShieldCheck size={14} />
+                  Criptografia de ponta a ponta
+                </div>
+              </div>
 
-              <div className="space-y-3 mb-4 max-h-72 overflow-y-auto">
+              <div className="space-y-6 mb-6 max-h-[450px] overflow-y-auto pr-2 custom-scrollbar">
                 {messages.length === 0 ? (
-                  <p className="text-[var(--text-sm)] text-[var(--color-text-tertiary)] text-center py-4">
-                    Nenhuma mensagem ainda. Inicie a conversa com o denunciante.
-                  </p>
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="w-12 h-12 rounded-full bg-[var(--color-bg-tertiary)] flex items-center justify-center mb-3">
+                      <MessageSquare size={20} className="text-[var(--color-text-tertiary)] opacity-50" />
+                    </div>
+                    <p className="text-[var(--text-sm)] text-[var(--color-text-tertiary)] max-w-xs">
+                      Nenhuma mensagem ainda. O denunciante será notificado por e-mail quando você enviar uma mensagem.
+                    </p>
+                  </div>
                 ) : (
                   messages.map((msg) => (
                     <div
                       key={msg.id}
-                      className={["flex", msg.autor === "gestor" ? "justify-end" : "justify-start"].join(" ")}
+                      className={["flex w-full", msg.autor === "gestor" ? "justify-end" : "justify-start"].join(" ")}
                     >
                       {msg.autor === "sistema" ? (
-                        <div className="w-full text-center">
-                          <span className="inline-block text-[var(--text-xs)] text-[var(--color-text-tertiary)] bg-[var(--color-bg-secondary)] rounded-full px-3 py-1">
+                        <div className="w-full flex justify-center my-2">
+                          <span className="text-[var(--text-xs)] font-medium text-[var(--color-text-tertiary)] bg-[var(--color-bg-tertiary)]/50 rounded-full px-4 py-1 border border-[var(--color-border)]">
                             {msg.texto}
                           </span>
                         </div>
                       ) : (
-                        <div className="max-w-[78%] space-y-1">
-                          <p className="text-[var(--text-2xs)] font-semibold px-1"
-                            style={{ color: msg.autor === "gestor" ? "var(--color-primary)" : "var(--color-text-tertiary)" }}>
-                            {msg.autor === "gestor" ? "Você" : "Denunciante"}
-                          </p>
-                          <div
-                            className="rounded-[var(--radius-lg)] px-3.5 py-2.5"
-                            style={{
-                              background: msg.autor === "gestor" ? "var(--color-primary)" : "var(--color-bg-secondary)",
-                              color: msg.autor === "gestor" ? "#fff" : "var(--color-text-primary)",
-                            }}
-                          >
-                            <p className="text-[var(--text-sm)] leading-relaxed">{msg.texto}</p>
-                            <p className="text-[var(--text-2xs)] mt-1 opacity-60 text-right">
-                              {new Date(msg.timestamp).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                        <div className={["max-w-[85%] sm:max-w-[70%] group", msg.autor === "gestor" ? "items-end" : "items-start"].join(" ")}>
+                          <div className={["flex items-center gap-2 mb-1 px-1", msg.autor === "gestor" ? "flex-row-reverse" : "flex-row"].join(" ")}>
+                            <p className="text-[var(--text-2xs)] font-bold uppercase tracking-wider"
+                              style={{ color: msg.autor === "gestor" ? "var(--color-primary)" : "var(--color-text-tertiary)" }}>
+                              {msg.autor === "gestor" ? "Canal de Ética" : "Denunciante"}
                             </p>
+                            <span className="text-[10px] text-[var(--color-text-tertiary)] opacity-0 group-hover:opacity-100 transition-opacity">
+                              {new Date(msg.timestamp).toLocaleString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                            </span>
+                          </div>
+                          <div
+                            className={[
+                              "rounded-2xl px-4 py-3 shadow-sm transition-all duration-200",
+                              msg.autor === "gestor" 
+                                ? "bg-[var(--color-primary)] text-white rounded-tr-none hover:shadow-md" 
+                                : "bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] rounded-tl-none border border-[var(--color-border)] hover:bg-[var(--color-bg-secondary)]"
+                            ].join(" ")}
+                          >
+                            <p className="text-[var(--text-sm)] leading-relaxed whitespace-pre-wrap">{msg.texto}</p>
+                            <div className={["flex items-center gap-1 mt-1.5 opacity-60 text-[10px]", msg.autor === "gestor" ? "justify-end" : "justify-start"].join(" ")}>
+                              {new Date(msg.timestamp).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit" })}
+                            </div>
                           </div>
                         </div>
                       )}
@@ -529,31 +571,45 @@ export default function CaseDetailPage({ params }: Props) {
                 <div ref={messagesEndRef} />
               </div>
 
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Escrever mensagem ao denunciante…"
+              <div className="relative group">
+                <textarea
+                  placeholder="Escrever mensagem oficial ao denunciante…"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void handleSendMessage(); } }}
                   disabled={sendingMessage}
-                  className="flex-1 min-h-[44px] rounded-[var(--radius-md)] border border-[var(--color-border)] px-3.5 py-2 bg-[var(--color-bg)] text-[var(--color-text-primary)] text-[var(--text-base)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] disabled:opacity-50"
+                  rows={2}
+                  className="w-full rounded-2xl border border-[var(--color-border)] pl-4 pr-16 py-3 bg-[var(--color-bg)] text-[var(--color-text-primary)] text-[var(--text-sm)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] disabled:opacity-50 transition-all resize-none shadow-inner"
                 />
-                <Button variant="primary" size="md" loading={sendingMessage} disabled={!newMessage.trim()} onClick={handleSendMessage}>
-                  Enviar
-                </Button>
+                <div className="absolute right-2 bottom-2">
+                  <Button 
+                    variant="primary" 
+                    size="sm" 
+                    loading={sendingMessage} 
+                    disabled={!newMessage.trim()} 
+                    onClick={handleSendMessage} 
+                    className="h-10 w-10 rounded-xl !p-0 flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all"
+                  >
+                    <Send size={18} strokeWidth={2} />
+                  </Button>
+                </div>
               </div>
             </div>
 
             {/* Audit log */}
-            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 sm:p-5">
-              <h2 className="text-[var(--text-sm)] font-semibold text-[var(--color-text-primary)] mb-4">
-                Log de auditoria
-              </h2>
+            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-6 sm:p-7 shadow-sm">
+              <div className="flex items-center gap-2 mb-6">
+                <History size={18} className="text-[var(--color-text-secondary)]" />
+                <h2 className="text-[var(--text-base)] font-bold text-[var(--color-text-primary)]">
+                  Log de auditoria
+                </h2>
+              </div>
               {auditLogs.length === 0 ? (
-                <p className="text-[var(--text-sm)] text-[var(--color-text-tertiary)]">Nenhum registro ainda.</p>
+                <div className="text-center py-8 bg-[var(--color-bg-tertiary)]/50 rounded-xl border border-dashed border-[var(--color-border)]">
+                  <p className="text-[var(--text-sm)] text-[var(--color-text-tertiary)]">Nenhum registro de atividade ainda.</p>
+                </div>
               ) : (
-                <div className="space-y-0.5">
+                <div className="space-y-1">
                   {auditLogs.map((entry) => {
                     const actor = userMap[entry.user_id];
                     return (
@@ -571,17 +627,23 @@ export default function CaseDetailPage({ params }: Props) {
           </div>
 
           {/* ── Sidebar column ── */}
-          <div className="w-full lg:w-60 xl:w-64 flex-shrink-0 space-y-4">
+          <div className="w-full lg:w-72 xl:w-80 flex-shrink-0 space-y-5">
 
             {/* Timeline */}
-            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 sm:p-5">
-              <h2 className="text-[var(--text-sm)] font-semibold text-[var(--color-text-primary)] mb-4">Progresso</h2>
+            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-6 shadow-sm">
+              <h2 className="text-[var(--text-sm)] font-bold text-[var(--color-text-primary)] mb-5 flex items-center gap-2">
+                <History size={16} />
+                Progresso do Caso
+              </h2>
               <StatusTimeline steps={buildTimelineSteps(caseData.status)} />
             </div>
 
             {/* Status change */}
-            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 sm:p-5">
-              <h2 className="text-[var(--text-sm)] font-semibold text-[var(--color-text-primary)] mb-3">Alterar status</h2>
+            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-6 shadow-sm">
+              <h2 className="text-[var(--text-sm)] font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
+                <Badge variant="default" className="p-1"><Check size={12} /></Badge>
+                Alterar Status
+              </h2>
               <Select
                 label="Status"
                 srOnly
@@ -592,23 +654,36 @@ export default function CaseDetailPage({ params }: Props) {
               />
             </div>
 
-            {/* AI assistant */}
-            <Button
-              variant="secondary"
-              fullWidth
-              onClick={() => setAiOpen(true)}
-              iconLeft={
-                <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-                  <path d="M8 2l1.5 3 3.5.5-2.5 2.5.5 3.5L8 10l-3 1.5.5-3.5L3 5.5 6.5 5 8 2z" strokeLinejoin="round" />
-                </svg>
-              }
-            >
-              Analisar com IA
-            </Button>
+            {/* AI assistant — gated by plan */}
+            {user?.plano === "entrada" ? (
+              <div className="rounded-2xl border-2 border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-5 text-center">
+                <Lock size={20} className="mx-auto mb-2 text-[var(--color-text-tertiary)]" />
+                <p className="text-xs text-[var(--color-text-secondary)] mb-3">
+                  Assistente de IA disponível nos planos Gestão e Enterprise.
+                </p>
+                <Link href="/app/configuracoes" className="text-xs font-bold text-[var(--color-primary)] hover:underline">
+                  Conhecer planos →
+                </Link>
+              </div>
+            ) : (
+              <Button
+                variant="secondary"
+                fullWidth
+                size="lg"
+                onClick={() => setAiOpen(true)}
+                className="py-6 rounded-2xl border-2 border-[var(--color-primary)]/10 hover:border-[var(--color-primary)]/30 hover:bg-[var(--color-primary)]/5 text-[var(--color-primary)] font-bold shadow-sm"
+                iconLeft={<Sparkles size={18} strokeWidth={2} />}
+              >
+                Assistente de IA
+              </Button>
+            )}
 
             {/* Responsible */}
-            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 sm:p-5">
-              <h2 className="text-[var(--text-sm)] font-semibold text-[var(--color-text-primary)] mb-3">Responsável</h2>
+            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-6 shadow-sm">
+              <h2 className="text-[var(--text-sm)] font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
+                <User size={16} />
+                Responsável
+              </h2>
               <Select
                 label="Responsável"
                 srOnly
@@ -620,66 +695,124 @@ export default function CaseDetailPage({ params }: Props) {
             </div>
 
             {/* Deadline */}
-            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 sm:p-5">
-              <h2 className="text-[var(--text-sm)] font-semibold text-[var(--color-text-primary)] mb-3">Prazo</h2>
-              <input
-                type="date"
-                value={prazoValue}
-                onChange={(e) => setPrazoValue(e.target.value)}
-                onBlur={handleSavePrazo}
-                className="w-full min-h-[44px] rounded-[var(--radius-md)] border border-[var(--color-border)] px-3.5 py-2 bg-[var(--color-bg)] text-[var(--color-text-primary)] text-[var(--text-base)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
-              />
+            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-6 shadow-sm">
+              <h2 className="text-[var(--text-sm)] font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
+                <Calendar size={16} />
+                Prazo de Conclusão
+              </h2>
+              <div className="relative">
+                <input
+                  type="date"
+                  value={prazoValue}
+                  onChange={(e) => setPrazoValue(e.target.value)}
+                  className="w-full min-h-[46px] rounded-xl border border-[var(--color-border)] px-4 py-2 bg-[var(--color-bg)] text-[var(--color-text-primary)] text-[var(--text-sm)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all"
+                />
+              </div>
+              {prazoValue !== (caseData.prazo ? new Date(caseData.prazo).toISOString().split("T")[0] : "") && (
+                <Button variant="secondary" size="sm" fullWidth onClick={handleSavePrazo} className="mt-3 rounded-xl">
+                  Salvar prazo
+                </Button>
+              )}
               {prazoVencido && prazoValue && (
-                <p className="text-[var(--text-xs)] text-[var(--color-danger)] mt-1.5">Prazo vencido!</p>
+                <div className="flex items-center gap-1.5 mt-3 text-[var(--text-xs)] text-[var(--color-danger)] font-bold animate-pulse">
+                  <AlertCircle size={14} />
+                  Prazo vencido!
+                </div>
               )}
               {!prazoVencido && prazoNearby && prazoValue && (
-                <p className="text-[var(--text-xs)] text-[var(--color-warning)] mt-1.5">Prazo em menos de 5 dias.</p>
+                <div className="flex items-center gap-1.5 mt-3 text-[var(--text-xs)] text-[var(--color-warning)] font-bold">
+                  <AlertCircle size={14} />
+                  Prazo em menos de 5 dias.
+                </div>
+              )}
+            </div>
+
+            {/* Anexos */}
+            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-6 shadow-sm">
+              <h2 className="text-[var(--text-sm)] font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
+                <Paperclip size={16} />
+                Anexos
+              </h2>
+              {!caseData.anexos?.length ? (
+                <p className="text-xs text-[var(--color-text-tertiary)]">Nenhum anexo enviado.</p>
+              ) : (
+                <ul className="space-y-2">
+                  {caseData.anexos.map((a) => (
+                    <li key={a.id} className="flex items-center justify-between gap-2 rounded-xl border border-[var(--color-border)] px-3 py-2 text-xs">
+                      <span className="truncate text-[var(--color-text-primary)] font-medium">{a.nome}</span>
+                      {a.url && (
+                        <a
+                          href={a.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="shrink-0 flex items-center gap-1 text-[var(--color-primary)] hover:underline font-bold"
+                        >
+                          <Download size={13} />
+                        </a>
+                      )}
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
 
             {/* Internal notes */}
-            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 sm:p-5">
-              <h2 className="text-[var(--text-sm)] font-semibold text-[var(--color-text-primary)] mb-3">Notas internas</h2>
+            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-6 shadow-sm">
+              <h2 className="text-[var(--text-sm)] font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
+                <MessageSquare size={16} />
+                Notas Internas
+              </h2>
               <Textarea
                 label="Notas internas"
                 srOnly
                 value={notesValue}
                 onChange={(e) => setNotesValue(e.target.value)}
-                placeholder="Registre observações internas sobre este caso…"
+                placeholder="Registre observações estratégicas…"
                 rows={4}
+                className="rounded-xl text-[var(--text-sm)]"
               />
-              <div className="mt-2">
-                <Button variant="secondary" size="sm" loading={savingNotes} onClick={handleSaveNotes}>
-                  Salvar notas
+              <div className="mt-4">
+                <Button variant="secondary" size="sm" fullWidth loading={savingNotes} onClick={handleSaveNotes} className="rounded-xl">
+                  Salvar Alterações
                 </Button>
               </div>
             </div>
 
             {/* Mentioned parties */}
             {(user?.role === "admin" || user?.role === "gestor") && (
-              <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 sm:p-5">
-                <h2 className="text-[var(--text-sm)] font-semibold text-[var(--color-text-primary)] mb-3">Partes identificadas</h2>
+              <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-6 shadow-sm">
+                <h2 className="text-[var(--text-sm)] font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
+                  <ShieldCheck size={16} />
+                  Partes Identificadas
+                </h2>
                 {caseData.mencionados.length > 0 ? (
-                  <ul className="space-y-1.5 mb-3">
+                  <ul className="space-y-3 mb-5">
                     {caseData.mencionados.map((uid) => {
                       const u = userMap[uid];
                       return (
-                        <li key={uid} className="flex items-center gap-2 text-[var(--text-xs)]">
-                          <span
-                            className="w-2 h-2 rounded-full flex-shrink-0"
-                            style={{ background: "var(--color-accent)" }}
-                            aria-hidden
-                          />
-                          <span className="text-[var(--color-text-secondary)]">
-                            {u ? `${u.nome} (${u.role})` : uid}
-                          </span>
+                        <li key={uid} className="flex items-center gap-3 p-2 bg-[var(--color-bg-tertiary)]/50 rounded-xl border border-[var(--color-border)]">
+                          <div className="w-8 h-8 rounded-full bg-[var(--color-primary-surface)] flex items-center justify-center text-[var(--color-primary)] font-bold text-[var(--text-xs)]">
+                            {u?.nome.charAt(0) ?? "U"}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[var(--text-xs)] font-bold text-[var(--color-text-primary)] truncate">
+                              {u?.nome ?? uid}
+                            </p>
+                            <p className="text-[10px] text-[var(--color-text-tertiary)] truncate">
+                              {u?.role ?? "Usuário"}
+                            </p>
+                          </div>
                         </li>
                       );
                     })}
                   </ul>
-                ) : null}
-                <Button variant="secondary" size="sm" fullWidth onClick={() => setMencionadoModalOpen(true)}>
-                  + Adicionar parte
+                ) : (
+                  <div className="mb-4 p-4 text-center border border-dashed border-[var(--color-border)] rounded-xl">
+                    <p className="text-[var(--text-xs)] text-[var(--color-text-tertiary)]">Nenhuma parte adicionada</p>
+                  </div>
+                )}
+                <Button variant="secondary" size="sm" fullWidth onClick={() => setMencionadoModalOpen(true)} iconLeft={<Plus size={14} strokeWidth={1.5} />} className="rounded-xl">
+                  Adicionar Parte
                 </Button>
               </div>
             )}

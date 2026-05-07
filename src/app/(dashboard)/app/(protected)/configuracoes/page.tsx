@@ -11,6 +11,20 @@ import { Badge } from "@/components/ui/Badge";
 import { Select } from "@/components/ui/Select";
 import { Modal } from "@/components/ui/Modal";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { 
+  AlertTriangle, 
+  X, 
+  Users, 
+  Settings, 
+  CreditCard, 
+  ShieldAlert, 
+  Plus, 
+  CheckCircle2, 
+  MoreHorizontal,
+  Building2,
+  Trash2,
+  UserPlus
+} from "lucide-react";
 import type { Role } from "@/lib/types";
 
 interface UserData {
@@ -227,15 +241,19 @@ export default function ConfiguracoesPage() {
       <>
         <DashboardHeader breadcrumbs={[{ label: "Visão geral", href: "/app" }, { label: "Configurações" }]} />
         <PageContainer>
-          <div className="flex items-center justify-center min-h-[200px]">
-            <div className="text-center">
-              <p className="text-[var(--text-base)] font-semibold text-[var(--color-text-primary)] mb-2">
-                Acesso restrito a administradores
-              </p>
-              <p className="text-[var(--text-sm)] text-[var(--color-text-tertiary)]">
-                Somente administradores podem acessar as configurações da organização.
-              </p>
+          <div className="flex flex-col items-center justify-center min-h-[400px] text-center max-w-md mx-auto">
+            <div className="w-16 h-16 bg-[var(--color-bg-secondary)] rounded-full flex items-center justify-center mb-6 border border-[var(--color-border)]">
+              <ShieldAlert className="text-[var(--color-text-tertiary)]" size={32} />
             </div>
+            <h1 className="text-[var(--text-xl)] font-bold text-[var(--color-text-primary)] mb-2">
+              Acesso Restrito
+            </h1>
+            <p className="text-[var(--text-base)] text-[var(--color-text-tertiary)] mb-8">
+              Somente administradores podem acessar as configurações da organização e gerenciar usuários.
+            </p>
+            <Button variant="primary" asChild>
+              <Link href="/app">Voltar para o Dashboard</Link>
+            </Button>
           </div>
         </PageContainer>
       </>
@@ -247,332 +265,435 @@ export default function ConfiguracoesPage() {
       <DashboardHeader breadcrumbs={[{ label: "Visão geral", href: "/app" }, { label: "Configurações" }]} />
 
       <PageContainer>
-        <div className="max-w-2xl space-y-5">
-
-          {/* ── Org data ── */}
-          <section className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 sm:p-5 space-y-4">
-            <h2 className="text-[var(--text-base)] font-semibold text-[var(--color-text-primary)]">Organização</h2>
-
-            {orgLoading ? (
-              <div className="space-y-3">
-                <Skeleton height="44px" rounded="md" />
-                <Skeleton height="44px" rounded="md" />
-                <Skeleton height="44px" rounded="md" />
-              </div>
-            ) : (
-              <>
-                <Input
-                  label="Nome da organização"
-                  value={orgNome}
-                  onChange={(e) => setOrgNome(e.target.value)}
-                />
-
-                {org?.slug && (
-                  <div>
-                    <label className="block text-[var(--text-sm)] font-medium text-[var(--color-text-primary)] mb-1.5">
-                      Slug (URL do canal)
-                    </label>
-                    <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
-                      <span className="text-[var(--text-xs)] text-[var(--color-text-tertiary)]">
-                        portalsigilo.com.br/
-                      </span>
-                      <span className="font-mono text-[var(--text-sm)] text-[var(--color-text-primary)]">
-                        {org.slug}
-                      </span>
-                      <span
-                        className="ml-auto text-[var(--text-2xs)] font-medium px-1.5 py-0.5 rounded"
-                        style={{ background: "var(--color-bg-tertiary)", color: "var(--color-text-tertiary)" }}
-                      >
-                        somente leitura
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                <Input
-                  label="Mensagem de boas-vindas do canal"
-                  value={boasVindas}
-                  onChange={(e) => setBoasVindas(e.target.value)}
-                  helper="Exibida na tela inicial do canal de denúncias."
-                  placeholder="Este é um espaço seguro para você ser ouvido."
-                />
-
-                <div>
-                  <label className="block text-[var(--text-sm)] font-medium text-[var(--color-text-primary)] mb-1.5">
-                    Prazo padrão de resposta (dias)
-                  </label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={90}
-                    value={prazoPadrao}
-                    onChange={(e) => setPrazoPadrao(e.target.value)}
-                    className="w-28 min-h-[44px] rounded-[var(--radius-md)] border border-[var(--color-border)] px-3.5 py-2 bg-[var(--color-bg)] text-[var(--color-text-primary)] text-[var(--text-base)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
-                  />
-                </div>
-
-                {/* Departments — used as heatmap rows */}
-                <div>
-                  <label className="block text-[var(--text-sm)] font-medium text-[var(--color-text-primary)] mb-1">
-                    Departamentos
-                  </label>
-                  <p className="text-[var(--text-xs)] text-[var(--color-text-tertiary)] mb-2">
-                    Define as linhas do mapa de concentração por departamento.
-                  </p>
-
-                  {departamentos.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {departamentos.map((dept) => (
-                        <span
-                          key={dept}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[var(--text-xs)] font-medium"
-                          style={{ background: "var(--color-bg-tertiary)", color: "var(--color-text-secondary)" }}
-                        >
-                          {dept}
-                          <button
-                            type="button"
-                            onClick={() => setDepartamentos((prev) => prev.filter((d) => d !== dept))}
-                            className="ml-0.5 text-[var(--color-text-tertiary)] hover:text-[var(--color-danger)] transition-colors focus:outline-none"
-                            aria-label={`Remover ${dept}`}
-                          >
-                            ×
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Nome do departamento"
-                      value={novoDept}
-                      onChange={(e) => setNovoDept(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          const trimmed = novoDept.trim();
-                          if (trimmed && !departamentos.includes(trimmed)) {
-                            setDepartamentos((prev) => [...prev, trimmed]);
-                          }
-                          setNovoDept("");
-                        }
-                      }}
-                      className="flex-1 min-h-[40px] rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 py-2 bg-[var(--color-bg)] text-[var(--color-text-primary)] text-[var(--text-sm)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
-                    />
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => {
-                        const trimmed = novoDept.trim();
-                        if (trimmed && !departamentos.includes(trimmed)) {
-                          setDepartamentos((prev) => [...prev, trimmed]);
-                        }
-                        setNovoDept("");
-                      }}
-                      disabled={!novoDept.trim() || departamentos.includes(novoDept.trim())}
-                    >
-                      Adicionar
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 pt-1">
-                  <Button variant="primary" size="md" loading={savingOrg} onClick={handleSaveOrg}>
-                    Salvar alterações
-                  </Button>
-                  {orgSaved && (
-                    <span className="text-[var(--text-sm)] text-[var(--color-success)]">Salvo!</span>
-                  )}
-                  {orgError && (
-                    <span className="text-[var(--text-sm)] text-[var(--color-danger)]">{orgError}</span>
-                  )}
-                </div>
-              </>
-            )}
-          </section>
-
-          {/* ── Plan ── */}
-          <section className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 sm:p-5">
-            <h2 className="text-[var(--text-base)] font-semibold text-[var(--color-text-primary)] mb-4">Plano atual</h2>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <span
-                  className="text-[var(--text-sm)] font-semibold px-3 py-1.5 rounded-[var(--radius-md)]"
-                  style={{ background: "var(--color-accent-surface)", color: "var(--color-accent-dark)" }}
-                >
-                  {PLANO_LABELS[user.plano] ?? user.plano}
-                </span>
-                <div>
-                  <p className="text-[var(--text-sm)] text-[var(--color-text-primary)] font-medium">
-                    {user.orgName}
-                  </p>
-                  <p className="text-[var(--text-xs)] text-[var(--color-text-tertiary)]">
-                    {user.plano === "entrada" ? "1 gestor · sem IA · sem WhatsApp" :
-                     user.plano === "gestao" ? "Até 10 gestores · IA · WhatsApp" :
-                     "Ilimitado · todas as funcionalidades"}
-                  </p>
-                </div>
-              </div>
-              {user.plano !== "enterprise" && (
-                <Link
-                  href="/app/configuracoes"
-                  className="flex-shrink-0 text-[var(--text-sm)] font-semibold px-4 py-2 rounded-[var(--radius-md)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
-                  style={{ background: "var(--color-primary)", color: "var(--color-on-primary)" }}
-                >
-                  Fazer upgrade
-                </Link>
-              )}
-            </div>
-          </section>
-
-          {/* ── Users ── */}
-          <section className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-4 sm:p-5 space-y-4">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-[var(--text-base)] font-semibold text-[var(--color-text-primary)]">Usuários</h2>
-              <Button variant="primary" size="sm" onClick={() => setAddUserOpen(true)}>
-                + Convidar
-              </Button>
-            </div>
-
-            {loadingUsers ? (
-              <div className="space-y-3">
-                {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} height="48px" rounded="md" />)}
-              </div>
-            ) : users.length === 0 ? (
-              <p className="text-[var(--text-sm)] text-[var(--color-text-tertiary)]">Nenhum usuário encontrado.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left" style={{ minWidth: 480 }}>
-                  <thead>
-                    <tr className="border-b border-[var(--color-border)]">
-                      {["Nome", "E-mail", "Perfil", "Status", "Ações"].map((h) => (
-                        <th key={h} className="px-3 py-2.5 text-[var(--text-xs)] font-medium text-[var(--color-text-tertiary)] uppercase tracking-wide whitespace-nowrap">
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.map((u) => (
-                      <tr key={u.id} className="border-b border-[var(--color-border)] last:border-0">
-                        <td className="px-3 py-3 text-[var(--text-sm)] font-medium text-[var(--color-text-primary)] whitespace-nowrap">
-                          {u.nome}
-                          {u.id === user.uid && (
-                            <span className="ml-1.5 text-[var(--text-xs)] text-[var(--color-text-tertiary)]">(você)</span>
-                          )}
-                        </td>
-                        <td className="px-3 py-3 text-[var(--text-sm)] text-[var(--color-text-secondary)] max-w-[160px] truncate">
-                          {u.email}
-                        </td>
-                        <td className="px-3 py-3">
-                          {u.id === user.uid ? (
-                            <Badge>{u.role}</Badge>
-                          ) : (
-                            <select
-                              value={u.role}
-                              onChange={(e) => handleChangeRole(u.id, e.target.value as Role)}
-                              className="text-[var(--text-xs)] border border-[var(--color-border)] rounded-[var(--radius-sm)] px-2 py-1 bg-[var(--color-bg)] text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
-                            >
-                              {ROLE_OPTIONS.map((opt) => (
-                                <option key={opt.value} value={opt.value}>{opt.label}</option>
-                              ))}
-                            </select>
-                          )}
-                        </td>
-                        <td className="px-3 py-3">
-                          <span
-                            className="text-[var(--text-xs)] font-medium px-2 py-0.5 rounded-full"
-                            style={{
-                              background: u.ativo ? "var(--color-success-surface)" : "var(--color-bg-tertiary)",
-                              color: u.ativo ? "var(--color-success)" : "var(--color-text-tertiary)",
-                            }}
-                          >
-                            {u.ativo ? "Ativo" : "Inativo"}
-                          </span>
-                        </td>
-                        <td className="px-3 py-3">
-                          {u.id !== user.uid && (
-                            <Button variant="ghost" size="sm" onClick={() => handleToggleAtivo(u.id, u.ativo)}>
-                              {u.ativo ? "Desativar" : "Reativar"}
-                            </Button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
-
-          {/* ── Danger zone ── */}
-          <section
-            className="rounded-[var(--radius-lg)] p-4 sm:p-5 space-y-3"
-            style={{ border: "1px solid var(--color-danger)", background: "var(--color-danger-surface)" }}
-          >
-            <div className="flex items-center gap-2 mb-1">
-              <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="var(--color-danger)" strokeWidth="1.5" aria-hidden>
-                <path d="M8 2L2 13h12L8 2z" strokeLinejoin="round" />
-                <path d="M8 7v3M8 12h.01" strokeLinecap="round" />
-              </svg>
-              <h2 className="text-[var(--text-base)] font-semibold" style={{ color: "var(--color-danger)" }}>
-                Zona de perigo
-              </h2>
-            </div>
-
-            <p className="text-[var(--text-sm)]" style={{ color: "var(--color-danger)" }}>
-              Desativar o canal impede novos relatos. Casos existentes são preservados. Esta ação não pode ser desfeita sem suporte.
+        <div className="max-w-4xl mx-auto space-y-8">
+          
+          <div className="flex flex-col gap-1">
+            <h1 className="text-[var(--text-2xl)] font-bold text-[var(--color-text-primary)]">Configurações</h1>
+            <p className="text-[var(--text-sm)] text-[var(--color-text-tertiary)]">
+              Gerencie os dados da sua organização, membros da equipe e preferências do canal.
             </p>
+          </div>
 
-            {dangerStep === 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setDangerStep(1)}
-                className="border border-[var(--color-danger)] text-[var(--color-danger)] hover:bg-[var(--color-danger)] hover:text-white"
-              >
-                Desativar canal de denúncias
-              </Button>
-            )}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            
+            {/* Sidebar Navigation (Visual Only for now) */}
+            <aside className="hidden lg:block space-y-1">
+              {[
+                { icon: Building2, label: "Organização", active: true },
+                { icon: Users, label: "Usuários", active: false },
+                { icon: CreditCard, label: "Plano e Faturamento", active: false },
+                { icon: Settings, label: "Preferências", active: false },
+              ].map((item) => (
+                <button
+                  key={item.label}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-[var(--text-sm)] font-medium transition-all ${
+                    item.active 
+                      ? "bg-[var(--color-bg-secondary)] text-[var(--color-primary)] border border-[var(--color-border)] shadow-sm" 
+                      : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)]"
+                  }`}
+                >
+                  <item.icon size={18} strokeWidth={item.active ? 2.2 : 1.8} />
+                  {item.label}
+                </button>
+              ))}
+            </aside>
 
-            {dangerStep === 1 && (
-              <div className="space-y-3">
-                <p className="text-[var(--text-sm)] font-semibold" style={{ color: "var(--color-danger)" }}>
-                  Para confirmar, digite o slug da organização: <code className="font-mono">{org?.slug}</code>
-                </p>
-                <input
-                  type="text"
-                  value={dangerConfirmText}
-                  onChange={(e) => setDangerConfirmText(e.target.value)}
-                  placeholder={org?.slug ?? "slug"}
-                  className="w-full min-h-[44px] rounded-[var(--radius-md)] border border-[var(--color-danger)] px-3.5 py-2 bg-white text-[var(--color-text-primary)] text-[var(--text-base)] focus:outline-none focus-visible:ring-2"
-                  style={{ outlineColor: "var(--color-danger)" }}
-                />
-                <div className="flex gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => { setDangerStep(0); setDangerConfirmText(""); }}>
-                    Cancelar
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    loading={dangerLoading}
-                    disabled={dangerConfirmText !== org?.slug}
-                    onClick={handleDeactivateChannel}
-                    className="border border-[var(--color-danger)] text-[var(--color-danger)] hover:bg-[var(--color-danger)] hover:text-white disabled:opacity-40"
-                  >
-                    Confirmar desativação
+            <div className="lg:col-span-2 space-y-8">
+              
+              {/* ── Organização ── */}
+              <section className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-6 border-b border-[var(--color-border)]">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="text-[var(--color-primary)]" size={20} />
+                    <h2 className="text-[var(--text-lg)] font-bold text-[var(--color-text-primary)]">Dados da Organização</h2>
+                  </div>
+                </div>
+                
+                <div className="p-6 space-y-6">
+                  {orgLoading ? (
+                    <div className="space-y-4">
+                      <Skeleton height="60px" rounded="xl" />
+                      <Skeleton height="60px" rounded="xl" />
+                      <Skeleton height="100px" rounded="xl" />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-1 gap-6">
+                        <Input
+                          label="Nome da organização"
+                          value={orgNome}
+                          onChange={(e) => setOrgNome(e.target.value)}
+                          placeholder="Ex: Minha Empresa S.A."
+                        />
+
+                        {org?.slug && (
+                          <div className="space-y-1.5">
+                            <label className="text-[var(--text-xs)] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider">
+                              Slug do Canal (URL)
+                            </label>
+                            <div className="flex items-center gap-2 p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] group">
+                              <span className="text-[var(--text-sm)] text-[var(--color-text-tertiary)] select-none">
+                                portalsigilo.com.br/
+                              </span>
+                              <span className="font-mono text-[var(--text-sm)] font-semibold text-[var(--color-text-primary)]">
+                                {org.slug}
+                              </span>
+                              <Badge className="ml-auto bg-[var(--color-bg-tertiary)] text-[var(--color-text-tertiary)] border-none">
+                                Reservado
+                              </Badge>
+                            </div>
+                          </div>
+                        )}
+
+                        <Input
+                          label="Mensagem de boas-vindas"
+                          value={boasVindas}
+                          onChange={(e) => setBoasVindas(e.target.value)}
+                          helper="Esta mensagem aparece na tela inicial do canal de denúncias."
+                          placeholder="Este é um ambiente seguro..."
+                          multiline
+                          rows={3}
+                        />
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                          <div className="space-y-1.5">
+                            <label className="text-[var(--text-xs)] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider">
+                              Prazo de Resposta (Dias)
+                            </label>
+                            <div className="relative max-w-[120px]">
+                              <input
+                                type="number"
+                                min={1}
+                                max={90}
+                                value={prazoPadrao}
+                                onChange={(e) => setPrazoPadrao(e.target.value)}
+                                className="w-full h-11 rounded-xl border border-[var(--color-border)] px-4 bg-[var(--color-bg)] text-[var(--color-text-primary)] text-[var(--text-sm)] font-medium focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3">
+                          <div className="flex flex-col gap-0.5">
+                            <label className="text-[var(--text-xs)] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider">
+                              Departamentos
+                            </label>
+                            <p className="text-[var(--text-xs)] text-[var(--color-text-tertiary)]">
+                              Estruture sua organização para relatórios detalhados.
+                            </p>
+                          </div>
+
+                          <div className="flex flex-wrap gap-2 min-h-[40px] p-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/30">
+                            {departamentos.length > 0 ? (
+                              departamentos.map((dept) => (
+                                <Badge 
+                                  key={dept} 
+                                  className="pl-3 pr-1.5 py-1 bg-white border-[var(--color-border)] text-[var(--color-text-primary)] shadow-sm flex items-center gap-1.5 transition-all hover:border-[var(--color-primary)] group"
+                                >
+                                  {dept}
+                                  <button
+                                    type="button"
+                                    onClick={() => setDepartamentos((prev) => prev.filter((d) => d !== dept))}
+                                    className="p-0.5 rounded-full text-[var(--color-text-tertiary)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-surface)] transition-all"
+                                  >
+                                    <X size={12} />
+                                  </button>
+                                </Badge>
+                              ))
+                            ) : (
+                              <span className="text-[var(--text-xs)] text-[var(--color-text-tertiary)] italic p-1">
+                                Nenhum departamento cadastrado.
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              placeholder="Adicionar departamento..."
+                              value={novoDept}
+                              onChange={(e) => setNovoDept(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  const trimmed = novoDept.trim();
+                                  if (trimmed && !departamentos.includes(trimmed)) {
+                                    setDepartamentos((prev) => [...prev, trimmed]);
+                                  }
+                                  setNovoDept("");
+                                }
+                              }}
+                              className="flex-1 h-10 rounded-xl border border-[var(--color-border)] px-4 bg-[var(--color-bg)] text-[var(--text-sm)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all"
+                            />
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              className="h-10 px-4"
+                              onClick={() => {
+                                const trimmed = novoDept.trim();
+                                if (trimmed && !departamentos.includes(trimmed)) {
+                                  setDepartamentos((prev) => [...prev, trimmed]);
+                                }
+                                setNovoDept("");
+                              }}
+                              disabled={!novoDept.trim() || departamentos.includes(novoDept.trim())}
+                            >
+                              <Plus size={16} className="mr-1.5" />
+                              Add
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-4 border-t border-[var(--color-border)]">
+                        <div className="flex items-center gap-2">
+                          {orgSaved && (
+                            <div className="flex items-center gap-1.5 text-[var(--text-sm)] text-[var(--color-success)] font-medium animate-in fade-in slide-in-from-left-2">
+                              <CheckCircle2 size={16} />
+                              Alterações salvas com sucesso!
+                            </div>
+                          )}
+                          {orgError && (
+                            <div className="flex items-center gap-1.5 text-[var(--text-sm)] text-[var(--color-danger)] font-medium">
+                              <AlertTriangle size={16} />
+                              {orgError}
+                            </div>
+                          )}
+                        </div>
+                        <Button 
+                          variant="primary" 
+                          size="md" 
+                          loading={savingOrg} 
+                          onClick={handleSaveOrg}
+                          className="min-w-[140px]"
+                        >
+                          Salvar Dados
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </section>
+
+              {/* ── Plano Atual ── */}
+              <section className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-6 border-b border-[var(--color-border)]">
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="text-[var(--color-primary)]" size={20} />
+                    <h2 className="text-[var(--text-lg)] font-bold text-[var(--color-text-primary)]">Plano e Faturamento</h2>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-6 p-4 rounded-2xl border border-[var(--color-primary)]/10 bg-[var(--color-primary)]/[0.02]">
+                    <div className="w-12 h-12 rounded-xl bg-[var(--color-primary)] flex items-center justify-center text-white shadow-lg shadow-[var(--color-primary)]/20">
+                      <CreditCard size={24} />
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-[var(--text-base)] font-bold text-[var(--color-text-primary)]">
+                          Plano {PLANO_LABELS[user.plano] ?? user.plano}
+                        </h3>
+                        <Badge className="bg-[var(--color-primary)] text-white border-none text-[var(--text-2xs)] font-bold">ATIVO</Badge>
+                      </div>
+                      <p className="text-[var(--text-xs)] text-[var(--color-text-tertiary)] leading-relaxed">
+                        {user.plano === "entrada" ? "Ideal para pequenas empresas (1 gestor, sem IA)." :
+                         user.plano === "gestao" ? "Completo para times em crescimento (Até 10 gestores, IA, WhatsApp)." :
+                         "Solução enterprise ilimitada com todas as funcionalidades e suporte prioritário."}
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <Link
+                        href="/app/configuracoes"
+                        className="inline-flex items-center justify-center gap-2 font-semibold rounded-[var(--radius-md)] border border-transparent transition-all cursor-pointer select-none bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] active:scale-[0.98] [box-shadow:0_2px_8px_rgba(42,96,112,0.30)] hover:[box-shadow:0_4px_14px_rgba(42,96,112,0.40)] px-3 min-h-[32px] text-[var(--text-xs)]"
+                      >
+                        Fazer Upgrade
+                      </Link>
+                      <button className="text-[var(--text-xs)] font-medium text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors">
+                        Ver histórico de faturas
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* ── Usuários ── */}
+              <section className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-6 border-b border-[var(--color-border)] flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Users className="text-[var(--color-primary)]" size={20} />
+                    <h2 className="text-[var(--text-lg)] font-bold text-[var(--color-text-primary)]">Membros da Equipe</h2>
+                  </div>
+                  <Button variant="secondary" size="sm" onClick={() => setAddUserOpen(true)}>
+                    <UserPlus size={16} className="mr-2" />
+                    Convidar
                   </Button>
                 </div>
-              </div>
-            )}
 
-            {dangerStep === 2 && (
-              <p className="text-[var(--text-sm)] font-semibold" style={{ color: "var(--color-danger)" }}>
-                Canal desativado. Entre em contato com o suporte para reverter.
-              </p>
-            )}
-          </section>
+                <div className="overflow-x-auto">
+                  {loadingUsers ? (
+                    <div className="p-6 space-y-4">
+                      {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} height="52px" rounded="xl" />)}
+                    </div>
+                  ) : users.length === 0 ? (
+                    <div className="p-12 text-center">
+                      <Users className="mx-auto text-[var(--color-text-tertiary)] mb-4 opacity-20" size={48} />
+                      <p className="text-[var(--text-sm)] text-[var(--color-text-tertiary)]">Nenhum usuário encontrado.</p>
+                    </div>
+                  ) : (
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="bg-[var(--color-bg-secondary)]/50 border-b border-[var(--color-border)]">
+                          <th className="px-6 py-4 text-[var(--text-xs)] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider">Usuário</th>
+                          <th className="px-6 py-4 text-[var(--text-xs)] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider">Perfil</th>
+                          <th className="px-6 py-4 text-[var(--text-xs)] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider text-center">Status</th>
+                          <th className="px-6 py-4 text-[var(--text-xs)] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider text-right">Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[var(--color-border)]">
+                        {users.map((u) => (
+                          <tr key={u.id} className="hover:bg-[var(--color-bg-secondary)]/30 transition-colors group">
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center font-bold text-sm">
+                                  {u.nome.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="text-[var(--text-sm)] font-bold text-[var(--color-text-primary)]">
+                                    {u.nome}
+                                    {u.id === user.uid && (
+                                      <span className="ml-2 px-1.5 py-0.5 rounded-md bg-[var(--color-bg-tertiary)] text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-tighter">EU</span>
+                                    )}
+                                  </span>
+                                  <span className="text-[var(--text-xs)] text-[var(--color-text-tertiary)]">{u.email}</span>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              {u.id === user.uid ? (
+                                <Badge className="bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] border-[var(--color-border)] capitalize">
+                                  {u.role}
+                                </Badge>
+                              ) : (
+                                <select
+                                  value={u.role}
+                                  onChange={(e) => handleChangeRole(u.id, e.target.value as Role)}
+                                  className="text-[var(--text-xs)] font-medium border border-[var(--color-border)] rounded-lg px-2 py-1 bg-white text-[var(--color-text-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all outline-none"
+                                >
+                                  {ROLE_OPTIONS.map((opt) => (
+                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                  ))}
+                                </select>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 text-center">
+                              <span
+                                className={`inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full border ${
+                                  u.ativo 
+                                    ? "bg-[var(--color-success-surface)] text-[var(--color-success)] border-[var(--color-success)]/20" 
+                                    : "bg-[var(--color-bg-tertiary)] text-[var(--color-text-tertiary)] border-[var(--color-border)]"
+                                }`}
+                              >
+                                <span className={`w-1.5 h-1.5 rounded-full ${u.ativo ? "bg-[var(--color-success)]" : "bg-[var(--color-text-tertiary)]"}`} />
+                                {u.ativo ? "Ativo" : "Inativo"}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              {u.id !== user.uid && (
+                                <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="xs" 
+                                    onClick={() => handleToggleAtivo(u.id, u.ativo)}
+                                    className={u.ativo ? "text-[var(--color-danger)] hover:bg-[var(--color-danger-surface)]" : "text-[var(--color-success)] hover:bg-[var(--color-success-surface)]"}
+                                  >
+                                    {u.ativo ? <Trash2 size={16} /> : <CheckCircle2 size={16} />}
+                                    <span className="ml-1.5">{u.ativo ? "Desativar" : "Reativar"}</span>
+                                  </Button>
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              </section>
+
+              {/* ── Zona de Perigo ── */}
+              <section className="border border-[var(--color-danger)]/30 rounded-2xl overflow-hidden bg-white">
+                <div className="p-6 bg-[var(--color-danger-surface)] border-b border-[var(--color-danger)]/20">
+                  <div className="flex items-center gap-2">
+                    <ShieldAlert className="text-[var(--color-danger)]" size={20} />
+                    <h2 className="text-[var(--text-lg)] font-bold text-[var(--color-danger)]">Zona de Perigo</h2>
+                  </div>
+                </div>
+                
+                <div className="p-6 space-y-4">
+                  <p className="text-[var(--text-sm)] text-[var(--color-text-secondary)] leading-relaxed">
+                    Desativar o canal interromperá imediatamente o recebimento de novos relatos. Os dados existentes continuarão disponíveis para consulta, mas o canal ficará inacessível para denunciantes.
+                  </p>
+
+                  {dangerStep === 0 && (
+                    <Button
+                      variant="ghost"
+                      onClick={() => setDangerStep(1)}
+                      className="text-[var(--color-danger)] border border-[var(--color-danger)]/20 hover:bg-[var(--color-danger-surface)] transition-all"
+                    >
+                      Desativar Canal de Denúncias
+                    </Button>
+                  )}
+
+                  {dangerStep === 1 && (
+                    <div className="p-4 rounded-xl border border-[var(--color-danger)]/20 bg-[var(--color-danger-surface)]/30 space-y-4 animate-in fade-in zoom-in-95">
+                      <div className="flex items-start gap-3">
+                        <AlertTriangle className="text-[var(--color-danger)] shrink-0" size={18} />
+                        <div className="space-y-1">
+                          <p className="text-[var(--text-sm)] font-bold text-[var(--color-text-primary)]">Confirme a desativação</p>
+                          <p className="text-[var(--text-xs)] text-[var(--color-text-secondary)]">
+                            Digite o slug da organização <span className="font-mono font-bold text-[var(--color-danger)]">{org?.slug}</span> para prosseguir.
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <input
+                        type="text"
+                        value={dangerConfirmText}
+                        onChange={(e) => setDangerConfirmText(e.target.value)}
+                        placeholder={org?.slug ?? "slug"}
+                        className="w-full h-11 rounded-xl border border-[var(--color-danger)]/30 px-4 bg-white text-[var(--color-text-primary)] text-[var(--text-sm)] font-mono focus:ring-2 focus:ring-[var(--color-danger)]/20 transition-all outline-none"
+                      />
+                      
+                      <div className="flex gap-3">
+                        <Button variant="ghost" size="sm" onClick={() => { setDangerStep(0); setDangerConfirmText(""); }}>
+                          Cancelar
+                        </Button>
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          loading={dangerLoading}
+                          disabled={dangerConfirmText !== org?.slug}
+                          onClick={handleDeactivateChannel}
+                          className="bg-[var(--color-danger)] hover:bg-[var(--color-danger)]/90 text-white border-none disabled:opacity-30"
+                        >
+                          Confirmar Desativação Definitiva
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {dangerStep === 2 && (
+                    <div className="p-4 rounded-xl bg-[var(--color-danger-surface)] border border-[var(--color-danger)]/20 flex items-center gap-3 text-[var(--color-danger)]">
+                      <CheckCircle2 size={20} />
+                      <p className="text-[var(--text-sm)] font-bold">
+                        Canal desativado. Entre em contato com o suporte para reativar.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </section>
+            </div>
+          </div>
         </div>
       </PageContainer>
 
@@ -580,26 +701,62 @@ export default function ConfiguracoesPage() {
       <Modal
         open={addUserOpen}
         onClose={() => { setAddUserOpen(false); setCreateUserError(null); }}
-        title="Convidar usuário"
+        title="Convidar Novo Membro"
         footer={
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setAddUserOpen(false)}>Cancelar</Button>
-            <Button variant="primary" size="sm" loading={creatingUser} onClick={handleCreateUser}>
-              Criar usuário
+          <div className="flex justify-end gap-3 p-6 border-t border-[var(--color-border)]">
+            <Button variant="ghost" onClick={() => setAddUserOpen(false)}>Cancelar</Button>
+            <Button variant="primary" loading={creatingUser} onClick={handleCreateUser}>
+              Enviar Convite
             </Button>
           </div>
         }
       >
-        <div className="space-y-4">
-          <Input label="Nome completo" value={newUserNome} onChange={(e) => setNewUserNome(e.target.value)} required />
-          <Input label="E-mail" type="email" value={newUserEmail} onChange={(e) => setNewUserEmail(e.target.value)} required />
-          <Select label="Perfil" options={ROLE_OPTIONS} value={newUserRole} onChange={(e) => setNewUserRole(e.target.value as Role)} />
+        <div className="p-6 space-y-5">
+          <div className="flex flex-col gap-1 mb-2">
+            <p className="text-[var(--text-sm)] text-[var(--color-text-tertiary)]">
+              Preencha os dados abaixo para enviar um convite de acesso à plataforma.
+            </p>
+          </div>
+          
+          <Input 
+            label="Nome Completo" 
+            value={newUserNome} 
+            onChange={(e) => setNewUserNome(e.target.value)} 
+            placeholder="Ex: João Silva"
+            required 
+          />
+          
+          <Input 
+            label="E-mail Corporativo" 
+            type="email" 
+            value={newUserEmail} 
+            onChange={(e) => setNewUserEmail(e.target.value)} 
+            placeholder="joao@empresa.com.br"
+            required 
+          />
+          
+          <Select 
+            label="Perfil de Acesso" 
+            options={ROLE_OPTIONS} 
+            value={newUserRole} 
+            onChange={(e) => setNewUserRole(e.target.value as Role)} 
+          />
+          
           {createUserError && (
-            <p role="alert" className="text-[var(--text-sm)] text-[var(--color-danger)]">{createUserError}</p>
+            <div className="p-3 rounded-xl bg-[var(--color-danger-surface)] border border-[var(--color-danger)]/20 flex items-center gap-2 text-[var(--color-danger)] text-[var(--text-sm)]">
+              <AlertTriangle size={16} />
+              {createUserError}
+            </div>
           )}
-          <p className="text-[var(--text-xs)] text-[var(--color-text-tertiary)]">
-            Uma senha temporária será gerada. O usuário deverá redefini-la no primeiro acesso.
-          </p>
+          
+          <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
+            <div className="flex gap-3">
+              <ShieldAlert className="text-[var(--color-text-tertiary)] shrink-0" size={18} />
+              <p className="text-[var(--text-xs)] text-[var(--color-text-tertiary)] leading-relaxed">
+                Uma senha temporária será gerada automaticamente e enviada para o e-mail do usuário. Ele deverá redefini-la no primeiro acesso por questões de segurança.
+              </p>
+            </div>
+          </div>
         </div>
       </Modal>
     </>

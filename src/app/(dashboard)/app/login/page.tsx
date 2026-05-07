@@ -39,8 +39,8 @@ const INPUT_STYLE: React.CSSProperties = {
 };
 
 function focusInput(e: React.FocusEvent<HTMLInputElement>) {
-  e.currentTarget.style.border = "1px solid #2A6070";
-  e.currentTarget.style.boxShadow = "0 0 0 2px rgba(42,96,112,0.12)";
+  e.currentTarget.style.border = "1px solid var(--color-primary)";
+  e.currentTarget.style.boxShadow = "var(--shadow-focus)";
   e.currentTarget.style.background = "var(--color-card)";
 }
 
@@ -117,7 +117,7 @@ export default function LoginPage() {
             {
               label: "Criptografado",
               icon: (
-                <svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="#2A6070" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="var(--color-primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <rect x="2" y="6" width="10" height="7" rx="1.5" />
                   <path d="M4.5 6V4a2.5 2.5 0 0 1 5 0v2" />
                 </svg>
@@ -126,7 +126,7 @@ export default function LoginPage() {
             {
               label: "Auditado",
               icon: (
-                <svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="#2A6070" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="var(--color-primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <path d="M7 1L2 3v4c0 3 2.3 5 5 6 2.7-1 5-3 5-6V3L7 1z" />
                   <path d="M4.5 7l1.8 1.8L9.5 5.5" />
                 </svg>
@@ -135,7 +135,7 @@ export default function LoginPage() {
             {
               label: "Acesso restrito",
               icon: (
-                <svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="#2A6070" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="var(--color-primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <circle cx="7" cy="5" r="2.5" />
                   <path d="M2 12c0-2.8 2.2-5 5-5s5 2.2 5 5" />
                   <path d="M10.5 9.5L13 12M11 8.5l1.5-1.5" strokeLinecap="round" />
@@ -152,7 +152,7 @@ export default function LoginPage() {
                 />
               )}
               {item.icon}
-              <span className="text-xs font-medium" style={{ color: "#2A6070" }}>
+              <span className="text-xs font-medium" style={{ color: "var(--color-primary)" }}>
                 {item.label}
               </span>
             </span>
@@ -178,7 +178,7 @@ export default function LoginPage() {
                   fontSize: 11,
                   letterSpacing: "0.10em",
                   textTransform: "uppercase",
-                  color: "#C05A4A",
+                  color: "var(--color-accent)",
                 }}
               >
                 Painel de gestão
@@ -283,7 +283,7 @@ export default function LoginPage() {
                     style={{
                       height: 44,
                       borderRadius: "var(--radius-md)",
-                      background: "#2A6070",
+                      background: "var(--color-primary)",
                       color: "#fff",
                       fontSize: "var(--text-sm)",
                       fontWeight: 500,
@@ -291,8 +291,8 @@ export default function LoginPage() {
                       cursor: loading ? "not-allowed" : "pointer",
                       opacity: loading ? 0.7 : 1,
                     }}
-                    onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = "#224f5e"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = "#2A6070"; }}
+                    onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = "var(--color-primary-dark)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "var(--color-primary)"; }}
                   >
                     {loading ? "Entrando…" : "Entrar"}
                   </button>
@@ -314,8 +314,8 @@ export default function LoginPage() {
               <div
                 className="flex items-center gap-2.5 mt-5"
                 style={{
-                  background: "rgba(42,96,112,0.06)",
-                  border: "1px solid rgba(42,96,112,0.2)",
+                  background: "var(--color-primary-surface)",
+                  border: "1px solid var(--color-border)",
                   borderRadius: "var(--radius-md)",
                   padding: "0.625rem 0.875rem",
                 }}
@@ -324,10 +324,10 @@ export default function LoginPage() {
               >
                 <span
                   className="animate-pulse-slow flex-shrink-0 rounded-full"
-                  style={{ width: 8, height: 8, background: "#2A6070", display: "block" }}
+                  style={{ width: 8, height: 8, background: "var(--color-primary)", display: "block" }}
                   aria-hidden
                 />
-                <p style={{ fontSize: 12, color: "#2A6070", lineHeight: 1.4, margin: 0 }}>
+                <p style={{ fontSize: 12, color: "var(--color-primary)", lineHeight: 1.4, margin: 0 }}>
                   <strong>Seu acesso é registrado</strong> para fins de auditoria e conformidade.
                 </p>
               </div>
@@ -419,7 +419,7 @@ export default function LoginPage() {
                     style={{
                       height: 44,
                       borderRadius: "var(--radius-md)",
-                      background: "#2A6070",
+                      background: "var(--color-primary)",
                       color: "#fff",
                       fontSize: "var(--text-sm)",
                       fontWeight: 500,
@@ -427,8 +427,8 @@ export default function LoginPage() {
                       cursor: resetLoading ? "not-allowed" : "pointer",
                       opacity: resetLoading ? 0.7 : 1,
                     }}
-                    onMouseEnter={(e) => { if (!resetLoading) e.currentTarget.style.background = "#224f5e"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = "#2A6070"; }}
+                    onMouseEnter={(e) => { if (!resetLoading) e.currentTarget.style.background = "var(--color-primary-dark)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "var(--color-primary)"; }}
                   >
                     {resetLoading ? "Enviando…" : "Enviar link"}
                   </button>

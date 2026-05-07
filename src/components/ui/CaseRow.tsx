@@ -50,7 +50,7 @@ export function CaseRow({
       role={onClick ? "button" : undefined}
       onKeyDown={onClick ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } } : undefined}
       className={[
-        "border-b border-[var(--color-border)] last:border-0",
+        "h-16 border-b border-[var(--color-border)] last:border-0",
         "transition-colors duration-[var(--duration-fast)]",
         onClick
           ? "hover:bg-[var(--color-card-hover)] cursor-pointer focus:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
@@ -61,51 +61,51 @@ export function CaseRow({
         .join(" ")}
     >
       {/* Urgency */}
-      <td className="px-4 py-3 w-12">
+      <td className="px-4 py-2 w-12">
         <UrgencyIndicator level={urgency} showLabel />
       </td>
 
       {/* Channel */}
-      <td className="px-4 py-3 w-24">
+      <td className="px-4 py-2 w-24">
         <Badge variant="channel" channel={channel} />
       </td>
 
       {/* Category */}
-      <td className="px-4 py-3 text-[var(--text-sm)] text-[var(--color-text-secondary)] min-w-[120px]">
+      <td className="px-4 py-2 text-[13px] font-medium text-[var(--color-text-secondary)] min-w-[120px]">
         {category ?? "—"}
       </td>
 
       {/* Protocol */}
-      <td className="px-4 py-3 font-mono text-[var(--text-xs)] text-[var(--color-text-secondary)] whitespace-nowrap">
+      <td className="px-4 py-2 font-mono text-[12px] text-[var(--color-text-secondary)] whitespace-nowrap">
         {protocolo}
       </td>
 
       {/* Status */}
-      <td className="px-4 py-3">
+      <td className="px-4 py-2">
         <Badge variant="status" status={status} />
       </td>
 
       {/* Days open */}
-      <td className="px-4 py-3 text-right w-20">
+      <td className="px-4 py-2 text-right w-24">
         {diasEmAberto != null ? (
-          <span className="text-[var(--text-xs)] tabular-nums text-[var(--color-text-tertiary)]">
+          <span className="text-[13px] font-medium tabular-nums text-[var(--color-text-secondary)]">
             {diasEmAberto}d
           </span>
         ) : (
-          <span className="text-[var(--text-xs)] text-[var(--color-text-tertiary)]">—</span>
+          <span className="text-[12px] text-[var(--color-text-tertiary)]">—</span>
         )}
       </td>
 
       {/* Deadline */}
-      <td className="px-4 py-3 text-right w-20">
+      <td className="px-4 py-2 text-right w-24">
         {deadlineInfo ? (
           <span
             className={[
-              "text-[var(--text-xs)] font-medium tabular-nums",
+              "text-[13px] font-semibold tabular-nums",
               deadlineInfo.overdue
                 ? "text-[var(--color-danger)]"
                 : (deadlineInfo.label !== "Hoje" && deadlineInfo.label !== "Amanhã")
-                  ? "text-[var(--color-text-tertiary)]"
+                  ? "text-[var(--color-success)]"
                   : "text-[var(--color-warning)]",
             ]
               .filter(Boolean)
@@ -114,7 +114,7 @@ export function CaseRow({
             {deadlineInfo.label}
           </span>
         ) : (
-          <span className="text-[var(--text-xs)] text-[var(--color-text-tertiary)]">—</span>
+          <span className="text-[12px] text-[var(--color-text-tertiary)]">—</span>
         )}
       </td>
     </tr>

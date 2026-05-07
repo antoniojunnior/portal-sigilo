@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -10,6 +10,7 @@ import { Select } from "@/components/ui/Select";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { Search, FilterX, Download } from "lucide-react";
 import type { StatusValue, ChannelValue } from "@/components/ui/Badge";
 import type { UrgencyLevel } from "@/components/ui/UrgencyIndicator";
 import type { CaseStatus, CanalOrigem, UrgenciaNivel } from "@/lib/types";
@@ -62,6 +63,34 @@ const SORT_OPTIONS = [
 
 const PAGE_SIZE = 10;
 
+function getPaginationItems(current: number, total: number): (number | "...")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const items: (number | "...")[] = [1];
+  if (current > 3) items.push("...");
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  for (let i = start; i <= end; i++) items.push(i);
+  if (current < total - 2) items.push("...");
+  items.push(total);
+  return items;
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  aguardando_triagem: "Triagem",
+  em_apuracao: "Apurando",
+  pendente_informacao: "Pendente",
+  encerrado_sem_infracao: "Encerrado",
+  encerrado_com_acao: "Encerrado",
+};
+
+const STATUS_CLASSES: Record<string, string> = {
+  aguardando_triagem: "bg-[var(--color-warning-surface)] text-[var(--color-warning)]",
+  em_apuracao: "bg-[var(--color-primary-surface)] text-[var(--color-primary-dark)]",
+  pendente_informacao: "bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]",
+  encerrado_sem_infracao: "bg-[var(--color-success-surface)] text-[var(--color-success)]",
+  encerrado_com_acao: "bg-[var(--color-success-surface)] text-[var(--color-success)]",
+};
+
 function exportCSV(cases: CaseRecord[]) {
   const headers = ["Protocolo", "Categoria", "Urgência", "Canal", "Status", "Dias em aberto", "Prazo"];
   const rows = cases.map((c) => [
@@ -86,13 +115,16 @@ function exportCSV(cases: CaseRecord[]) {
 export default function CasosPage() {
   const { user } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [statusFilter, setStatusFilter] = useState("");
-  const [urgencyFilter, setUrgencyFilter] = useState("");
+  const [urgencyFilter, setUrgencyFilter] = useState(
+    searchParams.get("filtro") === "urgente" ? "4" : ""
+  );
   const [channelFilter, setChannelFilter] = useState("");
   const [sortValue, setSortValue] = useState("created_at|desc");
-  const [protocolSearch, setProtocolSearch] = useState("");
-  const [protocolDebounced, setProtocolDebounced] = useState("");
+  const [protocolSearch, setProtocolSearch] = useState(searchParams.get("protocol") ?? "");
+  const [protocolDebounced, setProtocolDebounced] = useState(searchParams.get("protocol") ?? "");
 
   const [cases, setCases] = useState<CaseRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -175,149 +207,177 @@ export default function CasosPage() {
 
       <PageContainer>
         {/* Search + filters */}
-        <div className="mb-4 space-y-3">
-          {/* Protocol search */}
-          <div className="relative">
-            <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
-              viewBox="0 0 16 16" width="14" height="14" fill="none"
-              stroke="var(--color-text-tertiary)" strokeWidth="1.5" strokeLinecap="round" aria-hidden
-            >
-              <circle cx="6.5" cy="6.5" r="4.5" />
-              <path d="M11 11l2.5 2.5" />
-            </svg>
-            <input
-              type="search"
-              placeholder="Buscar por protocolo (ex: ETK-2024-…)"
-              value={protocolSearch}
-              onChange={(e) => { setProtocolSearch(e.target.value); setPage(1); }}
-              className="w-full pl-9 pr-4 py-2.5 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-primary)] text-[var(--text-sm)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
-              aria-label="Buscar por protocolo"
-            />
+        <div className="mb-6 space-y-4">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+            {/* Protocol search */}
+            <div className="relative flex-1">
+              <Search
+                className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-tertiary)]"
+                size={18}
+                strokeWidth={1.8}
+              />
+              <input
+                type="search"
+                placeholder="Buscar por protocolo (ex: ETK-2024-…)"
+                value={protocolSearch}
+                onChange={(e) => { setProtocolSearch(e.target.value); setPage(1); }}
+                className="w-full pl-11 pr-4 py-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] text-[var(--color-text-primary)] text-[var(--text-sm)] shadow-[var(--shadow-xs)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all"
+                aria-label="Buscar por protocolo"
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" onClick={resetFilters} className="text-[var(--color-text-secondary)] hover:text-[var(--color-danger)]" iconLeft={<FilterX size={16} strokeWidth={1.8} />}>
+                  Limpar filtros
+                </Button>
+              )}
+
+              {/* CSV export — plan-gated */}
+              <div className="flex-shrink-0">
+                {canExportCSV ? (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={cases.length === 0}
+                    onClick={() => exportCSV(cases)}
+                    className="h-10 rounded-xl px-4 font-semibold shadow-[var(--shadow-xs)]"
+                    iconLeft={<Download size={16} strokeWidth={1.8} />}
+                  >
+                    Exportar CSV
+                  </Button>
+                ) : (
+                  <span
+                    title="Exportação disponível nos planos Gestão e Enterprise"
+                    className="flex h-10 items-center gap-2 px-4 rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--text-xs)] text-[var(--color-text-tertiary)] cursor-default select-none"
+                  >
+                    <Download size={16} strokeWidth={1.8} />
+                    Exportar CSV
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Filter row — scrollable on mobile */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible">
-            <div className="flex-shrink-0 w-44 sm:w-48">
+          <div className="flex items-center gap-3 overflow-x-auto pb-2 -mx-1 px-1 sm:flex-wrap sm:overflow-visible">
+            <div className="flex-shrink-0 w-44">
               <Select
                 label="Status"
                 srOnly
                 options={STATUS_OPTIONS}
                 value={statusFilter}
                 onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+                className="h-10 text-sm shadow-[var(--shadow-xs)]"
               />
             </div>
-            <div className="flex-shrink-0 w-40 sm:w-44">
+            <div className="flex-shrink-0 w-44">
               <Select
                 label="Urgência"
                 srOnly
                 options={URGENCY_OPTIONS}
                 value={urgencyFilter}
                 onChange={(e) => { setUrgencyFilter(e.target.value); setPage(1); }}
+                className="h-10 text-sm shadow-[var(--shadow-xs)]"
               />
             </div>
-            <div className="flex-shrink-0 w-36 sm:w-40">
+            <div className="flex-shrink-0 w-40">
               <Select
                 label="Canal"
                 srOnly
                 options={CHANNEL_OPTIONS}
                 value={channelFilter}
                 onChange={(e) => { setChannelFilter(e.target.value); setPage(1); }}
+                className="h-10 text-sm shadow-[var(--shadow-xs)]"
               />
             </div>
-            <div className="flex-shrink-0 w-40 sm:w-44">
+            <div className="flex-shrink-0 w-44">
               <Select
                 label="Ordenar por"
                 srOnly
                 options={SORT_OPTIONS}
                 value={sortValue}
                 onChange={(e) => { setSortValue(e.target.value); setPage(1); }}
+                className="h-10 text-sm shadow-[var(--shadow-xs)]"
               />
             </div>
 
-            {hasActiveFilters && (
-              <Button variant="ghost" size="sm" onClick={resetFilters} className="flex-shrink-0">
-                Limpar filtros
-              </Button>
+            {!loading && (
+              <span className="ml-auto text-[var(--text-xs)] font-medium text-[var(--color-text-tertiary)] bg-[var(--color-bg-secondary)] px-3 py-1.5 rounded-full border border-[var(--color-border)]">
+                {total} {total === 1 ? "caso" : "casos"}
+              </span>
             )}
-
-            {/* CSV export — plan-gated */}
-            <div className="ml-auto flex-shrink-0">
-              {canExportCSV ? (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={cases.length === 0}
-                  onClick={() => exportCSV(cases)}
-                  iconLeft={
-                    <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden>
-                      <path d="M8 2v8M5 7l3 3 3-3" />
-                      <path d="M3 12h10" />
-                    </svg>
-                  }
-                >
-                  Exportar CSV
-                </Button>
-              ) : (
-                <span
-                  title="Exportação disponível nos planos Gestão e Enterprise"
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-md)] border border-dashed border-[var(--color-border)] text-[var(--text-xs)] text-[var(--color-text-tertiary)] cursor-default select-none"
-                >
-                  <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden>
-                    <rect x="5" y="8" width="6" height="5" rx="1" />
-                    <path d="M5 8V6a3 3 0 1 1 6 0v2" />
-                  </svg>
-                  Exportar CSV
-                </span>
-              )}
-            </div>
           </div>
-
-          {/* Result count */}
-          {!loading && (
-            <p className="text-[var(--text-xs)] text-[var(--color-text-tertiary)]">
-              {total} {total === 1 ? "caso encontrado" : "casos encontrados"}
-              {hasActiveFilters && " com os filtros ativos"}
-            </p>
-          )}
         </div>
 
-        {/* Table */}
-        <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] overflow-hidden">
+        {/* Table Container */}
+        <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-[var(--shadow-sm)] overflow-hidden transition-all">
           {loading ? (
-            <div className="p-4 sm:p-5 space-y-3">
-              {Array.from({ length: PAGE_SIZE }).map((_, i) => (
-                <Skeleton key={i} height="40px" rounded="md" />
+            <div className="p-6 space-y-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} height="48px" rounded="xl" />
               ))}
             </div>
           ) : cases.length === 0 ? (
-            <EmptyState
-              illustration="search"
-              title="Nenhum caso encontrado"
-              description={hasActiveFilters ? "Tente ajustar os filtros para encontrar o que procura." : "Quando novos relatos chegarem, aparecerão aqui."}
-              action={
-                hasActiveFilters ? (
-                  <Button variant="ghost" size="sm" onClick={resetFilters}>
-                    Limpar filtros
-                  </Button>
-                ) : undefined
-              }
-            />
+            <div className="py-12">
+              <EmptyState
+                illustration="search"
+                title="Nenhum caso encontrado"
+                description={hasActiveFilters ? "Tente ajustar os filtros para encontrar o que procura." : "Quando novos relatos chegarem, aparecerão aqui."}
+                action={
+                  hasActiveFilters ? (
+                    <Button variant="ghost" size="sm" onClick={resetFilters}>
+                      Limpar filtros
+                    </Button>
+                  ) : undefined
+                }
+              />
+            </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left" style={{ minWidth: 640 }}>
+            <>
+            {/* Mobile cards */}
+            <div className="md:hidden divide-y divide-[var(--color-border)]">
+              {cases.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => router.push(`/app/casos/${c.id}`)}
+                  className="w-full flex items-center gap-3 p-4 text-left transition-colors hover:bg-[var(--color-bg-secondary)] active:bg-[var(--color-bg-secondary)]"
+                >
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${(c.urgencia ?? 1) >= 4 ? "bg-[var(--color-danger-surface)] text-[var(--color-danger)]" : "bg-[var(--color-primary-surface)] text-[var(--color-primary)]"}`}>
+                    {c.urgencia ?? 1}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold text-[var(--color-text-primary)] truncate">
+                      {c.categoria || "Sem categoria"}
+                    </p>
+                    <p className="font-[var(--font-mono)] text-[10px] text-[var(--color-text-tertiary)] mt-0.5">
+                      #{c.protocolo}
+                    </p>
+                  </div>
+                  <div className="shrink-0">
+                    <span className={`inline-flex rounded-md px-2 py-1 text-[9px] font-bold uppercase tracking-wider ${STATUS_CLASSES[c.status] ?? "bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]"}`}>
+                      {STATUS_LABELS[c.status] ?? c.status}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left border-collapse" style={{ minWidth: 800 }}>
                 <thead>
-                  <tr className="border-b border-[var(--color-border)]">
-                    <th className="px-4 py-3 text-[var(--text-xs)] font-medium text-[var(--color-text-tertiary)] uppercase tracking-[var(--tracking-wide)] w-12">Urg.</th>
-                    <th className="px-4 py-3 text-[var(--text-xs)] font-medium text-[var(--color-text-tertiary)] uppercase tracking-[var(--tracking-wide)] w-24">Canal</th>
-                    <th className="px-4 py-3 text-[var(--text-xs)] font-medium text-[var(--color-text-tertiary)] uppercase tracking-[var(--tracking-wide)]">Categoria</th>
-                    <th className="px-4 py-3 text-[var(--text-xs)] font-medium text-[var(--color-text-tertiary)] uppercase tracking-[var(--tracking-wide)]">Protocolo</th>
-                    <th className="px-4 py-3 text-[var(--text-xs)] font-medium text-[var(--color-text-tertiary)] uppercase tracking-[var(--tracking-wide)]">Status</th>
-                    <th className="px-4 py-3 text-[var(--text-xs)] font-medium text-[var(--color-text-tertiary)] uppercase tracking-[var(--tracking-wide)] text-right w-20">Em aberto</th>
-                    <th className="px-4 py-3 text-[var(--text-xs)] font-medium text-[var(--color-text-tertiary)] uppercase tracking-[var(--tracking-wide)] text-right w-20">Prazo</th>
+                  <tr className="h-12 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]/30">
+                    <th className="px-4 py-2 text-[var(--text-2xs)] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider w-16">Urg.</th>
+                    <th className="px-4 py-2 text-[var(--text-2xs)] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider w-24">Canal</th>
+                    <th className="px-4 py-2 text-[var(--text-2xs)] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider">Categoria</th>
+                    <th className="px-4 py-2 text-[var(--text-2xs)] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider">Protocolo</th>
+                    <th className="px-4 py-2 text-[var(--text-2xs)] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-2 text-[var(--text-2xs)] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider text-right w-24">Em aberto</th>
+                    <th className="px-4 py-2 text-[var(--text-2xs)] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider text-right w-24">Prazo</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-[var(--color-border)]">
                   {cases.map((c) => (
                     <CaseRow
                       key={c.id}
@@ -334,20 +394,48 @@ export default function CasosPage() {
                 </tbody>
               </table>
             </div>
+            </>
           )}
         </div>
 
         {/* Pagination */}
         {!loading && totalPages > 1 && (
-          <div className="flex items-center justify-between mt-4 gap-3">
-            <span className="text-[var(--text-sm)] text-[var(--color-text-tertiary)]">
-              Página {page} de {totalPages}
+          <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
+            <span className="text-[var(--text-sm)] font-medium text-[var(--color-text-secondary)]">
+              Mostrando <span className="text-[var(--color-text-primary)]">{(page - 1) * PAGE_SIZE + 1}</span> a <span className="text-[var(--color-text-primary)]">{Math.min(page * PAGE_SIZE, total)}</span> de <span className="text-[var(--color-text-primary)]">{total}</span> resultados
             </span>
-            <div className="flex gap-2">
-              <Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                disabled={page <= 1} 
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="rounded-xl shadow-[var(--shadow-xs)]"
+              >
                 ← Anterior
               </Button>
-              <Button variant="secondary" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
+              <div className="flex items-center gap-1">
+                {getPaginationItems(page, totalPages).map((p, i) =>
+                  p === "..." ? (
+                    <span key={`ellipsis-${i}`} className="flex h-8 w-8 items-center justify-center text-xs text-[var(--color-text-tertiary)]">…</span>
+                  ) : (
+                    <button
+                      key={p}
+                      onClick={() => setPage(p as number)}
+                      className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all ${page === p ? "bg-[var(--color-primary)] text-white shadow-md shadow-[var(--color-primary)]/20" : "text-[var(--color-text-secondary)] hover:bg-[var(--color-card-hover)]"}`}
+                    >
+                      {p}
+                    </button>
+                  )
+                )}
+              </div>
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                disabled={page >= totalPages} 
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                className="rounded-xl shadow-[var(--shadow-xs)]"
+              >
                 Próximo →
               </Button>
             </div>
