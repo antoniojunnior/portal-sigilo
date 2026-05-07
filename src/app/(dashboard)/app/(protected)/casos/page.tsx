@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { Suspense, useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
@@ -112,7 +112,7 @@ function exportCSV(cases: CaseRecord[]) {
   URL.revokeObjectURL(url);
 }
 
-export default function CasosPage() {
+function CasosContent() {
   const { user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -443,5 +443,13 @@ export default function CasosPage() {
         )}
       </PageContainer>
     </>
+  );
+}
+
+export default function CasosPage() {
+  return (
+    <Suspense>
+      <CasosContent />
+    </Suspense>
   );
 }
