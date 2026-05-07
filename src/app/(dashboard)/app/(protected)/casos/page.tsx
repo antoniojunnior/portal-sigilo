@@ -128,6 +128,7 @@ function CasosContent() {
 
   const [cases, setCases] = useState<CaseRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -150,6 +151,7 @@ function CasosContent() {
     currentPage: number,
   ) => {
     setLoading(true);
+    setFetchError(false);
     try {
       const [sortBy, sortDir] = sort.split("|");
       const params = new URLSearchParams({
@@ -164,7 +166,10 @@ function CasosContent() {
       if (protocol) params.set("protocol", protocol);
 
       const res = await fetch(`/api/dashboard/cases?${params.toString()}`);
-      if (!res.ok) return;
+      if (!res.ok) {
+        setFetchError(true);
+        return;
+      }
 
       const data = await res.json() as {
         cases: CaseRecord[];
@@ -177,6 +182,7 @@ function CasosContent() {
       setTotalPages(data.totalPages ?? 1);
     } catch (err) {
       console.error("[CasosPage]", err);
+      setFetchError(true);
     } finally {
       setLoading(false);
     }
@@ -317,6 +323,19 @@ function CasosContent() {
               {Array.from({ length: 6 }).map((_, i) => (
                 <Skeleton key={i} height="48px" rounded="xl" />
               ))}
+            </div>
+          ) : fetchError ? (
+            <div className="py-12">
+              <EmptyState
+                illustration="search"
+                title="Erro ao carregar casos"
+                description="Não foi possível buscar os dados. Verifique sua conexão ou tente novamente."
+                action={
+                  <Button variant="ghost" size="sm" onClick={() => fetchCases(statusFilter, urgencyFilter, channelFilter, sortValue, protocolDebounced, page)}>
+                    Tentar novamente
+                  </Button>
+                }
+              />
             </div>
           ) : cases.length === 0 ? (
             <div className="py-12">

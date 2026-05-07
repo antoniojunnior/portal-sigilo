@@ -107,7 +107,13 @@ export async function GET(request: NextRequest) {
       totalPages,
     });
   } catch (err) {
-    console.error("[GET /api/dashboard/cases]", err);
+    const msg = err instanceof Error ? err.message : String(err);
+    // Firestore missing index errors include a URL to create the index — log it clearly.
+    if (msg.includes("index")) {
+      console.error("[GET /api/dashboard/cases] MISSING FIRESTORE INDEX:", msg);
+    } else {
+      console.error("[GET /api/dashboard/cases]", err);
+    }
     return Response.json({ error: "Erro interno" }, { status: 500 });
   }
 }
