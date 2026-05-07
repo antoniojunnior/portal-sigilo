@@ -16,7 +16,9 @@ export interface SessionUser {
 
 export async function verifySession(sessionCookie: string): Promise<SessionUser | null> {
   try {
-    const decoded = await adminAuth.verifySessionCookie(sessionCookie, true);
+    // checkRevoked=false: JWT validated cryptographically; revocation handled by
+    // the ativo===true Firestore check below, avoiding a Firebase network round-trip.
+    const decoded = await adminAuth.verifySessionCookie(sessionCookie, false);
     const uid = decoded.uid;
 
     const userDoc = await adminDb.collection("users").doc(uid).get();

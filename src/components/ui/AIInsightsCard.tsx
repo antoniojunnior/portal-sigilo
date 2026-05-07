@@ -16,24 +16,19 @@ export function AIInsightsCard() {
   const [data, setData] = useState<InsightData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(false);
     fetch("/api/dashboard/insights")
-      .then(r => r.ok ? r.json() as Promise<InsightData> : null)
-      .then(d => {
-        if (d) {
-          setData(d);
-          setError(false);
-        } else {
-          setError(true);
-        }
-      })
-      .catch(err => {
-        console.error("[AIInsightsCard]", err);
-        setError(true);
-      })
-      .finally(() => setLoading(false));
-  }, []);
+      .then(r => r.ok ? r.json() as Promise<InsightData> : Promise.reject(new Error(`HTTP ${r.status}`)))
+      .then(d => { if (!cancelled) { setData(d); setError(false); } })
+      .catch(err => { console.error("[AIInsightsCard]", err); if (!cancelled) setError(true); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [attempt]);
 
   const timeAgo = data ? new Intl.RelativeTimeFormat("pt-BR", { numeric: "auto" }).format(
     Math.round((new Date(data.generatedAt).getTime() - Date.now()) / (1000 * 60)),
@@ -78,8 +73,8 @@ export function AIInsightsCard() {
         <p className="mx-auto mt-2 max-w-md text-sm text-[var(--color-text-secondary)]">
           Não foi possível gerar novos insights estratégicos agora. Tente novamente em alguns instantes.
         </p>
-        <button 
-          onClick={() => { setLoading(true); window.location.reload(); }}
+        <button
+          onClick={() => setAttempt(a => a + 1)}
           className="mt-6 inline-flex h-10 items-center justify-center rounded-xl bg-[var(--color-primary-surface)] px-6 text-sm font-semibold text-[var(--color-primary-dark)] transition hover:bg-[var(--color-primary)]/10"
         >
           Tentar novamente

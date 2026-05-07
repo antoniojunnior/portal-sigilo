@@ -55,7 +55,11 @@ interface RecentCase {
   prazo?: string;
 }
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+const fetcher = (url: string) =>
+  fetch(url).then((res) => {
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  });
 
 function greeting(nome: string): string {
   const h = new Date().getHours();

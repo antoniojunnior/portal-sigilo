@@ -88,7 +88,7 @@ export function Heatmap({
     if (externalData) { setLoading(false); return; }
     setLoading(true);
     fetch("/api/dashboard/heatmap")
-      .then((r) => r.ok ? r.json() as Promise<HeatmapApiData> : null)
+      .then((r) => r.ok ? r.json() as Promise<HeatmapApiData> : Promise.reject(new Error(`HTTP ${r.status}`)))
       .then((d) => {
         if (d?.rows) {
           setInternalCategories(d.categories || []);
