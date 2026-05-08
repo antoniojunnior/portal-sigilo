@@ -30,6 +30,7 @@ export default function Tela0() {
   // true from the start because autoFocus fires before React hydration and onFocus never runs
   const [focused, setFocused] = useState(true);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [protocolo, setProtocolo] = useState("");
   const [protocoloResolving, setProtocoloResolving] = useState(false);
   const [protocoloError, setProtocoloError] = useState<string | null>(null);
@@ -206,12 +207,17 @@ export default function Tela0() {
           <div
             ref={searchContainerRef}
             className="mb-1.5"
-            onBlur={(e) => {
-              if (!searchContainerRef.current?.contains(e.relatedTarget as Node)) {
-                setFocused(false);
-              }
+            onBlur={() => {
+              blurTimeoutRef.current = setTimeout(() => {
+                if (!searchContainerRef.current?.contains(document.activeElement)) {
+                  setFocused(false);
+                }
+              }, 150);
             }}
-            onFocus={() => setFocused(true)}
+            onFocus={() => {
+              if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+              setFocused(true);
+            }}
           >
             <div className="relative">
               <div
@@ -263,6 +269,7 @@ export default function Tela0() {
             {/* Dropdown — inside same container for focus tracking */}
             {showDropdown && (
               <div
+                onMouseDown={(e) => e.preventDefault()}
                 className="mt-1 overflow-hidden"
                 style={{
                   border: "1px solid var(--color-border)",
