@@ -48,11 +48,11 @@ const URGENCY_LABELS: Record<UrgencyLevel, string> = {
 };
 
 const STATUS_STYLES: Record<StatusValue, string> = {
-  aguardando_triagem: "bg-amber-50 text-amber-700 border-amber-200",
-  em_apuracao: "bg-blue-50 text-blue-700 border-blue-200",
-  pendente_informacao: "bg-orange-50 text-orange-700 border-orange-200",
-  encerrado_sem_infracao: "bg-[var(--color-bg-secondary)] text-[var(--color-text-tertiary)] border-[var(--color-border)]",
-  encerrado_com_acao: "bg-[var(--color-primary-surface)] text-[var(--color-primary-dark)] border-[var(--color-primary)]/20",
+  aguardando_triagem: "bg-[var(--color-warning-surface)] text-[var(--color-warning)]",
+  em_apuracao: "bg-[var(--color-primary-surface)] text-[var(--color-primary-dark)]",
+  pendente_informacao: "bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]",
+  encerrado_sem_infracao: "bg-[var(--color-success-surface)] text-[var(--color-success)]",
+  encerrado_com_acao: "bg-[var(--color-success-surface)] text-[var(--color-success)]",
 };
 
 const STATUS_LABELS: Record<StatusValue, string> = {
@@ -76,10 +76,10 @@ const PLAN_LABELS: Record<PlanValue, string> = {
 };
 
 const CHANNEL_STYLES: Record<ChannelValue, string> = {
-  web: "bg-sky-50 text-sky-700 border-sky-200",
-  whatsapp: "bg-green-50 text-green-700 border-green-200",
-  app: "bg-violet-50 text-violet-700 border-violet-200",
-  "0800": "bg-amber-50 text-amber-700 border-amber-200",
+  web: "bg-sky-50 text-sky-700",
+  whatsapp: "bg-green-50 text-green-700",
+  app: "bg-violet-50 text-violet-700",
+  "0800": "bg-amber-50 text-amber-700",
 };
 
 const CHANNEL_LABELS: Record<ChannelValue, string> = {
@@ -91,6 +91,9 @@ const CHANNEL_LABELS: Record<ChannelValue, string> = {
 
 const BASE =
   "inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-full)] border text-[var(--text-xs)] font-medium leading-none whitespace-nowrap";
+
+const LABEL_BASE =
+  "inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider whitespace-nowrap leading-none";
 
 /**
  * Semantic badge for urgency levels (1–5), case status, subscription plan, and channel origin.
@@ -131,7 +134,7 @@ export function Badge({
 
   if (variant === "status" && status) {
     return (
-      <span className={[BASE, STATUS_STYLES[status], className].filter(Boolean).join(" ")}>
+      <span className={[LABEL_BASE, STATUS_STYLES[status], className].filter(Boolean).join(" ")}>
         {STATUS_LABELS[status]}
       </span>
     );
@@ -147,7 +150,7 @@ export function Badge({
 
   if (variant === "channel" && channel) {
     return (
-      <span className={[BASE, CHANNEL_STYLES[channel], className].filter(Boolean).join(" ")}>
+      <span className={[LABEL_BASE, CHANNEL_STYLES[channel], className].filter(Boolean).join(" ")}>
         {CHANNEL_LABELS[channel]}
       </span>
     );

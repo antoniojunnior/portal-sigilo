@@ -7,7 +7,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { MetricCard } from "@/components/ui/MetricCard";
 import { Heatmap } from "@/components/ui/Heatmap";
-import { RiskCell } from "@/components/ui/RiskCell";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { 
   Lock, 
@@ -37,11 +36,6 @@ interface MetricsData {
   resolvidosTrend: TrendInfo | null;
 }
 
-interface HeatmapData {
-  departments: string[];
-  categories: string[];
-  rows: { dept: string; values: number[] }[];
-}
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -78,13 +72,7 @@ export default function RelatoriosPage() {
     { refreshInterval: 300000 } // 5 minutes
   );
 
-  const { data: heatmap, isLoading: loadingHeatmap } = useSWR<HeatmapData>(
-    user?.plano !== "entrada" ? "/api/dashboard/heatmap" : null,
-    fetcher,
-    { refreshInterval: 600000 } // 10 minutes
-  );
-
-  const loading = loadingMetrics || loadingHeatmap;
+  const loading = loadingMetrics;
 
   if (!user) return null;
 
@@ -174,31 +162,10 @@ export default function RelatoriosPage() {
               <div className="grid gap-6 xl:grid-cols-[1fr_400px]">
                 <div className="space-y-6">
                   {/* Risk heatmap */}
-                  <section aria-label="Mapa de calor de risco" className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-[var(--shadow-sm)] overflow-hidden">
-                    <div className="px-6 py-5 border-b border-[var(--color-border)] flex items-center justify-between">
-                      <div>
-                        <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Mapa de Risco</h2>
-                        <p className="mt-1 text-sm text-[var(--color-text-secondary)]">Concentração por departamento e categoria</p>
-                      </div>
-                    </div>
-                    <div className="p-1 sm:p-2">
-                      {loading || !heatmap ? (
-                        <div className="p-6 space-y-4">
-                          {Array.from({ length: 6 }).map((_, i) => (
-                            <Skeleton key={i} height="48px" rounded="xl" />
-                          ))}
-                        </div>
-                      ) : (
-                        <Heatmap
-                          externalData={heatmap}
-                          showFilter={false}
-                          stickyFirstCol
-                          title="Mapa de Risco"
-                          subtitle="Concentração por departamento e categoria"
-                        />
-                      )}
-                    </div>
-                  </section>
+                  <Heatmap
+                    title="Mapa de Risco"
+                    subtitle="Concentração por departamento e categoria"
+                  />
 
                   {/* Channel distribution */}
                   {metrics && (

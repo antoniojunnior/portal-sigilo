@@ -218,6 +218,11 @@ export function DashboardHeader({
                   <p className="text-[11px] text-[var(--color-text-tertiary)]">
                     {ROLE_LABELS[authUser?.role ?? ""] ?? "Usuário"}
                   </p>
+                  {authUser?.orgName && (
+                    <p className="mt-1.5 truncate text-[10px] font-semibold text-[var(--color-primary)]">
+                      {authUser.orgName}
+                    </p>
+                  )}
                 </div>
               )}
               <div className="p-2">
