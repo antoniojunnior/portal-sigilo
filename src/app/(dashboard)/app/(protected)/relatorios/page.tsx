@@ -253,20 +253,20 @@ export default function RelatoriosPage() {
                             <Sparkles size={20} className="text-white" />
                           </div>
                           <div>
-                            <h3 className="font-bold text-[var(--color-text-primary)]">IA Assistente</h3>
-                            <span className="text-[10px] font-bold uppercase tracking-wider bg-[var(--color-accent)] text-white px-2 py-0.5 rounded-full">Beta</span>
+                            <h3 className="text-base font-bold text-[var(--color-text-primary)]">IA Assistente</h3>
+                            <span className="text-xs font-bold uppercase tracking-wider bg-[var(--color-accent)] text-white px-2 py-0.5 rounded-full">Beta</span>
                           </div>
                         </div>
                         
                         <div className="space-y-4">
                           <div className="bg-[var(--color-card)]/60 backdrop-blur-sm p-4 rounded-xl border border-[var(--color-border)]">
-                            <p className="text-sm font-semibold text-[var(--color-text-primary)]">Relatório Executivo Automático</p>
+                            <p className="text-sm font-bold text-[var(--color-text-primary)]">Relatório Executivo Automático</p>
                             <p className="mt-1 text-xs text-[var(--color-text-tertiary)] leading-relaxed">
                               A IA gera resumos executivos focados em conformidade e riscos jurídicos baseados nos relatos do período.
                             </p>
                           </div>
                           <div className="bg-[var(--color-card)]/60 backdrop-blur-sm p-4 rounded-xl border border-[var(--color-border)]">
-                            <p className="text-sm font-semibold text-[var(--color-text-primary)]">Predição de Tendências</p>
+                            <p className="text-sm font-bold text-[var(--color-text-primary)]">Predição de Tendências</p>
                             <p className="mt-1 text-xs text-[var(--color-text-tertiary)] leading-relaxed">
                               Identificação proativa de focos de conflito antes que se tornem problemas sistêmicos.
                             </p>
@@ -289,7 +289,7 @@ export default function RelatoriosPage() {
                           <Sparkles size={22} className="text-[var(--color-primary)]" />
                         </div>
                         <div>
-                          <h3 className="text-base font-bold text-[var(--color-text-primary)]">Inteligência Preditiva</h3>
+                          <h3 className="text-base font-bold text-[var(--color-text-primary)] leading-snug">Inteligência Preditiva</h3>
                           <p className="mt-1 text-sm text-[var(--color-text-secondary)] leading-relaxed">
                             Resumos automáticos e análise de risco ESG disponíveis no plano <span className="font-bold text-[var(--color-primary)]">Enterprise</span>.
                           </p>
@@ -310,7 +310,7 @@ export default function RelatoriosPage() {
                     <section aria-label="Indicadores ESG" className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-[var(--shadow-sm)] overflow-hidden">
                       <div className="px-6 py-5 border-b border-[var(--color-border)] flex items-center justify-between">
                         <h2 className="text-lg font-bold text-[var(--color-text-primary)]">Indicadores ESG</h2>
-                        <span className="text-[10px] font-bold bg-[var(--color-success-surface)] text-[var(--color-success)] px-2 py-0.5 rounded-full">Enterprise</span>
+                        <span className="text-xs font-bold uppercase tracking-wider bg-[var(--color-success-surface)] text-[var(--color-success)] px-2 py-0.5 rounded-full">Enterprise</span>
                       </div>
                       <div className="p-6 text-center">
                         <div className="w-12 h-12 bg-[var(--color-bg-secondary)] rounded-full flex items-center justify-center mx-auto mb-4">

@@ -227,7 +227,7 @@ function CasosContent() {
                 placeholder="Buscar por protocolo (ex: ETK-2024-…)"
                 value={protocolSearch}
                 onChange={(e) => { setProtocolSearch(e.target.value); setPage(1); }}
-                className="w-full pl-11 pr-4 py-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] text-[var(--color-text-primary)] text-[var(--text-sm)] shadow-[var(--shadow-xs)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all"
+                className="w-full pl-11 pr-4 py-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] text-[var(--color-text-primary)] text-sm shadow-[var(--shadow-xs)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all"
                 aria-label="Buscar por protocolo"
               />
             </div>
@@ -255,7 +255,7 @@ function CasosContent() {
                 ) : (
                   <span
                     title="Exportação disponível nos planos Gestão e Enterprise"
-                    className="flex h-10 items-center gap-2 px-4 rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--text-xs)] text-[var(--color-text-tertiary)] cursor-default select-none"
+                    className="flex h-10 items-center gap-2 px-4 rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-xs text-[var(--color-text-tertiary)] cursor-default select-none"
                   >
                     <Download size={16} strokeWidth={1.8} />
                     Exportar CSV
@@ -309,7 +309,7 @@ function CasosContent() {
             </div>
 
             {!loading && (
-              <span className="ml-auto text-[var(--text-xs)] font-medium text-[var(--color-text-tertiary)] bg-[var(--color-bg-secondary)] px-3 py-1.5 rounded-full border border-[var(--color-border)]">
+              <span className="ml-auto text-xs font-medium text-[var(--color-text-tertiary)] bg-[var(--color-bg-secondary)] px-3 py-1.5 rounded-full border border-[var(--color-border)]">
                 {total} {total === 1 ? "caso" : "casos"}
               </span>
             )}
@@ -374,7 +374,7 @@ function CasosContent() {
                     </p>
                   </div>
                   <div className="shrink-0">
-                    <span className={`inline-flex rounded-md px-2 py-1 text-[9px] font-bold uppercase tracking-wider ${STATUS_CLASSES[c.status] ?? "bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]"}`}>
+                    <span className={`inline-flex rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${STATUS_CLASSES[c.status] ?? "bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]"}`}>
                       {STATUS_LABELS[c.status] ?? c.status}
                     </span>
                   </div>
@@ -387,13 +387,13 @@ function CasosContent() {
               <table className="w-full text-left border-collapse" style={{ minWidth: 800 }}>
                 <thead>
                   <tr className="h-12 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]/30">
-                    <th className="px-4 py-2 text-[var(--text-2xs)] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider w-16">Urg.</th>
-                    <th className="px-4 py-2 text-[var(--text-2xs)] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider w-24">Canal</th>
-                    <th className="px-4 py-2 text-[var(--text-2xs)] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider">Categoria</th>
-                    <th className="px-4 py-2 text-[var(--text-2xs)] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider">Protocolo</th>
-                    <th className="px-4 py-2 text-[var(--text-2xs)] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider">Status</th>
-                    <th className="px-4 py-2 text-[var(--text-2xs)] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider text-right w-24">Em aberto</th>
-                    <th className="px-4 py-2 text-[var(--text-2xs)] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider text-right w-24">Prazo</th>
+                    <th className="px-4 py-2 text-xs font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider w-16">Urg.</th>
+                    <th className="px-4 py-2 text-xs font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider w-24">Canal</th>
+                    <th className="px-4 py-2 text-xs font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider">Categoria</th>
+                    <th className="px-4 py-2 text-xs font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider">Protocolo</th>
+                    <th className="px-4 py-2 text-xs font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-2 text-xs font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider text-right w-24">Em aberto</th>
+                    <th className="px-4 py-2 text-xs font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider text-right w-24">Prazo</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--color-border)]">
@@ -420,7 +420,7 @@ function CasosContent() {
         {/* Pagination */}
         {!loading && totalPages > 1 && (
           <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
-            <span className="text-[var(--text-sm)] font-medium text-[var(--color-text-secondary)]">
+            <span className="text-sm font-medium text-[var(--color-text-secondary)]">
               Mostrando <span className="text-[var(--color-text-primary)]">{(page - 1) * PAGE_SIZE + 1}</span> a <span className="text-[var(--color-text-primary)]">{Math.min(page * PAGE_SIZE, total)}</span> de <span className="text-[var(--color-text-primary)]">{total}</span> resultados
             </span>
             <div className="flex items-center gap-2">

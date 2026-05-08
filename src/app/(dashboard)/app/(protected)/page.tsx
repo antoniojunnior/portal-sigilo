@@ -338,7 +338,7 @@ export default function DashboardOverview() {
             )}
 
             <section className="grid gap-6 xl:grid-cols-[1fr_380px]">
-              <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-6 min-w-0">
                 <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-[var(--shadow-sm)] overflow-hidden">
                   <div className="px-6 py-5 border-b border-[var(--color-border)] flex items-center justify-between bg-gradient-to-r from-[var(--color-card)] to-[var(--color-bg-secondary)]/30">
                     <div>
@@ -453,7 +453,7 @@ export default function DashboardOverview() {
                 </div>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-6 min-w-0">
                 <ErrorBoundary>
                   <Heatmap />
                 </ErrorBoundary>

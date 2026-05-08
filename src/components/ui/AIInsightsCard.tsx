@@ -84,7 +84,7 @@ export function AIInsightsCard() {
   }
 
   return (
-    <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-[var(--shadow-sm)] transition-all duration-300 hover:shadow-[var(--shadow-md)]">
+    <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-[var(--shadow-sm)] transition-all duration-300 hover:shadow-[var(--shadow-md)] overflow-hidden">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="flex items-center gap-2 text-lg font-semibold text-[var(--color-text-primary)]">
           <Sparkles className="text-[var(--color-primary)]" size={21} strokeWidth={1.8} />
@@ -107,7 +107,7 @@ export function AIInsightsCard() {
             <ArrowRight size={17} />
           </button>
         </div>
-        <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/50 p-6 animate-in fade-in slide-in-from-right-4 duration-700">
+        <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/50 p-4 sm:p-6 animate-in fade-in slide-in-from-right-4 duration-700">
           <h3 className="mb-4 text-sm font-semibold text-[var(--color-text-primary)]">Recomendações sugeridas</h3>
           <ul className="space-y-4 text-sm leading-relaxed text-[var(--color-text-secondary)]">
             {data.recommendations.map((rec, i) => (
