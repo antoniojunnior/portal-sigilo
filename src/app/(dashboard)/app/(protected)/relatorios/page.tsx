@@ -8,13 +8,13 @@ import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { MetricCard } from "@/components/ui/MetricCard";
 import { Heatmap } from "@/components/ui/Heatmap";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { 
-  Lock, 
-  Download, 
-  Sparkles, 
-  ChevronRight, 
-  BarChart3, 
-  PieChart, 
+import {
+  Lock,
+  Download,
+  Sparkles,
+  ChevronRight,
+  BarChart3,
+  PieChart,
   TrendingUp,
   FileBarChart
 } from "lucide-react";
@@ -86,7 +86,7 @@ export default function RelatoriosPage() {
 
       <main className="pb-28 lg:pb-10 overflow-y-auto h-full">
         <div className="mx-auto max-w-[1280px] px-4 py-6 md:px-6 md:py-8">
-          
+
           <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div>
               <h1 className="font-[var(--font-display)] text-4xl font-semibold tracking-tight text-[var(--color-text-primary)] md:text-5xl">
@@ -94,7 +94,7 @@ export default function RelatoriosPage() {
               </h1>
               <p className="mt-2 text-lg text-[var(--color-text-secondary)]">Análise profunda do canal nos últimos 90 dias.</p>
             </div>
-            
+
             {canExportPDF && !loading && (
               <button
                 type="button"
@@ -111,7 +111,7 @@ export default function RelatoriosPage() {
             <PlanGate plano={user.plano} />
           ) : (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-              
+
               {/* Metric Cards Grid */}
               <section aria-label="Métricas principais">
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -159,138 +159,134 @@ export default function RelatoriosPage() {
                 </div>
               </section>
 
-              <div className="grid gap-6 xl:grid-cols-[1fr_400px]">
-                <div className="space-y-6">
-                  {/* Risk heatmap */}
-                  <Heatmap
-                    title="Mapa de Risco"
-                    subtitle="Concentração por departamento e categoria"
-                  />
+              <div className="space-y-6 min-w-0">
+                {/* Risk heatmap */}
+                <Heatmap
+                  title="Mapa de Risco"
+                  subtitle="Concentração por departamento e categoria"
+                />
 
-                  {/* Channel distribution */}
-                  {metrics && (
-                    <section aria-label="Distribuição por canal" className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-[var(--shadow-sm)] overflow-hidden">
-                      <div className="px-6 py-5 border-b border-[var(--color-border)]">
-                        <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Canais de Origem</h2>
-                        <p className="mt-1 text-sm text-[var(--color-text-secondary)]">Origem dos relatos recebidos</p>
-                      </div>
-                      <div className="p-6">
-                        <div className="space-y-6">
-                          {Object.entries(metrics.byChannel)
-                            .filter(([, v]) => v > 0)
-                            .sort((a, b) => b[1] - a[1])
-                            .map(([ch, count]) => {
-                              const total = Object.values(metrics.byChannel).reduce((a, b) => a + b, 0);
-                              const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
-                              return (
-                                <div key={ch} className="space-y-2">
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-sm font-bold text-[var(--color-text-primary)] capitalize">
-                                      {ch === "whatsapp" ? "WhatsApp (Criptografado)" : ch}
-                                    </span>
-                                    <span className="text-sm font-bold text-[var(--color-primary-dark)]">
-                                      {count} relato{count !== 1 ? 's' : ''}
-                                    </span>
-                                  </div>
-                                  <div className="h-3 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
-                                    <div
-                                      style={{ width: `${percentage}%` }}
-                                      className="h-full rounded-full bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] transition-all duration-1000 ease-out"
-                                    />
-                                  </div>
+                {/* Channel distribution */}
+                {metrics && (
+                  <section aria-label="Distribuição por canal" className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-[var(--shadow-sm)] overflow-hidden">
+                    <div className="px-6 py-5 border-b border-[var(--color-border)]">
+                      <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Canais de Origem</h2>
+                      <p className="mt-1 text-sm text-[var(--color-text-secondary)]">Origem dos relatos recebidos</p>
+                    </div>
+                    <div className="p-6">
+                      <div className="space-y-6">
+                        {Object.entries(metrics.byChannel)
+                          .filter(([, v]) => v > 0)
+                          .sort((a, b) => b[1] - a[1])
+                          .map(([ch, count]) => {
+                            const total = Object.values(metrics.byChannel).reduce((a, b) => a + b, 0);
+                            const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+                            return (
+                              <div key={ch} className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-bold text-[var(--color-text-primary)] capitalize">
+                                    {ch === "whatsapp" ? "WhatsApp (Criptografado)" : ch}
+                                  </span>
+                                  <span className="text-sm font-bold text-[var(--color-primary-dark)]">
+                                    {count} relato{count !== 1 ? 's' : ''}
+                                  </span>
                                 </div>
-                              );
-                            })}
-                        </div>
+                                <div className="h-3 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
+                                  <div
+                                    style={{ width: `${percentage}%` }}
+                                    className="h-full rounded-full bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] transition-all duration-1000 ease-out"
+                                  />
+                                </div>
+                              </div>
+                            );
+                          })}
                       </div>
-                    </section>
-                  )}
-                </div>
+                    </div>
+                  </section>
+                )}
 
-                <div className="space-y-6">
-                  {/* AI Assistant Insight — Enterprise only or Coming Soon */}
-                  {isEnterprise ? (
-                    <section aria-label="IA Insight" className="rounded-2xl border border-[var(--color-accent)] bg-[var(--color-accent-surface)]/30 shadow-[var(--shadow-sm)] overflow-hidden relative group">
-                      <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity">
-                        <Sparkles size={64} className="text-[var(--color-accent)]" />
-                      </div>
-                      <div className="p-6 relative">
-                        <div className="flex items-center gap-3 mb-6">
-                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] flex items-center justify-center shadow-[var(--shadow-sm)]">
-                            <Sparkles size={20} className="text-white" />
-                          </div>
-                          <div>
-                            <h3 className="text-base font-bold text-[var(--color-text-primary)]">IA Assistente</h3>
-                            <span className="text-xs font-bold uppercase tracking-wider bg-[var(--color-accent)] text-white px-2 py-0.5 rounded-full">Beta</span>
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-4">
-                          <div className="bg-[var(--color-card)]/60 backdrop-blur-sm p-4 rounded-xl border border-[var(--color-border)]">
-                            <p className="text-sm font-bold text-[var(--color-text-primary)]">Relatório Executivo Automático</p>
-                            <p className="mt-1 text-xs text-[var(--color-text-tertiary)] leading-relaxed">
-                              A IA gera resumos executivos focados em conformidade e riscos jurídicos baseados nos relatos do período.
-                            </p>
-                          </div>
-                          <div className="bg-[var(--color-card)]/60 backdrop-blur-sm p-4 rounded-xl border border-[var(--color-border)]">
-                            <p className="text-sm font-bold text-[var(--color-text-primary)]">Predição de Tendências</p>
-                            <p className="mt-1 text-xs text-[var(--color-text-tertiary)] leading-relaxed">
-                              Identificação proativa de focos de conflito antes que se tornem problemas sistêmicos.
-                            </p>
-                          </div>
-                        </div>
-                        
-                        <div className="mt-8 pt-6 border-t border-[var(--color-border)] text-center">
-                          <p className="text-xs font-bold text-[var(--color-primary)] uppercase tracking-widest">Ativado para sua organização</p>
-                        </div>
-                      </div>
-                    </section>
-                  ) : (
-                    /* Upgrade Banner for Gestão users */
-                    <section className="rounded-2xl border border-[var(--color-border)] bg-gradient-to-br from-[var(--color-bg-secondary)]/50 to-[var(--color-card)] p-6 relative overflow-hidden group">
-                      {/* Subtle background decoration */}
-                      <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-[var(--color-primary)] opacity-[0.03] rounded-full blur-3xl group-hover:opacity-[0.06] transition-opacity" />
-                      
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-white border border-[var(--color-border)] shadow-sm flex items-center justify-center flex-shrink-0">
-                          <Sparkles size={22} className="text-[var(--color-primary)]" />
+                {/* AI Assistant Insight — Enterprise only or Coming Soon */}
+                {isEnterprise ? (
+                  <section aria-label="IA Insight" className="rounded-2xl border border-[var(--color-accent)] bg-[var(--color-accent-surface)]/30 shadow-[var(--shadow-sm)] overflow-hidden relative group">
+                    <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity">
+                      <Sparkles size={64} className="text-[var(--color-accent)]" />
+                    </div>
+                    <div className="p-6 relative">
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] flex items-center justify-center shadow-[var(--shadow-sm)]">
+                          <Sparkles size={20} className="text-white" />
                         </div>
                         <div>
-                          <h3 className="text-base font-bold text-[var(--color-text-primary)] leading-snug">Inteligência Preditiva</h3>
-                          <p className="mt-1 text-sm text-[var(--color-text-secondary)] leading-relaxed">
-                            Resumos automáticos e análise de risco ESG disponíveis no plano <span className="font-bold text-[var(--color-primary)]">Enterprise</span>.
-                          </p>
-                          <Link 
-                            href="/app/configuracoes" 
-                            className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-[var(--color-primary)] hover:underline"
-                          >
-                            Saiba mais sobre upgrade
-                            <ChevronRight size={14} />
-                          </Link>
+                          <h3 className="text-base font-bold text-[var(--color-text-primary)]">IA Assistente</h3>
+                          <span className="text-xs font-bold uppercase tracking-wider bg-[var(--color-accent)] text-white px-2 py-0.5 rounded-full">Beta</span>
                         </div>
                       </div>
-                    </section>
-                  )}
 
-                  {/* ESG Indicators — Enterprise only */}
-                  {isEnterprise && (
-                    <section aria-label="Indicadores ESG" className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-[var(--shadow-sm)] overflow-hidden">
-                      <div className="px-6 py-5 border-b border-[var(--color-border)] flex items-center justify-between">
-                        <h2 className="text-lg font-bold text-[var(--color-text-primary)]">Indicadores ESG</h2>
-                        <span className="text-xs font-bold uppercase tracking-wider bg-[var(--color-success-surface)] text-[var(--color-success)] px-2 py-0.5 rounded-full">Enterprise</span>
-                      </div>
-                      <div className="p-6 text-center">
-                        <div className="w-12 h-12 bg-[var(--color-bg-secondary)] rounded-full flex items-center justify-center mx-auto mb-4">
-                          <TrendingUp size={20} className="text-[var(--color-text-tertiary)]" />
+                      <div className="space-y-4">
+                        <div className="bg-[var(--color-card)]/60 backdrop-blur-sm p-4 rounded-xl border border-[var(--color-border)]">
+                          <p className="text-sm font-bold text-[var(--color-text-primary)]">Relatório Executivo Automático</p>
+                          <p className="mt-1 text-xs text-[var(--color-text-tertiary)] leading-relaxed">
+                            A IA gera resumos executivos focados em conformidade e riscos jurídicos baseados nos relatos do período.
+                          </p>
                         </div>
-                        <p className="text-sm text-[var(--color-text-tertiary)] leading-relaxed">
-                          Geração automática de indicadores GRI S-OWN-2 e G-GOV-2 para seu relatório de sustentabilidade.
-                        </p>
-                        <p className="mt-4 text-xs font-bold text-[var(--color-text-primary)]">Consulte seu gerente de contas</p>
+                        <div className="bg-[var(--color-card)]/60 backdrop-blur-sm p-4 rounded-xl border border-[var(--color-border)]">
+                          <p className="text-sm font-bold text-[var(--color-text-primary)]">Predição de Tendências</p>
+                          <p className="mt-1 text-xs text-[var(--color-text-tertiary)] leading-relaxed">
+                            Identificação proativa de focos de conflito antes que se tornem problemas sistêmicos.
+                          </p>
+                        </div>
                       </div>
-                    </section>
-                  )}
-                </div>
+
+                      <div className="mt-8 pt-6 border-t border-[var(--color-border)] text-center">
+                        <p className="text-xs font-bold text-[var(--color-primary)] uppercase tracking-widest">Ativado para sua organização</p>
+                      </div>
+                    </div>
+                  </section>
+                ) : (
+                  /* Upgrade Banner for Gestão users */
+                  <section className="rounded-2xl border border-[var(--color-border)] bg-gradient-to-br from-[var(--color-bg-secondary)]/50 to-[var(--color-card)] p-6 relative overflow-hidden group">
+                    {/* Subtle background decoration */}
+                    <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-[var(--color-primary)] opacity-[0.03] rounded-full blur-3xl group-hover:opacity-[0.06] transition-opacity" />
+
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-white border border-[var(--color-border)] shadow-sm flex items-center justify-center flex-shrink-0">
+                        <Sparkles size={22} className="text-[var(--color-primary)]" />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-bold text-[var(--color-text-primary)] leading-snug">Inteligência Preditiva</h3>
+                        <p className="mt-1 text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                          Resumos automáticos e análise de risco ESG disponíveis no plano <span className="font-bold text-[var(--color-primary)]">Enterprise</span>.
+                        </p>
+                        <Link
+                          href="/app/configuracoes"
+                          className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-[var(--color-primary)] hover:underline"
+                        >
+                          Saiba mais sobre upgrade
+                          <ChevronRight size={14} />
+                        </Link>
+                      </div>
+                    </div>
+                  </section>
+                )}
+
+                {/* ESG Indicators — Enterprise only */}
+                {isEnterprise && (
+                  <section aria-label="Indicadores ESG" className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-[var(--shadow-sm)] overflow-hidden">
+                    <div className="px-6 py-5 border-b border-[var(--color-border)] flex items-center justify-between">
+                      <h2 className="text-lg font-bold text-[var(--color-text-primary)]">Indicadores ESG</h2>
+                      <span className="text-xs font-bold uppercase tracking-wider bg-[var(--color-success-surface)] text-[var(--color-success)] px-2 py-0.5 rounded-full">Enterprise</span>
+                    </div>
+                    <div className="p-6 text-center">
+                      <div className="w-12 h-12 bg-[var(--color-bg-secondary)] rounded-full flex items-center justify-center mx-auto mb-4">
+                        <TrendingUp size={20} className="text-[var(--color-text-tertiary)]" />
+                      </div>
+                      <p className="text-sm text-[var(--color-text-tertiary)] leading-relaxed">
+                        Geração automática de indicadores GRI S-OWN-2 e G-GOV-2 para seu relatório de sustentabilidade.
+                      </p>
+                      <p className="mt-4 text-xs font-bold text-[var(--color-text-primary)]">Consulte seu gerente de contas</p>
+                    </div>
+                  </section>
+                )}
               </div>
             </div>
           )}

@@ -140,7 +140,7 @@ function CriticalAlert({ count }: { count: number }) {
           <p className="mt-1 text-sm leading-relaxed text-[var(--color-text-secondary)]">Conforme as diretrizes, casos urgentes devem ser respondidos em até 48 horas.</p>
         </div>
       </div>
-      <Link 
+      <Link
         href="/app/casos?filtro=urgente"
         className="mt-4 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[var(--color-danger)] px-5 text-sm font-semibold text-white shadow-[var(--shadow-sm)] transition hover:brightness-95 focus-visible:ring-2 focus-visible:ring-[var(--color-danger-surface)] md:mt-0"
       >
@@ -248,36 +248,36 @@ export default function DashboardOverview() {
 
             <ErrorBoundary>
               <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <MetricCard 
-                  label="Total de relatos" 
-                  value={metrics?.total ?? 0} 
+                <MetricCard
+                  label="Total de relatos"
+                  value={metrics?.total ?? 0}
                   trend={metrics?.totalTrend ?? undefined}
                   tone="primary"
-                  icon={FolderOpen} 
-                  loading={loadingMetrics} 
+                  icon={FolderOpen}
+                  loading={loadingMetrics}
                 />
-                <MetricCard 
-                  label="Casos em apuração" 
-                  value={metrics?.emApuracao ?? 0} 
+                <MetricCard
+                  label="Casos em apuração"
+                  value={metrics?.emApuracao ?? 0}
                   trend={metrics?.emApuracaoTrend ?? undefined}
                   tone="primary"
-                  icon={RefreshCcw} 
-                  loading={loadingMetrics} 
+                  icon={RefreshCcw}
+                  loading={loadingMetrics}
                 />
-                <MetricCard 
-                  label="Tempo médio de resposta" 
-                  value={metrics?.prazoMedio != null ? `${metrics.prazoMedio}h` : "—"} 
+                <MetricCard
+                  label="Tempo médio de resposta"
+                  value={metrics?.prazoMedio != null ? `${metrics.prazoMedio}h` : "—"}
                   trend="Dentro do esperado"
-                  icon={Clock3} 
-                  loading={loadingMetrics} 
+                  icon={Clock3}
+                  loading={loadingMetrics}
                 />
-                <MetricCard 
-                  label="Resolvidos (30 dias)" 
-                  value={metrics?.resolvidos30d ?? 0} 
+                <MetricCard
+                  label="Resolvidos (30 dias)"
+                  value={metrics?.resolvidos30d ?? 0}
                   trend={metrics?.resolvidosTrend ?? undefined}
                   tone="success"
-                  icon={CheckCircle2} 
-                  loading={loadingMetrics} 
+                  icon={CheckCircle2}
+                  loading={loadingMetrics}
                 />
               </section>
             </ErrorBoundary>
@@ -352,7 +352,7 @@ export default function DashboardOverview() {
                   </div>
 
                   <div className="hidden md:block">
-                    <DataTable 
+                    <DataTable
                       columns={[
                         {
                           header: "Protocolo",
@@ -364,16 +364,16 @@ export default function DashboardOverview() {
                           )
                         },
                         { header: "Categoria", accessor: "categoria", className: "text-[var(--color-text-secondary)] font-medium" },
-                        { 
-                          header: "Status", 
+                        {
+                          header: "Status",
                           accessor: (item) => (
                             <span className={`inline-flex rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${getStatusClasses(item.status)}`}>
                               {getStatusLabel(item.status)}
                             </span>
                           )
                         },
-                        { 
-                          header: "SLA", 
+                        {
+                          header: "SLA",
                           accessor: (item) => {
                             const hours = calculateSlaHours(item.prazo, item.created_at);
                             return (
@@ -414,7 +414,7 @@ export default function DashboardOverview() {
                       recentCases.map((item) => {
                         const slaHours = calculateSlaHours(item.prazo, item.created_at);
                         const isHighUrgency = (item.urgencia || 0) >= 4;
-                        
+
                         return (
                           <Link
                             key={item.id}
@@ -455,7 +455,10 @@ export default function DashboardOverview() {
 
               <div className="space-y-6 min-w-0">
                 <ErrorBoundary>
-                  <Heatmap />
+                  <Heatmap
+                    title="Mapa de Risco"
+                    subtitle="Concentração por departamento e categoria"
+                  />
                 </ErrorBoundary>
                 <ErrorBoundary>
                   <AIInsightsCard />
