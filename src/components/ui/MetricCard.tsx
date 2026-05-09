@@ -57,6 +57,9 @@ export function MetricCard({
     setVisible(false);
   }, [loading]);
 
+  const numericValue = typeof value === "number" ? value : null;
+  const countedValue = useCountUp(numericValue ?? 0, visible);
+
   if (loading) {
     return (
       <div className={`rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-[var(--shadow-sm)] ${className}`}>
@@ -67,9 +70,6 @@ export function MetricCard({
       </div>
     );
   }
-
-  const numericValue = typeof value === "number" ? value : null;
-  const countedValue = useCountUp(numericValue ?? 0, visible);
   const displayValue = numericValue !== null ? countedValue : value;
 
   const toneClasses = {
