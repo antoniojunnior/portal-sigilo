@@ -73,3 +73,24 @@ npm-debug.log*
 # ─── Expo / React Native ──────────────────────────────────────────────
 mobile/.expo/
 mobile/node_modules/
+
+# Environment & Secrets (AIOX)
+.env.*.local
+*.key
+
+# Dependencies (AIOX)
+node_modules/
+
+# Build & Logs (AIOX)
+dist/
+build/
+logs/
+
+# IDE & OS (AIOX)
+*.swp
+
+# AIOX Local (AIOX)
+.aiox-core/local/
+.claude/settings.local.json
+.aiox/install-log.txt
+.aiox/handoffs/

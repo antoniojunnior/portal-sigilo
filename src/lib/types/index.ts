@@ -143,6 +143,7 @@ export interface AuditLog {
 // ─── Report ───────────────────────────────────────────────────────────────────
 
 export type ReportTipo = "padrao" | "personalizado" | "esg";
+export type ReportStatus = "rascunho" | "aprovado" | "exportado";
 
 export interface Report {
   id: string;
@@ -157,6 +158,10 @@ export interface Report {
   aprovado: boolean;
   exportado: boolean;
   tipo: ReportTipo;
+  status: ReportStatus;
+  aprovado_por?: string;
+  aprovado_em?: Timestamp;
+  filtros?: Record<string, unknown>;
 }
 
 // ─── WhatsappSession ──────────────────────────────────────────────────────────

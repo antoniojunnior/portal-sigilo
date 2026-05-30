@@ -823,6 +823,7 @@ export default function CaseDetailPage({ params }: Props) {
       <AIAssistantPanel
         open={aiOpen}
         onClose={() => setAiOpen(false)}
+        caseId={caseId}
         context={`Caso ${caseData.protocolo}: ${caseData.categoria ?? "sem categoria"} — ${caseData.triagem_ia?.recomendacao ?? ""}`}
       />
 

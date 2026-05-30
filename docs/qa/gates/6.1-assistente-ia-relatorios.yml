@@ -1,0 +1,28 @@
+schema: 1
+story: "6.1"
+gate: CONCERNS
+status_reason: "Implementação funcional e segura. Issues REL-001 e ARCH-001 identificados e corrigidos durante o gate. TEST-001 (sem testes automatizados) permanece como dívida técnica — padrão do projeto."
+reviewer: Quinn
+updated: "2026-05-30T19:15:00-03:00"
+top_issues:
+  - id: REL-001
+    severity: medium
+    finding: "/api/reports/generate e /api/reports/[reportId]/export sem try/catch global."
+    suggested_action: "RESOLVIDO durante QA gate — try/catch adicionados em ambos os handlers."
+    status: fixed
+  - id: ARCH-001
+    severity: low
+    finding: "URL hardcoded 'https://app.portalsigilo.com.br' em functions/src/scheduledReports.ts:141."
+    suggested_action: "RESOLVIDO durante QA gate — substituído por process.env.APP_URL com fallback."
+    status: fixed
+  - id: TEST-001
+    severity: low
+    finding: "Nenhum teste automatizado para as 5 novas rotas API. Padrão pré-existente do projeto."
+    suggested_action: "Adicionar testes de integração básicos em sprint futura. Não bloqueia."
+    status: open
+waiver:
+  active: false
+fixes_applied_during_gate:
+  - "src/app/api/reports/generate/route.ts — try/catch global adicionado"
+  - "src/app/api/reports/[reportId]/export/route.ts — try/catch global adicionado"
+  - "functions/src/scheduledReports.ts — URL hardcoded → process.env.APP_URL com fallback"
