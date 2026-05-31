@@ -1,0 +1,61 @@
+schema: 1
+story: '9.2'
+story_title: 'Webhook Asaas — Criação Automática de Org e Onboarding'
+gate: CONCERNS
+status_reason: 'Lógica de provisionamento correta e idempotente. WH-001 (timing attack) corrigido durante o gate. WH-002 é concern funcional crítico: email admin usa endereço placeholder — cliente real jamais recebe credenciais. Requer fix antes de ir para produção.'
+reviewer: 'Quinn (Test Architect)'
+updated: '2026-05-30T00:00:00-03:00'
+
+top_issues:
+  - id: WH-002
+    severity: high
+    category: requirements
+    description: 'adminEmail é placeholder gerado (admin-{orgId}@portalsigilo-pending.com) pois o webhook Asaas não inclui o email do cliente no payload. O email de boas-vindas com senha temporária nunca chega ao cliente real.'
+    recommendation: 'Chamar GET /v3/customers/{customerId} na API Asaas para obter o email real antes de criar o usuário admin. Requer ASAAS_API_KEY nas Functions env vars.'
+    suggested_owner: dev
+  - id: WH-003
+    severity: medium
+    category: code
+    description: 'TOCTOU race condition na geração de slug: duas orgs criadas simultaneamente podem passar ambas pela verificação de unicidade antes de qualquer uma gravar.'
+    recommendation: 'Usar Firestore transaction ou adicionar sufixo aleatório sempre (não apenas em colisão) para maior robustez.'
+    suggested_owner: dev
+
+waiver: { active: false }
+
+quality_score: 70
+expires: '2026-06-13T00:00:00-03:00'
+
+evidence:
+  tests_reviewed: { count: 0 }
+  risks_identified: { count: 3 }
+  trace:
+    ac_covered: [1, 3, 4, 5]
+    ac_gaps: [2, 6]
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: 'Token validado como PRIMEIRA operação. WH-001 (timing attack) corrigido durante gate — agora usa crypto.timingSafeEqual. ASAAS_WEBHOOK_TOKEN apenas em process.env. Nenhum dado financeiro no Firestore. gerarSenhaTemporaria() usa crypto.randomBytes(16) — seguro.'
+  performance:
+    status: PASS
+    notes: 'Operações assíncronas corretas. idempotência via query em asaas_customer_id. E-mail isolado em try/catch separado.'
+  reliability:
+    status: CONCERNS
+    notes: 'WH-002: onboarding quebrado pois email placeholder não chega ao cliente. Org é criada corretamente mas cliente não consegue acessar o dashboard sem intervenção manual.'
+  maintainability:
+    status: PASS
+    notes: 'Helpers bem separados (provisionOrg, atualizarPlanoOrg, logAuditFunction). Código limpo e bem estruturado.'
+
+recommendations:
+  immediate:
+    - action: 'WH-002: Chamar GET /v3/customers/{customerId} na Asaas API para obter email real do cliente antes de criar usuário admin. ASAAS_API_KEY deve ser adicionada às Functions env vars (functions/.env).'
+      refs: ['functions/src/webhookAsaas.ts']
+    - action: 'WH-002: nomeOrg também é placeholder. Buscar nome real da empresa via GET /v3/customers/{customerId} junto com o email.'
+      refs: ['functions/src/webhookAsaas.ts']
+  future:
+    - action: 'WH-003: Adicionar sufixo aleatório ao slug sempre (não apenas em colisão) ou usar Firestore transaction para garantir unicidade sob concorrência.'
+      refs: ['functions/src/webhookAsaas.ts']
+    - action: 'Executar Tasks 8.2 e 8.3 — testes com Firebase Emulator e curl payload antes de deploy em produção.'
+      refs: ['functions/src/webhookAsaas.ts']
+    - action: 'Adicionar Firestore index em orgs.asaas_customer_id para query eficiente em produção (scale).'
+      refs: ['firestore.indexes.json']

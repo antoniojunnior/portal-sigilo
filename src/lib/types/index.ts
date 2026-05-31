@@ -4,6 +4,18 @@ import { Timestamp } from "firebase/firestore";
 
 export type Plano = "entrada" | "gestao" | "enterprise";
 
+export interface PlanoConfig {
+  id: "entrada" | "gestao" | "enterprise";
+  nome: string;
+  precoMensal: number | null;
+  precoAnual: number | null;
+  usuarios: number;
+  armazenamento: string;
+  sla: string;
+  destaque?: boolean;
+  features: { descricao: string; disponivel: boolean }[];
+}
+
 export interface OrgConfiguracoes {
   categorias: string[];
   boas_vindas: string;

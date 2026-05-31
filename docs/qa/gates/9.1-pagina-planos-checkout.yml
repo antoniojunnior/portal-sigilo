@@ -1,0 +1,42 @@
+schema: 1
+story: '9.1'
+story_title: 'Página de Planos e Integração Checkout Asaas'
+gate: PASS
+status_reason: 'Todos os ACs implementados, segurança verificada (ASAAS_API_KEY isolada, server-only, validação de plano), error handling completo. Task 5.4 (teste manual com sandbox) não executável sem credenciais reais — esperado.'
+reviewer: 'Quinn (Test Architect)'
+updated: '2026-05-30T00:00:00-03:00'
+
+top_issues: []
+waiver: { active: false }
+
+quality_score: 95
+expires: '2026-06-13T00:00:00-03:00'
+
+evidence:
+  tests_reviewed: { count: 0 }
+  risks_identified: { count: 1 }
+  trace:
+    ac_covered: [1, 2, 3, 4, 5]
+    ac_gaps: []
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: 'ASAAS_API_KEY isolada em server-only route handler e env.ts. import "server-only" presente. Validação de plano antes de chamar API Asaas. Grep limpo — zero leaks client-side.'
+  performance:
+    status: PASS
+    notes: 'Operação simples: fetch + redirect. Sem processamento pesado. Loading state presente para UX.'
+  reliability:
+    status: PASS
+    notes: 'try/catch global em route handler. Status 400/502/500 diferenciados. Error toast no client. Task 5.4 pendente — requer credenciais reais para validação end-to-end.'
+  maintainability:
+    status: PASS
+    notes: 'Dados centralizados em planos.ts. Interface PlanoConfig tipada. Padrão do projeto seguido corretamente.'
+
+recommendations:
+  immediate: []
+  future:
+    - action: 'Executar Task 5.4 — teste manual com chave sandbox real do Asaas para validar fluxo completo de redirect'
+      refs: ['src/app/api/checkout/create/route.ts']
+    - action: 'Considerar rate limiting no endpoint /api/checkout/create para evitar abuso de criação de links'
+      refs: ['src/app/api/checkout/create/route.ts']

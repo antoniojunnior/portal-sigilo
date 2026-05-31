@@ -31,5 +31,14 @@ export const FIREBASE_PRIVATE_KEY = requireEnv("FIREBASE_PRIVATE_KEY").replace(
 /** Email do service account Firebase Admin. */
 export const FIREBASE_CLIENT_EMAIL = requireEnv("FIREBASE_CLIENT_EMAIL");
 
+/** Chave da API Asaas — exclusivamente server-side. Validada no request (não no boot). */
+export const ASAAS_API_KEY = process.env.ASAAS_API_KEY ?? "";
+
+/** URL base da API Asaas: sandbox ou produção, controlado por ASAAS_SANDBOX. */
+export const ASAAS_BASE_URL =
+  process.env.ASAAS_SANDBOX === "true"
+    ? "https://sandbox.asaas.com/api"
+    : "https://api.asaas.com/api";
+
 // ─── Client-side (prefixo NEXT_PUBLIC_) — exportados aqui somente para uso
 // em Route Handlers e Server Components. Para Client Components, use env.client.ts.

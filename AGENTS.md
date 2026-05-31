@@ -45,7 +45,7 @@ Stack: Next.js 14 + TypeScript + Firebase + Anthropic API + Tailwind + shadcn/ui
 - Fase 3 — Chatbot Claude: ✅ concluída
 - Fase 4 — Triagem automática: ✅ concluída
 - Fase 5 — Dashboard: ✅ concluída
-- Fase 6 — Assistente IA: pendente
+- Fase 6 — Assistente IA: ✅ concluída
 - Fase 7 — WhatsApp: pendente
 - Fase 8 — App mobile: pendente
 - Fase 9 — Checkout: pendente
