@@ -73,13 +73,28 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Retorna o limite de usuários do plano: 1 (entrada), 10 (gestao), null (enterprise/sem limite).
+    // Usa users_count denormalizado em orgs — mais eficiente que getAfter() count query.
+    function getPlanoLimit(orgId) {
+      let plano = get(/databases/$(database)/documents/orgs/$(orgId)).data.plano_ativo;
+      return plano == 'entrada' ? 1 : (plano == 'gestao' ? 10 : null);
+    }
+
+    function getOrgUsersCount(orgId) {
+      let orgData = get(/databases/$(database)/documents/orgs/$(orgId)).data;
+      return orgData.get('users_count', 0);
+    }
+
     // ─── users ────────────────────────────────────────────────────────────────
     // Gestores leem sua própria org. Apenas admin cria/atualiza outros usuários.
+    // Limite de usuários por plano aplicado via users_count denormalizado na org.
     match /users/{userId} {
       allow read: if isAuthenticated()
         && (request.auth.uid == userId
             || isGestorDaOrg(resource.data.org_id));
-      allow create: if isAdminDaOrg(request.resource.data.org_id);
+      allow create: if isAdminDaOrg(request.resource.data.org_id)
+        && (getPlanoLimit(request.resource.data.org_id) == null
+            || getOrgUsersCount(request.resource.data.org_id) < getPlanoLimit(request.resource.data.org_id));
       allow update: if isAdminDaOrg(resource.data.org_id)
         || (request.auth.uid == userId
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nome']));

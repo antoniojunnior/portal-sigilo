@@ -165,6 +165,7 @@ async function provisionOrg(payload: AsaasWebhookPayload): Promise<void> {
     data_inicio: agora,
     data_renovacao: admin.firestore.Timestamp.fromDate(dataRenovacao),
     criado_em: agora,
+    users_count: 0,
     configuracoes: {
       categorias: ["fraude", "assédio", "corrupção", "segurança", "outros"],
       boas_vindas: "Canal de denúncias ativo. Relate com segurança e anonimato.",
@@ -196,6 +197,9 @@ async function provisionOrg(payload: AsaasWebhookPayload): Promise<void> {
     ativo: true,
     criado_em: agora,
   });
+
+  // Incrementar users_count após criar admin inicial
+  await db.collection("orgs").doc(orgId).update({ users_count: FieldValue.increment(1) });
 
   // Audit log
   await logAuditFunction(orgId, "org_created", {

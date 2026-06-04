@@ -2,6 +2,7 @@
 
 import { Sidebar } from "./Sidebar";
 import { BottomNav } from "./BottomNav";
+import { SuspensoBanner } from "@/components/ui/SuspensoBanner";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -15,6 +16,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Main content */}
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden relative pb-[72px] lg:pb-0">
+        <SuspensoBanner />
         {children}
       </div>
 

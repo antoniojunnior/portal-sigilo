@@ -12,15 +12,14 @@ import { Select } from "@/components/ui/Select";
 import { Modal } from "@/components/ui/Modal";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { 
-  AlertTriangle, 
-  X, 
-  Users, 
-  Settings, 
-  CreditCard, 
-  ShieldAlert, 
-  Plus, 
-  CheckCircle2, 
-  MoreHorizontal,
+  AlertTriangle,
+  X,
+  Users,
+  Settings,
+  CreditCard,
+  ShieldAlert,
+  Plus,
+  CheckCircle2,
   Building2,
   Trash2,
   UserPlus
@@ -276,25 +275,26 @@ export default function ConfiguracoesPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             
-            {/* Sidebar Navigation (Visual Only for now) */}
+            {/* Sidebar Navigation */}
             <aside className="hidden lg:block space-y-1">
               {[
-                { icon: Building2, label: "Organização", active: true },
-                { icon: Users, label: "Usuários", active: false },
-                { icon: CreditCard, label: "Plano e Faturamento", active: false },
-                { icon: Settings, label: "Preferências", active: false },
+                { icon: Building2, label: "Organização", href: "/app/configuracoes", active: true },
+                { icon: Users, label: "Usuários", href: "/app/configuracoes", active: false },
+                { icon: CreditCard, label: "Faturamento", href: "/app/configuracoes/faturamento", active: false },
+                { icon: Settings, label: "Preferências", href: "/app/configuracoes", active: false },
               ].map((item) => (
-                <button
+                <Link
                   key={item.label}
+                  href={item.href}
                   className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-[var(--text-sm)] font-medium transition-all ${
-                    item.active 
-                      ? "bg-[var(--color-bg-secondary)] text-[var(--color-primary)] border border-[var(--color-border)] shadow-sm" 
+                    item.active
+                      ? "bg-[var(--color-bg-secondary)] text-[var(--color-primary)] border border-[var(--color-border)] shadow-sm"
                       : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)]"
                   }`}
                 >
                   <item.icon size={18} strokeWidth={item.active ? 2.2 : 1.8} />
                   {item.label}
-                </button>
+                </Link>
               ))}
             </aside>
 
@@ -503,7 +503,7 @@ export default function ConfiguracoesPage() {
                     </div>
                     <div className="flex flex-col gap-2">
                       <Link
-                        href="/app/configuracoes"
+                        href="/app/configuracoes/faturamento"
                         className="inline-flex items-center justify-center gap-2 font-semibold rounded-[var(--radius-md)] border border-transparent transition-all cursor-pointer select-none bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] active:scale-[0.98] [box-shadow:0_2px_8px_rgba(42,96,112,0.30)] hover:[box-shadow:0_4px_14px_rgba(42,96,112,0.40)] px-3 min-h-[32px] text-[var(--text-xs)]"
                       >
                         Fazer Upgrade

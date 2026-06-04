@@ -60,6 +60,10 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "feature_not_available", plano: session.plano }, { status: 403 });
   }
 
+  if (session.plano === "suspenso" || session.plano === "cancelado") {
+    return Response.json({ error: "plan_suspended", plano: session.plano }, { status: 403 });
+  }
+
   let body: RequestBody;
   try {
     body = await request.json() as RequestBody;

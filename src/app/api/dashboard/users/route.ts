@@ -1,9 +1,16 @@
+import "server-only";
 import { adminAuth, adminDb } from "@/lib/firebase-admin/admin";
 import { verifySession } from "@/lib/utils/auth";
 import { logAudit } from "@/lib/utils/audit";
 import { FieldValue } from "firebase-admin/firestore";
 import type { NextRequest } from "next/server";
 import type { Role } from "@/lib/types";
+
+const PLAN_USER_LIMITS: Record<string, number | null> = {
+  entrada: 1,
+  gestao: 10,
+  enterprise: null,
+};
 
 export async function GET(request: NextRequest) {
   try {
@@ -69,6 +76,19 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: "role inválido" }, { status: 400 });
     }
 
+    // Enforce plan user limit — Admin SDK bypasses Firestore Rules, so we check here
+    const orgDoc = await adminDb.collection("orgs").doc(session.orgId).get();
+    if (!orgDoc.exists) return Response.json({ error: "Organização não encontrada" }, { status: 404 });
+    const orgData = orgDoc.data()!;
+    const planLimit = PLAN_USER_LIMITS[orgData.plano_ativo as string] ?? 1;
+    const usersCount = (orgData.users_count as number) ?? 0;
+    if (planLimit !== null && usersCount >= planLimit) {
+      return Response.json(
+        { error: "user_limit_reached", plano: orgData.plano_ativo, limit: planLimit },
+        { status: 403 }
+      );
+    }
+
     // Create user in Firebase Auth
     const firebaseUser = await adminAuth.createUser({
       email: body.email,
@@ -87,6 +107,10 @@ export async function POST(request: NextRequest) {
       role: body.role,
       ativo: true,
       criado_em: FieldValue.serverTimestamp(),
+    });
+
+    await adminDb.collection("orgs").doc(session.orgId).update({
+      users_count: FieldValue.increment(1),
     });
 
     await logAudit({

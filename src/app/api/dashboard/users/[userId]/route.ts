@@ -1,6 +1,8 @@
+import "server-only";
 import { adminDb } from "@/lib/firebase-admin/admin";
 import { verifySession } from "@/lib/utils/auth";
 import { logAudit } from "@/lib/utils/audit";
+import { FieldValue } from "firebase-admin/firestore";
 import type { NextRequest } from "next/server";
 import type { Role } from "@/lib/types";
 
@@ -51,6 +53,14 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     }
 
     await adminDb.collection("users").doc(userId).update(updates);
+
+    // Sincronizar users_count somente quando o estado realmente muda
+    if (body.ativo !== undefined && body.ativo !== userData.ativo) {
+      const delta = body.ativo ? 1 : -1;
+      await adminDb.collection("orgs").doc(session.orgId).update({
+        users_count: FieldValue.increment(delta),
+      });
+    }
 
     await logAudit({
       orgId: session.orgId,

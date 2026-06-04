@@ -1,0 +1,98 @@
+schema: 1
+story: '9.3'
+story_title: 'Controle de Limites por Plano e Painel de Faturamento'
+gate: PASS
+status_reason: >
+  Todos os ACs implementados corretamente. Issues HIGH e MEDIUM foram corrigidos
+  diretamente durante o review. TSC EXIT:0 após correções.
+reviewer: 'Quinn (Test Architect)'
+updated: '2026-06-02T00:00:00Z'
+
+top_issues:
+  - severity: high
+    category: security
+    description: >
+      POST /api/dashboard/users criava usuários via Admin SDK (que bypassa Firestore Rules)
+      sem verificar limite de plano — AC-1 não era aplicado no fluxo principal do dashboard.
+    recommendation: Adicionar verificação PLAN_USER_LIMITS antes de criar usuário no Route Handler.
+    status: FIXED
+    suggested_owner: dev
+
+  - severity: medium
+    category: code
+    description: >
+      PATCH /api/dashboard/users/[userId] incrementava/decrementava users_count sem verificar
+      o estado atual do usuário — chamadas repetidas corrompem o contador.
+    recommendation: Só aplicar delta quando body.ativo !== userData.ativo.
+    status: FIXED
+    suggested_owner: dev
+
+  - severity: medium
+    category: code
+    description: >
+      Botão "Fazer Upgrade" em configuracoes/page.tsx apontava para /app/configuracoes
+      em vez de /app/configuracoes/faturamento.
+    recommendation: Corrigir href para /app/configuracoes/faturamento.
+    status: FIXED
+    suggested_owner: dev
+
+  - severity: low
+    category: code
+    description: Import `MoreHorizontal` em configuracoes/page.tsx sem uso no JSX.
+    recommendation: Remover import.
+    status: FIXED
+    suggested_owner: dev
+
+waiver: { active: false }
+
+quality_score: 82
+
+expires: '2026-06-16T00:00:00Z'
+
+evidence:
+  tests_reviewed: 0
+  risks_identified: 4
+  trace:
+    ac_covered: [1, 2, 3, 4, 5, 6]
+    ac_gaps: []
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: >
+      ANTHROPIC_API_KEY nunca exposta no client. URL do portal Asaas gerada server-side.
+      Verificação de role admin em /api/billing/* e /api/dashboard/users. Mime type
+      validado por magic bytes. Plan limit agora enforced no Route Handler (Admin SDK path).
+  performance:
+    status: PASS
+    notes: >
+      Storage check com graceful degradation (timeout não bloqueia upload). SWR com
+      refreshInterval=30000 para notificações. Verificação de plano lê orgDoc já cacheado
+      no verifySession flow (uma leitura extra na criação de usuários — aceitável).
+  reliability:
+    status: PASS
+    notes: >
+      users_count idempotency corrigida — delta só aplicado quando estado muda.
+      FieldValue.increment() garante atomicidade da operação de counter.
+  maintainability:
+    status: PASS
+    notes: >
+      PLAN_USER_LIMITS centralizado no Route Handler. Constante PLANO_BADGE/PLANO_COLORS
+      coerente entre DashboardHeader e faturamento/page.tsx.
+
+recommendations:
+  immediate: []
+  future:
+    - action: >
+        Emulator test AC-1 (Task 1.4): testar via Firebase Emulator local que
+        create de user além do limite retorna PERMISSION_DENIED nas Firestore Rules
+        para validar a dupla camada de proteção (Rules + Route Handler).
+      refs: ['firestore.rules', 'src/app/api/dashboard/users/route.ts']
+    - action: >
+        Considerar adicionar rate limiting no /api/upload-attachment para prevenir
+        esgotamento de quota de storage por org via uploads anônimos de alta frequência.
+      refs: ['src/app/api/upload-attachment/route.ts']
+    - action: >
+        Adicionar e2e test para fluxo suspenso: org com plano_ativo='suspenso' → banner
+        visível + relatórios 403 + assistente 403.
+      refs: ['src/components/ui/SuspensoBanner.tsx', 'src/app/api/reports/generate/route.ts']

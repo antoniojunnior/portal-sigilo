@@ -3,6 +3,39 @@ import { adminDb, adminStorage } from "@/lib/firebase-admin/admin";
 import { fileTypeFromBuffer } from "file-type";
 import type { NextRequest } from "next/server";
 
+const STORAGE_LIMITS_BYTES: Record<string, number | null> = {
+  entrada: 2 * 1024 * 1024 * 1024,   // 2 GB
+  gestao: 20 * 1024 * 1024 * 1024,   // 20 GB
+  enterprise: null,                   // ilimitado
+};
+
+async function getOrgStorageUsed(orgId: string): Promise<number> {
+  const bucket = adminStorage.bucket();
+  const [files] = await bucket.getFiles({ prefix: `orgs/${orgId}/` });
+  return files.reduce((sum, f) => {
+    const size = parseInt(f.metadata.size as string ?? "0", 10);
+    return sum + (isNaN(size) ? 0 : size);
+  }, 0);
+}
+
+async function checkStorageLimit(orgId: string, fileSize: number): Promise<{ ok: boolean; used?: number; limit?: number }> {
+  try {
+    const orgDoc = await adminDb.collection("orgs").doc(orgId).get();
+    if (!orgDoc.exists) return { ok: true };
+    const plano = (orgDoc.data()?.plano_ativo as string) ?? "entrada";
+    const limit = STORAGE_LIMITS_BYTES[plano] ?? STORAGE_LIMITS_BYTES.entrada!;
+    if (limit === null) return { ok: true };
+    const used = await getOrgStorageUsed(orgId);
+    if (used + fileSize > limit) {
+      return { ok: false, used, limit };
+    }
+    return { ok: true };
+  } catch (err) {
+    console.warn("[upload-attachment] Falha ao verificar storage — graceful degradation:", err);
+    return { ok: true };
+  }
+}
+
 const ALLOWED_MIME_TYPES = new Set([
   "image/jpeg",
   "image/png",
@@ -34,6 +67,14 @@ export async function POST(request: NextRequest) {
 
   if (file.size > MAX_FILE_SIZE) {
     return Response.json({ error: "Arquivo muito grande. Tamanho máximo: 50 MB." }, { status: 400 });
+  }
+
+  const storageCheck = await checkStorageLimit(org_id, file.size);
+  if (!storageCheck.ok) {
+    return Response.json(
+      { error: "storage_limit_exceeded", used: storageCheck.used, limit: storageCheck.limit },
+      { status: 403 }
+    );
   }
 
   const bytes = await file.arrayBuffer();

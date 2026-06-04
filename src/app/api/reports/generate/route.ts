@@ -27,6 +27,10 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "Auditores não podem gerar relatórios." }, { status: 403 });
   }
 
+  if (session.plano === "suspenso" || session.plano === "cancelado") {
+    return Response.json({ error: "plan_suspended", plano: session.plano }, { status: 403 });
+  }
+
   let body: RequestBody;
   try {
     body = await request.json() as RequestBody;
@@ -49,7 +53,7 @@ export async function POST(request: NextRequest) {
 
   try {
   // Agregar dados do período
-  let query = adminDb
+  const query = adminDb
     .collection("cases")
     .where("org_id", "==", session.orgId)
     .where("created_at", ">=", inicio)
