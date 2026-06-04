@@ -2,7 +2,7 @@
 
 ## Status
 
-**Planejado** — Aguarda execução pelo @sm (criação de stories)
+**Concluído** — Todas as stories implementadas, testadas e pushadas para `main`
 
 ## Objetivo do Epic
 
@@ -168,14 +168,14 @@ ASAAS_SANDBOX=true       # Modo sandbox para desenvolvimento
 
 ## Definition of Done
 
-- [ ] Página de planos funcional com redirect correto para Asaas
-- [ ] Webhook processa `PAYMENT_CONFIRMED` e cria org + admin + e-mail
-- [ ] Webhook processa `PAYMENT_OVERDUE` e atualiza status
-- [ ] Limites de usuários enforced via Firestore Rules
-- [ ] Painel de faturamento exibe plano e data de renovação
-- [ ] `ASAAS_API_KEY` e `ASAAS_WEBHOOK_TOKEN` apenas server-side — grep confirmado
-- [ ] Audit logs gravados para `org_created` e `plan_changed`
-- [ ] tsc + lint: zero erros
+- [x] Página de planos funcional com redirect correto para Asaas
+- [x] Webhook processa `PAYMENT_CONFIRMED` e cria org + admin + e-mail
+- [x] Webhook processa `PAYMENT_OVERDUE` e atualiza status
+- [x] Limites de usuários enforced via Firestore Rules
+- [x] Painel de faturamento exibe plano e data de renovação
+- [x] `ASAAS_API_KEY` e `ASAAS_WEBHOOK_TOKEN` apenas server-side — grep confirmado
+- [x] Audit logs gravados para `org_created` e `plan_changed`
+- [x] tsc: zero erros (lint com erros pre-existentes no projeto — não regressões da Epic 9)
 
 ## Handoff para @sm
 
@@ -194,3 +194,4 @@ Stack: Next.js 14 + Firebase Functions v2 + Firestore. Seguir padrões das stori
 | Data | Versão | Descrição | Autor |
 |------|--------|-----------|-------|
 | 2026-05-30 | 1.0 | Epic criado — Fase 9 Checkout e Gestão de Planos | Morgan (@pm) |
+| 2026-06-04 | 2.0 | Epic concluído — stories 9.1, 9.2, 9.3 Done e pushadas para `main` | Morgan (@pm) |

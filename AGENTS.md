@@ -48,5 +48,5 @@ Stack: Next.js 14 + TypeScript + Firebase + Anthropic API + Tailwind + shadcn/ui
 - Fase 6 — Assistente IA: ✅ concluída
 - Fase 7 — WhatsApp: pendente
 - Fase 8 — App mobile: pendente
-- Fase 9 — Checkout: pendente
+- Fase 9 — Checkout: ✅ concluída
 - Fase 10 — Enterprise: pendente
