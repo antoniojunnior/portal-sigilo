@@ -1,0 +1,43 @@
+schema: 1
+story: '9.4'
+story_title: 'DS Conformance — Página /planos'
+gate: PASS
+status_reason: 'Todos os 7 ACs verificados e aprovados. Zero classes hardcoded, Button DS correto, clientEnv aplicado, PlanoCard extraído, data-portal presente, role=alert presente, tsc e lint (scoped) limpos.'
+reviewer: 'Quinn (Test Architect)'
+updated: '2026-06-11T00:00:00.000Z'
+
+top_issues: []
+waiver:
+  active: false
+
+quality_score: 95
+expires: '2026-06-25T00:00:00.000Z'
+
+evidence:
+  tests_reviewed: 0
+  risks_identified: 2
+  trace:
+    ac_covered: [1, 2, 3, 4, 5, 6, 7]
+    ac_gaps: []
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: 'Zero process.env direto em Client Component. URL de checkout vem do servidor interno. salesContact via clientEnv.'
+  performance:
+    status: PASS
+    notes: 'PlanoCard é componente puro sem efeitos colaterais. loading state correto com spinner DS.'
+  reliability:
+    status: PASS
+    notes: 'try/catch em handleContratar com mensagem de erro visível. role=alert para acessibilidade. finally garante setLoading(false).'
+  maintainability:
+    status: PASS
+    notes: 'PlanoCard extraído corretamente. page.tsx é Server Component puro. Interface PlanoCardProps tipada. Padrão join() consistente com o projeto.'
+
+recommendations:
+  immediate: []
+  future:
+    - action: 'Adicionar console.error no catch de handleContratar para rastreabilidade em produção'
+      refs: ['src/app/planos/PlanoCard.tsx:32']
+    - action: 'Avaliar se border + border-2 stacking no card destaque é intencional (harmless, mas confuso)'
+      refs: ['src/app/planos/PlanoCard.tsx:48-52']

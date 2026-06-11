@@ -11,4 +11,5 @@ export const clientEnv = {
     messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
   },
+  salesContact: process.env.NEXT_PUBLIC_SALES_CONTACT ?? "mailto:vendas@portalsigilo.com.br",
 } as const;
