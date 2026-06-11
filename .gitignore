@@ -94,3 +94,8 @@ logs/
 .claude/settings.local.json
 .aiox/install-log.txt
 .aiox/handoffs/
+
+# Framework & tooling dirs (não versionados)
+.aiox-core/
+.claude/
+.github/
