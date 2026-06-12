@@ -1,5 +1,9 @@
 import { Timestamp } from "firebase/firestore";
 
+// ─── Billing ──────────────────────────────────────────────────────────────────
+
+export type BillingCycle = "mensal" | "anual";
+
 // ─── Org (tenant) ────────────────────────────────────────────────────────────
 
 export type Plano = "entrada" | "gestao" | "enterprise";
@@ -9,6 +13,8 @@ export interface PlanoConfig {
   nome: string;
   precoMensal: number | null;
   precoAnual: number | null;
+  economiaAnual?: number;
+  tagline?: string;
   usuarios: number;
   armazenamento: string;
   sla: string;

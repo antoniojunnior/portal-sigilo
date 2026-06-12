@@ -1,28 +1,43 @@
+"use client";
+
+import { useState } from "react";
 import { PLANOS } from "@/lib/planos";
+import type { BillingCycle } from "@/lib/types";
+import { BillingToggle } from "./BillingToggle";
 import { PlanoCard } from "./PlanoCard";
 
 export default function PlanosPage() {
+  const [ciclo, setCiclo] = useState<BillingCycle>("anual");
+
   return (
     <main data-portal className="min-h-screen bg-[var(--color-bg-secondary)] px-4 py-16">
       <div className="mx-auto max-w-6xl">
+        <div className="mb-4 flex justify-center">
+          <p className="text-[var(--text-xs)] text-[var(--color-text-tertiary)]">
+            LGPD · ISO 27001 · Criptografia ponta a ponta · Suporte incluso
+          </p>
+        </div>
+
         <div className="mb-12 text-center">
-          <h1 className="text-[var(--text-3xl)] font-bold text-[var(--color-text-primary)]">
-            Planos Portal Sigilo
+          <h1 className="text-[var(--text-hero)] font-bold text-[var(--color-text-primary)]">
+            Proteção real. Conformidade garantida.
           </h1>
           <p className="mt-4 text-[var(--text-md)] text-[var(--color-text-secondary)]">
-            Canal de denúncias corporativo com IA. Simples, seguro e eficaz.
+            Implante um canal de denúncias LGPD-compliant em minutos — sem jurídico, sem infraestrutura.
           </p>
+          <div className="mt-8 flex justify-center">
+            <BillingToggle value={ciclo} onChange={setCiclo} />
+          </div>
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {PLANOS.map((plano) => (
-            <PlanoCard key={plano.id} plano={plano} />
+            <PlanoCard key={plano.id} plano={plano} ciclo={ciclo} />
           ))}
         </div>
 
         <p className="mt-10 text-center text-[var(--text-sm)] text-[var(--color-text-tertiary)]">
-          Todos os planos incluem conformidade com LGPD, criptografia de dados e
-          suporte por e-mail.
+          Sem fidelidade no plano mensal. Cancele quando quiser.
         </p>
       </div>
     </main>
