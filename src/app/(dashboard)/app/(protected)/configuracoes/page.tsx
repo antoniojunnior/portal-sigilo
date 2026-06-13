@@ -85,6 +85,9 @@ export default function ConfiguracoesPage() {
   const [creatingUser, setCreatingUser] = useState(false);
   const [createUserError, setCreateUserError] = useState<string | null>(null);
 
+  const [billingInfo, setBillingInfo] = useState<{ has_asaas_customer: boolean } | null>(null);
+  const [billingLoading, setBillingLoading] = useState(false);
+
   // Danger zone
   const [dangerStep, setDangerStep] = useState<0 | 1 | 2>(0);
   const [dangerConfirmText, setDangerConfirmText] = useState("");
@@ -108,6 +111,23 @@ export default function ConfiguracoesPage() {
     }
   }, []);
 
+  const fetchBillingInfo = useCallback(async () => {
+    setBillingLoading(true);
+    try {
+      const res = await fetch("/api/billing/info");
+      if (!res.ok) {
+        setBillingInfo({ has_asaas_customer: false });
+        return;
+      }
+      const data = await res.json() as { has_asaas_customer: boolean };
+      setBillingInfo(data);
+    } catch {
+      setBillingInfo({ has_asaas_customer: false });
+    } finally {
+      setBillingLoading(false);
+    }
+  }, []);
+
   const fetchUsers = useCallback(async () => {
     setLoadingUsers(true);
     try {
@@ -126,8 +146,9 @@ export default function ConfiguracoesPage() {
     if (user?.role === "admin") {
       fetchOrg();
       fetchUsers();
+      fetchBillingInfo();
     }
-  }, [user, fetchOrg, fetchUsers]);
+  }, [user, fetchOrg, fetchUsers, fetchBillingInfo]);
 
   async function handleSaveOrg() {
     setSavingOrg(true);
@@ -502,15 +523,25 @@ export default function ConfiguracoesPage() {
                       </p>
                     </div>
                     <div className="flex flex-col gap-2">
-                      <Link
-                        href="/app/configuracoes/faturamento"
-                        className="inline-flex items-center justify-center gap-2 font-semibold rounded-[var(--radius-md)] border border-transparent transition-all cursor-pointer select-none bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] active:scale-[0.98] [box-shadow:0_2px_8px_rgba(42,96,112,0.30)] hover:[box-shadow:0_4px_14px_rgba(42,96,112,0.40)] px-3 min-h-[32px] text-[var(--text-xs)]"
-                      >
-                        Fazer Upgrade
-                      </Link>
-                      <button className="text-[var(--text-xs)] font-medium text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors">
-                        Ver histórico de faturas
-                      </button>
+                      {(billingLoading || billingInfo === null) ? (
+                        <div className="w-[80px] h-[32px]">
+                          <Skeleton height="32px" rounded="md" />
+                        </div>
+                      ) : billingInfo.has_asaas_customer ? (
+                        <Link
+                          href="/app/configuracoes/faturamento"
+                          className="inline-flex items-center justify-center gap-2 font-semibold rounded-[var(--radius-md)] border border-transparent transition-all cursor-pointer select-none bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] active:scale-[0.98] [box-shadow:0_2px_8px_rgba(42,96,112,0.30)] hover:[box-shadow:0_4px_14px_rgba(42,96,112,0.40)] px-3 min-h-[32px] text-[var(--text-xs)]"
+                        >
+                          Gerenciar Assinatura
+                        </Link>
+                      ) : (
+                        <Link
+                          href="/app/planos"
+                          className="inline-flex items-center justify-center gap-2 font-semibold rounded-[var(--radius-md)] border border-transparent transition-all cursor-pointer select-none bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] active:scale-[0.98] [box-shadow:0_2px_8px_rgba(42,96,112,0.30)] hover:[box-shadow:0_4px_14px_rgba(42,96,112,0.40)] px-3 min-h-[32px] text-[var(--text-xs)]"
+                        >
+                          Fazer Upgrade
+                        </Link>
+                      )}
                     </div>
                   </div>
                 </div>
