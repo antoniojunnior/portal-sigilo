@@ -99,3 +99,11 @@ logs/
 .aiox-core/
 .claude/
 .github/
+
+# AI tool configs (não versionados)
+.agents/
+.antigravity/
+.codex/
+.cursor/
+.gemini/
+.kimi/

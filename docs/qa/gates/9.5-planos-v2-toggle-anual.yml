@@ -1,0 +1,9 @@
+schema: 1
+story: '9.5'
+gate: PASS
+status_reason: 'Todos os 7 ACs implementados e verificados: TSC EXIT:0, zero lint nos arquivos da story, zero cn()/font-extrabold/text-4xl, acessibilidade completa no BillingToggle, helper createPaymentLink extraído corretamente com server-only guard.'
+reviewer: Quinn
+updated: '2026-06-13T00:00:00Z'
+top_issues: []
+waiver:
+  active: false
