@@ -1,0 +1,46 @@
+schema: 1
+story: '9.11'
+story_title: 'Cancelar assinatura em /configuracoes/faturamento'
+gate: CONCERNS
+status_reason: 'Todos os 5 ACs implementados incluindo os críticos de segurança. subscription_id obtido server-side (AC1). Audit log via logAudit (AC5). Herda CONCERNS de faturamento/page.tsx.'
+reviewer: 'Quinn (Test Architect)'
+updated: '2026-06-13T00:00:00Z'
+
+top_issues:
+  - severity: low
+    category: code
+    description: 'Após cancelamento com sucesso, fetchSubscription() é chamado para atualizar UI — correto. Porém se Firestore update falhar após cancelamento Asaas, haverá inconsistência de estado (Asaas cancelado, Firestore ainda com plano antigo).'
+    recommendation: 'Adicionar retry ou compensação em caso de falha do update Firestore pós-cancelamento Asaas.'
+    suggested_owner: dev
+
+waiver: { active: false }
+
+quality_score: 88
+expires: '2026-06-27T00:00:00Z'
+
+evidence:
+  tests_reviewed: 0
+  risks_identified: 1
+  trace:
+    ac_covered: [1, 2, 3, 4, 5]
+    ac_gaps: []
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: 'server-only; ASAAS_API_KEY via env.ts; auth+role admin verificado; subscription_id nunca vem do body cliente; audit log gravado'
+  performance:
+    status: PASS
+    notes: 'Modal persistent durante loading previne double-submit; botão desabilitado até digitação correta'
+  reliability:
+    status: CONCERNS
+    notes: 'Falha no update Firestore após Asaas DELETE bem-sucedido causa inconsistência de estado. Baixo risco pois cancelamento Asaas é idempotente, mas estado local pode ficar desatualizado.'
+  maintainability:
+    status: PASS
+    notes: 'cancelSubscription.ts isolado e reutilizável. logAudit segue padrão do projeto.'
+
+recommendations:
+  immediate: []
+  future:
+    - action: 'Envolver update Firestore em try/catch separado com log de erro detalhado para rastreamento de inconsistências pós-cancelamento'
+      refs: ['src/app/api/billing/cancel/route.ts:36-44']

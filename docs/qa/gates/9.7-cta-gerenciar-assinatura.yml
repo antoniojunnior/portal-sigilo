@@ -1,0 +1,53 @@
+schema: 1
+story: '9.7'
+story_title: 'CTA condicional "Gerenciar Assinatura" em /configuracoes'
+gate: CONCERNS
+status_reason: 'Todos os ACs implementados corretamente. Lint error react-hooks/set-state-in-effect em configuracoes/page.tsx é padrão pré-existente no projeto — story 9.7 estendeu o useEffect existente mas não introduziu o padrão.'
+reviewer: 'Quinn (Test Architect)'
+updated: '2026-06-13T00:00:00Z'
+
+top_issues:
+  - severity: low
+    category: code
+    description: 'CTA "Gerenciar Assinatura" e "Fazer Upgrade" usam classes CSS inline longas em vez do componente Button existente.'
+    recommendation: 'Considerar usar componente Button para consistência visual.'
+    suggested_owner: dev
+  - severity: low
+    category: code
+    description: 'react-hooks/set-state-in-effect em useEffect — padrão pré-existente; fetchBillingInfo adicionado ao efeito que já tinha fetchOrg/fetchUsers.'
+    recommendation: 'Padrão correto de data-fetching em React. Avaliar supressão seletiva da regra ou refatoração global no futuro.'
+    suggested_owner: dev
+
+waiver: { active: false }
+
+quality_score: 90
+expires: '2026-06-27T00:00:00Z'
+
+evidence:
+  tests_reviewed: 0
+  risks_identified: 1
+  trace:
+    ac_covered: [1, 2, 3, 4, 5]
+    ac_gaps: []
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: 'API /api/billing/info usa server-only, verifica sessão e role admin'
+  performance:
+    status: PASS
+    notes: 'Skeleton durante loading; fallback silencioso em erro evita retry loops'
+  reliability:
+    status: PASS
+    notes: 'Erro de rede → fallback seguro (has_asaas_customer: false)'
+  maintainability:
+    status: CONCERNS
+    notes: 'CTA usa inline CSS em vez de componente Button — menor'
+
+recommendations:
+  immediate: []
+  future:
+    - action: 'Refatorar CTA para usar componente Button com variant="primary" size="sm"'
+      refs: ['src/app/(dashboard)/app/(protected)/configuracoes/page.tsx:531-543']
+    - action: 'Avaliar suppressão global ou refatoração da regra react-hooks/set-state-in-effect'
+      refs: ['src/app/(dashboard)/app/(protected)/configuracoes/page.tsx:145']

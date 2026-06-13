@@ -1,0 +1,53 @@
+schema: 1
+story: '9.8'
+story_title: 'Dados da assinatura ativa em /configuracoes/faturamento'
+gate: CONCERNS
+status_reason: 'Todos os ACs implementados. faturamento/page.tsx (novo) tem lint error react-hooks/set-state-in-effect — mesmo padrão pré-existente do projeto. VALUE_TO_PLANO hardcoded é brittleness aceitável para MVP.'
+reviewer: 'Quinn (Test Architect)'
+updated: '2026-06-13T00:00:00Z'
+
+top_issues:
+  - severity: low
+    category: code
+    description: 'react-hooks/set-state-in-effect em faturamento/page.tsx:153 — novo arquivo introduz instância do padrão pré-existente.'
+    recommendation: 'Padrão de data-fetching correto. Avaliar estratégia global (TanStack Query ou similar) em sprint futuro.'
+    suggested_owner: dev
+  - severity: low
+    category: code
+    description: 'VALUE_TO_PLANO em getSubscription.ts mapeia por valor monetário hardcoded. Fallback "gestao" pode mapear incorretamente planos Enterprise.'
+    recommendation: 'Adicionar campo de metadata no Asaas ou usar description da assinatura para mapear plano de forma determinística.'
+    suggested_owner: dev
+
+waiver: { active: false }
+
+quality_score: 88
+expires: '2026-06-27T00:00:00Z'
+
+evidence:
+  tests_reviewed: 0
+  risks_identified: 2
+  trace:
+    ac_covered: [1, 2, 3, 4]
+    ac_gaps: []
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: 'server-only em subscription/route.ts e getSubscription.ts; ASAAS_API_KEY via env.ts; auth+role verificados'
+  performance:
+    status: PASS
+    notes: 'Skeleton 3 linhas; firestoreFallback rápido quando sem customerId'
+  reliability:
+    status: PASS
+    notes: 'Dual source Asaas/Firestore garante fallback. getSubscription retorna null em erro e route handler cai no fallback Firestore'
+  maintainability:
+    status: CONCERNS
+    notes: 'VALUE_TO_PLANO hardcoded é ponto de fragilidade'
+
+recommendations:
+  immediate: []
+  future:
+    - action: 'Substituir VALUE_TO_PLANO por mapeamento baseado em campo description ou externalReference da assinatura Asaas'
+      refs: ['src/lib/asaas/getSubscription.ts:26-31']
+    - action: 'Avaliar estratégia global de data-fetching (SWR/TanStack Query) para eliminar padrão lint'
+      refs: ['src/app/(dashboard)/app/(protected)/configuracoes/faturamento/page.tsx:151-156']

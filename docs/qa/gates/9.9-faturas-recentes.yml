@@ -1,0 +1,46 @@
+schema: 1
+story: '9.9'
+story_title: 'Faturas recentes em /configuracoes/faturamento'
+gate: CONCERNS
+status_reason: 'Todos os ACs implementados. Herda CONCERNS de faturamento/page.tsx (criado em 9.8). Badge PENDING usa classes Tailwind hardcoded em vez de CSS vars do projeto.'
+reviewer: 'Quinn (Test Architect)'
+updated: '2026-06-13T00:00:00Z'
+
+top_issues:
+  - severity: low
+    category: code
+    description: 'INVOICE_STATUS.PENDING usa bg-yellow-100 text-yellow-700 (Tailwind) enquanto demais badges usam CSS vars do projeto.'
+    recommendation: 'Substituir por --color-warning-surface e --color-warning ou equivalente definido no design system.'
+    suggested_owner: dev
+
+waiver: { active: false }
+
+quality_score: 92
+expires: '2026-06-27T00:00:00Z'
+
+evidence:
+  tests_reviewed: 0
+  risks_identified: 1
+  trace:
+    ac_covered: [1, 2, 3, 4]
+    ac_gaps: []
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: 'server-only em invoices/route.ts e getInvoices.ts; ASAAS_API_KEY protegida; auth+role verificados; rel="noopener noreferrer" em links externos'
+  performance:
+    status: PASS
+    notes: 'Skeleton tabela 3 linhas; limit=5 na query Asaas'
+  reliability:
+    status: PASS
+    notes: 'customerId ausente → lista vazia; erro API → mensagem AlertTriangle'
+  maintainability:
+    status: PASS
+    notes: 'getInvoices.ts limpo e independente'
+
+recommendations:
+  immediate: []
+  future:
+    - action: 'Substituir classes Tailwind hardcoded de PENDING por CSS vars do projeto'
+      refs: ['src/app/(dashboard)/app/(protected)/configuracoes/faturamento/page.tsx:67-70']

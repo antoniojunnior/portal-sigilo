@@ -1,0 +1,39 @@
+schema: 1
+story: '9.10'
+story_title: 'CTA "Alterar Plano" em /configuracoes/faturamento'
+gate: CONCERNS
+status_reason: 'ACs implementados. Herda CONCERNS de faturamento/page.tsx. Implementação simples e correta — hasAsaasSubscription controla visibilidade adequadamente.'
+reviewer: 'Quinn (Test Architect)'
+updated: '2026-06-13T00:00:00Z'
+
+top_issues: []
+
+waiver: { active: false }
+
+quality_score: 95
+expires: '2026-06-27T00:00:00Z'
+
+evidence:
+  tests_reviewed: 0
+  risks_identified: 0
+  trace:
+    ac_covered: [1, 2]
+    ac_gaps: []
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: 'Botão só visível client-side quando hasAsaasSubscription; navegação interna para /alterar-plano'
+  performance:
+    status: PASS
+    notes: 'Sem overhead adicional — renderizado condicionalmente via estado existente'
+  reliability:
+    status: PASS
+    notes: 'Condição dupla: subscription_id !== null (AC1). Se fetchSubscription falha, botão fica oculto — comportamento seguro'
+  maintainability:
+    status: PASS
+    notes: 'Implementação limpa — hasAsaasSubscription derivado de estado existente'
+
+recommendations:
+  immediate: []
+  future: []
