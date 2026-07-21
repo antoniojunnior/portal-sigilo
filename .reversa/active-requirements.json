@@ -1,10 +1,21 @@
 {
   "schema-version": 1,
-  "feature-dir": "_reversa_forward/001-unificar-plano-assinatura",
-  "feature-id": "001",
+  "feature-dir": "_reversa_forward/002-unificar-plano-assinatura",
+  "feature-id": "002",
   "short-name": "unificar-plano-assinatura",
-  "started-at": "2026-07-21T01:12:16Z",
+  "started-at": "2026-07-21T17:13:58Z",
   "current-stage": "requirements",
   "stages-completed": [],
-  "paused-features": []
+  "paused-features": [
+    {
+      "feature-dir": "_reversa_forward/001-unificar-plano-assinatura",
+      "feature-id": "001",
+      "short-name": "unificar-plano-assinatura",
+      "started-at": "2026-07-21T01:12:16Z",
+      "current-stage": "requirements",
+      "stages-completed": [],
+      "paused-at": "2026-07-21T17:13:58Z",
+      "paused-from-stage": "coding-em-progresso"
+    }
+  ]
 }
