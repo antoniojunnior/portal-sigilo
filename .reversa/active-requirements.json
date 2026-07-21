@@ -1,0 +1,10 @@
+{
+  "schema-version": 1,
+  "feature-dir": "_reversa_forward/001-unificar-plano-assinatura",
+  "feature-id": "001",
+  "short-name": "unificar-plano-assinatura",
+  "started-at": "2026-07-21T01:12:16Z",
+  "current-stage": "requirements",
+  "stages-completed": [],
+  "paused-features": []
+}

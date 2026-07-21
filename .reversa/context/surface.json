@@ -1,0 +1,69 @@
+{
+  "generated_at": "2026-07-20T00:00:00Z",
+  "project_root": "/Users/antoniojunnior/Documents/codigos/portal-sigilo",
+  "languages": [
+    { "name": "TypeScript", "extensions": [".ts", ".tsx"], "file_count": 126 },
+    { "name": "JavaScript", "extensions": [".js", ".mjs", ".jsx"], "file_count": 7 }
+  ],
+  "primary_language": "TypeScript",
+  "frameworks": [
+    { "name": "Next.js", "version": "16.2.4", "source": "package.json" },
+    { "name": "React", "version": "19.2.4", "source": "package.json" },
+    { "name": "Tailwind CSS", "version": "4", "source": "package.json" },
+    { "name": "firebase (client SDK)", "version": "12.12.1", "source": "package.json" },
+    { "name": "firebase-admin", "version": "13.8.0", "source": "package.json" },
+    { "name": "@anthropic-ai/sdk", "version": "0.90.0", "source": "package.json" },
+    { "name": "firebase-functions", "version": "6.0.1", "source": "functions/package.json" }
+  ],
+  "package_manager": "npm",
+  "entry_points": [
+    { "path": "src/app/layout.tsx", "type": "app_entry" },
+    { "path": "src/middleware.ts", "type": "middleware" },
+    { "path": "functions/src/index.ts", "type": "server_entry" }
+  ],
+  "config_files": [
+    "next.config.ts",
+    "tsconfig.json",
+    "eslint.config.mjs",
+    "firebase.json",
+    ".env.example",
+    "functions/.env.example"
+  ],
+  "ci_cd": [],
+  "docker": {},
+  "database_hints": [
+    { "path": "firestore.rules", "type": "firestore_security_rules" },
+    { "path": "firestore.indexes.json", "type": "firestore_indexes" },
+    { "path": "storage.rules", "type": "storage_security_rules" }
+  ],
+  "test_framework": "@firebase/rules-unit-testing (apenas Firestore/Storage Rules — sem framework de teste de aplicação identificado)",
+  "test_file_count": 0,
+  "modules": [
+    "assistant", "auth", "billing", "cases", "chat", "checkout",
+    "dashboard", "messages", "orgs", "reports", "upload-attachment"
+  ],
+  "total_files": 218,
+  "organization_suggestion": {
+    "granularity": "endpoint",
+    "rationale": "Route Handlers do Next.js App Router organizados por domínio de negócio sob src/app/api/*, um endpoint por pasta.",
+    "signals": [
+      {
+        "type": "centralized_routing_convention",
+        "evidence": [
+          "src/app/api/assistant",
+          "src/app/api/auth",
+          "src/app/api/billing",
+          "src/app/api/cases",
+          "src/app/api/chat",
+          "src/app/api/checkout",
+          "src/app/api/dashboard",
+          "src/app/api/messages",
+          "src/app/api/orgs",
+          "src/app/api/reports",
+          "src/app/api/upload-attachment"
+        ]
+      }
+    ],
+    "features": []
+  }
+}

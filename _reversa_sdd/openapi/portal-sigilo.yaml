@@ -1,0 +1,803 @@
+openapi: 3.0.3
+info:
+  title: Portal Sigilo API
+  description: >
+    API server-side (Next.js Route Handlers) do Portal Sigilo — canal de denúncias
+    corporativo com IA. Gerado retroativamente pelo Reversa a partir do código-fonte
+    em `src/app/api/**`. Ver `_reversa_sdd/*/contracts.md` por unit para detalhes
+    e exemplos adicionais.
+  version: "1.0.0-reversa"
+servers:
+  - url: /api
+    description: Mesma origem do app Next.js (sem domínio separado)
+
+security:
+  - sessionCookie: []
+
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: __session
+      description: Session cookie HttpOnly emitido por POST /api/auth/login. Ausente/inválido em rotas públicas.
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error: { type: string }
+
+    SessionUser:
+      type: object
+      properties:
+        uid: { type: string }
+        email: { type: string }
+        orgId: { type: string }
+        orgName: { type: string }
+        role: { type: string, enum: [admin, gestor, auditor] }
+        unitId: { type: string, nullable: true }
+        nome: { type: string }
+        plano: { type: string }
+
+    CaseHistoricoItem:
+      type: object
+      properties:
+        acao: { type: string }
+        user_id: { type: string, nullable: true }
+        timestamp: { type: string, format: date-time, nullable: true }
+        detalhes: { type: string, nullable: true }
+
+    Case:
+      type: object
+      properties:
+        id: { type: string }
+        org_id: { type: string }
+        unit_id: { type: string, nullable: true }
+        protocolo: { type: string, example: "ETK-2026-7K9M2P" }
+        canal_origem: { type: string, enum: [web, whatsapp, app, "0800"] }
+        categoria: { type: string, nullable: true }
+        urgencia: { type: integer, minimum: 1, maximum: 5, nullable: true }
+        status:
+          type: string
+          enum: [aguardando_triagem, em_apuracao, pendente_informacao, encerrado_sem_infracao, encerrado_com_acao]
+        created_at: { type: string, format: date-time }
+        dias_em_aberto: { type: integer, nullable: true }
+        historico:
+          type: array
+          items: { $ref: '#/components/schemas/CaseHistoricoItem' }
+        mencionados:
+          type: array
+          items: { type: string }
+        prazo: { type: string, format: date-time, nullable: true }
+        responsavel_id: { type: string, nullable: true }
+        notas_internas: { type: string, nullable: true }
+
+    Message:
+      type: object
+      properties:
+        id: { type: string }
+        case_id: { type: string }
+        org_id: { type: string }
+        autor: { type: string, enum: [sistema, denunciante, gestor] }
+        texto: { type: string }
+        seq: { type: integer, nullable: true }
+        timestamp: { type: string, format: date-time, nullable: true }
+
+    AuditLog:
+      type: object
+      properties:
+        id: { type: string }
+        org_id: { type: string }
+        user_id: { type: string }
+        acao: { type: string }
+        case_id: { type: string, nullable: true }
+        detalhes: { type: object, nullable: true }
+        timestamp: { type: string, format: date-time, nullable: true }
+
+    Report:
+      type: object
+      properties:
+        id: { type: string }
+        tipo: { type: string, enum: [padrao, personalizado, esg] }
+        status: { type: string, enum: [rascunho, aprovado, exportado] }
+        texto_claude: { type: string }
+        gerado_em: { type: string, format: date-time, nullable: true }
+        aprovado_em: { type: string, format: date-time, nullable: true }
+        periodo:
+          type: object
+          properties:
+            inicio: { type: string, format: date-time, nullable: true }
+            fim: { type: string, format: date-time, nullable: true }
+        metricas:
+          type: object
+          nullable: true
+          properties:
+            total: { type: integer }
+            resolvidos: { type: integer }
+            pendentes: { type: integer }
+            prazoMedio: { type: integer }
+            topCategorias: { type: array, items: { type: string } }
+
+    Org:
+      type: object
+      properties:
+        id: { type: string }
+        nome: { type: string }
+        slug: { type: string }
+        plano_ativo: { type: string }
+        logo: { type: string, nullable: true }
+        configuracoes: { type: object }
+
+    User:
+      type: object
+      properties:
+        id: { type: string }
+        nome: { type: string }
+        email: { type: string }
+        role: { type: string, enum: [admin, gestor, auditor] }
+        ativo: { type: boolean }
+        criado_em: { type: string, format: date-time, nullable: true }
+
+  responses:
+    Unauthorized:
+      description: Não autenticado / sessão inválida
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Forbidden:
+      description: Acesso negado (role, plano, mencionado ou org incorreta)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    NotFound:
+      description: Recurso não encontrado
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+paths:
+  # ── auth ──────────────────────────────────────────────────────────────────
+  /auth/login:
+    post:
+      tags: [auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [idToken]
+              properties: { idToken: { type: string } }
+      responses:
+        '200': { description: Sessão criada (Set-Cookie __session) }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /auth/logout:
+    post:
+      tags: [auth]
+      responses:
+        '200': { description: Sempre 200, cookie limpo }
+
+  /auth/me:
+    get:
+      tags: [auth]
+      responses:
+        '200':
+          description: Sessão atual
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SessionUser' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  # ── cases (público) ──────────────────────────────────────────────────────
+  /cases:
+    post:
+      tags: [cases]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [org_id]
+              properties:
+                org_id: { type: string }
+                unit_id: { type: string }
+                canal_origem: { type: string }
+                mensagens:
+                  type: array
+                  items:
+                    type: object
+                    properties: { autor: { type: string }, texto: { type: string } }
+      responses:
+        '200':
+          description: Caso criado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { protocolo: { type: string }, case_id: { type: string } }
+        '400': { description: org_id ausente }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /cases/resolve:
+    get:
+      tags: [cases]
+      security: []
+      parameters:
+        - { name: protocolo, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Org resolvida a partir do protocolo
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { found: { type: boolean }, slug: { type: string }, org_id: { type: string } }
+
+  /cases/track:
+    get:
+      tags: [cases]
+      security: []
+      parameters:
+        - { name: protocolo, in: query, required: true, schema: { type: string } }
+        - { name: org_id, in: query, required: false, schema: { type: string } }
+      responses:
+        '200':
+          description: Status público do caso (nunca inclui o relato)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  found: { type: boolean }
+                  case: { $ref: '#/components/schemas/Case' }
+
+  # ── chat ──────────────────────────────────────────────────────────────────
+  /chat:
+    post:
+      tags: [chat]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [messages, org_id]
+              properties:
+                messages:
+                  type: array
+                  items:
+                    type: object
+                    properties: { role: { type: string, enum: [user, assistant] }, content: { type: string } }
+                org_id: { type: string }
+                unit_id: { type: string }
+      responses:
+        '200':
+          description: 'SSE: token | case_created | done | error'
+          content:
+            text/event-stream: { schema: { type: string } }
+        '400': { description: campos obrigatórios ausentes }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ── messages (público) ──────────────────────────────────────────────────
+  /messages:
+    get:
+      tags: [messages]
+      security: []
+      parameters:
+        - { name: case_id, in: query, required: true, schema: { type: string } }
+        - { name: org_id, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Mensagens do caso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { messages: { type: array, items: { $ref: '#/components/schemas/Message' } } }
+    post:
+      tags: [messages]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [case_id, org_id, texto]
+              properties: { case_id: { type: string }, org_id: { type: string }, texto: { type: string } }
+      responses:
+        '200':
+          description: Mensagem registrada
+          content:
+            application/json:
+              schema: { type: object, properties: { id: { type: string } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ── orgs (público) ────────────────────────────────────────────────────────
+  /orgs/search:
+    get:
+      tags: [orgs]
+      security: []
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string, minLength: 0 } }
+      responses:
+        '200':
+          description: Orgs correspondentes (mín. 3 caracteres em q, máx 10 resultados)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  orgs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        nome: { type: string }
+                        slug: { type: string }
+                        logo: { type: string, nullable: true }
+                        plano_ativo: { type: string }
+
+  # ── checkout (público) ───────────────────────────────────────────────────
+  /checkout/create:
+    post:
+      tags: [checkout]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [plano]
+              properties:
+                plano: { type: string, enum: [entrada, gestao] }
+                ciclo: { type: string, enum: [mensal, anual], default: mensal }
+      responses:
+        '200':
+          description: Link de pagamento gerado
+          content:
+            application/json:
+              schema: { type: object, properties: { url: { type: string } } }
+        '400': { description: plano/ciclo inválido }
+        '502': { description: falha na Asaas }
+        '503': { description: serviço de pagamento não configurado }
+
+  # ── upload-attachment ────────────────────────────────────────────────────
+  /upload-attachment:
+    post:
+      tags: [upload-attachment]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, org_id]
+              properties:
+                file: { type: string, format: binary }
+                org_id: { type: string }
+      responses:
+        '200':
+          description: Anexo aceito
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  storage_path: { type: string }
+                  filename: { type: string }
+                  mime_type: { type: string }
+                  size: { type: integer }
+        '400': { description: tamanho/tipo inválido }
+        '403': { description: storage_limit_exceeded }
+
+  # ── assistant ─────────────────────────────────────────────────────────────
+  /assistant:
+    post:
+      tags: [assistant]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [caseId, messages]
+              properties:
+                caseId: { type: string }
+                messages:
+                  type: array
+                  items:
+                    type: object
+                    properties: { role: { type: string }, content: { type: string } }
+                includeFullReport: { type: boolean, default: false }
+      responses:
+        '200':
+          description: 'SSE: token | done | error'
+          content:
+            text/event-stream: { schema: { type: string } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [assistant]
+      description: Interno — atualiza ai_insights (role admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties: { items: { type: array, items: { type: string } } }
+      responses:
+        '200': { description: OK }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  # ── billing ───────────────────────────────────────────────────────────────
+  /billing/info:
+    get:
+      tags: [billing]
+      responses:
+        '200':
+          description: Dados básicos do plano
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  plano_ativo: { type: string }
+                  data_renovacao: { type: string, nullable: true }
+                  has_asaas_customer: { type: boolean }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /billing/subscription:
+    get:
+      tags: [billing]
+      responses:
+        '200':
+          description: Assinatura ativa (Asaas ou fallback Firestore)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  source: { type: string, enum: [asaas, firestore] }
+                  plano_ativo: { type: string }
+                  valor: { type: number, nullable: true }
+                  ciclo: { type: string, nullable: true }
+                  proximo_vencimento: { type: string, nullable: true }
+                  status: { type: string, nullable: true }
+                  subscription_id: { type: string, nullable: true }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /billing/invoices:
+    get:
+      tags: [billing]
+      responses:
+        '200':
+          description: Últimas 5 faturas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  invoices:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        valor: { type: number }
+                        vencimento: { type: string }
+                        status: { type: string }
+                        descricao: { type: string, nullable: true }
+                        invoice_url: { type: string, nullable: true }
+
+  /billing/cancel:
+    delete:
+      tags: [billing]
+      responses:
+        '200': { description: Assinatura cancelada }
+        '400': { description: nenhuma assinatura vinculada }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '502': { description: falha ao cancelar na Asaas }
+
+  # ── dashboard/cases ──────────────────────────────────────────────────────
+  /dashboard/cases:
+    get:
+      tags: [dashboard]
+      parameters:
+        - { name: status, in: query, schema: { type: string } }
+        - { name: urgency, in: query, schema: { type: integer } }
+        - { name: channel, in: query, schema: { type: string } }
+        - { name: protocol, in: query, schema: { type: string } }
+        - { name: dateFrom, in: query, schema: { type: string, format: date } }
+        - { name: dateTo, in: query, schema: { type: string, format: date } }
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+        - { name: limit, in: query, schema: { type: integer, default: 10, maximum: 50 } }
+        - { name: sortBy, in: query, schema: { type: string, enum: [created_at, urgencia, prazo] } }
+        - { name: sortDir, in: query, schema: { type: string, enum: [asc, desc] } }
+      responses:
+        '200':
+          description: Lista paginada de casos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cases: { type: array, items: { $ref: '#/components/schemas/Case' } }
+                  total: { type: integer }
+                  page: { type: integer }
+                  totalPages: { type: integer }
+
+  /dashboard/cases/{caseId}:
+    get:
+      tags: [dashboard]
+      parameters: [{ name: caseId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Detalhe do caso, content: { application/json: { schema: { $ref: '#/components/schemas/Case' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [dashboard]
+      parameters: [{ name: caseId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status: { type: string }
+                responsavel_id: { type: string }
+                notas_internas: { type: string }
+                prazo: { type: string, format: date-time }
+      responses:
+        '200': { description: OK }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /dashboard/cases/{caseId}/audit:
+    get:
+      tags: [dashboard]
+      parameters: [{ name: caseId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200':
+          description: Últimos 20 audit logs do caso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { logs: { type: array, items: { $ref: '#/components/schemas/AuditLog' } } }
+
+  /dashboard/cases/{caseId}/mencionados:
+    post:
+      tags: [dashboard]
+      parameters: [{ name: caseId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [userId], properties: { userId: { type: string } } }
+      responses:
+        '200': { description: OK }
+        '400': { description: userId obrigatório }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /dashboard/cases/{caseId}/messages:
+    get:
+      tags: [dashboard]
+      parameters: [{ name: caseId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200':
+          description: Mensagens do caso (visão do gestor)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { messages: { type: array, items: { $ref: '#/components/schemas/Message' } } }
+    post:
+      tags: [dashboard]
+      parameters: [{ name: caseId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [texto], properties: { texto: { type: string } } }
+      responses:
+        '200': { description: Mensagem do gestor registrada }
+
+  # ── dashboard/analytics ──────────────────────────────────────────────────
+  /dashboard/heatmap:
+    get:
+      tags: [dashboard]
+      responses:
+        '200':
+          description: Matriz departamento x categoria
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  departments: { type: array, items: { type: string } }
+                  categories: { type: array, items: { type: string } }
+                  rows:
+                    type: array
+                    items:
+                      type: object
+                      properties: { dept: { type: string }, values: { type: array, items: { type: integer } } }
+
+  /dashboard/insights:
+    get:
+      tags: [dashboard]
+      responses:
+        '200':
+          description: Insight de IA (com fallback em cascata)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  summary: { type: string }
+                  highlight: { type: string, nullable: true }
+                  description: { type: string }
+                  recommendations: { type: array, items: { type: string } }
+                  generatedAt: { type: string }
+                  source: { type: string, enum: [plano_gate, ai_scheduled, fallback, fallback_heuristic] }
+
+  /dashboard/metrics:
+    get:
+      tags: [dashboard]
+      parameters: [{ name: period, in: query, schema: { type: integer, default: 30 } }]
+      responses:
+        '200': { description: Métricas do período com tendências }
+
+  /dashboard/notifications/count:
+    get:
+      tags: [dashboard]
+      responses:
+        '200':
+          description: Contagem de notificações não lidas
+          content:
+            application/json:
+              schema: { type: object, properties: { unreadCount: { type: integer } } }
+
+  # ── dashboard/admin ──────────────────────────────────────────────────────
+  /dashboard/org:
+    get:
+      tags: [dashboard]
+      responses:
+        '200': { description: Dados da org, content: { application/json: { schema: { $ref: '#/components/schemas/Org' } } } }
+    patch:
+      tags: [dashboard]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { nome: { type: string }, configuracoes: { type: object } }
+      responses:
+        '200': { description: OK }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /dashboard/users:
+    get:
+      tags: [dashboard]
+      responses:
+        '200':
+          description: Usuários da org
+          content:
+            application/json:
+              schema: { type: object, properties: { users: { type: array, items: { $ref: '#/components/schemas/User' } } } }
+    post:
+      tags: [dashboard]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, nome, role]
+              properties:
+                email: { type: string }
+                nome: { type: string }
+                role: { type: string, enum: [admin, gestor, auditor] }
+                password: { type: string }
+      responses:
+        '201': { description: Usuário criado }
+        '403': { description: user_limit_reached ou acesso restrito }
+
+  /dashboard/users/{userId}:
+    patch:
+      tags: [dashboard]
+      parameters: [{ name: userId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { role: { type: string }, ativo: { type: boolean } }
+      responses:
+        '200': { description: OK }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ── reports ───────────────────────────────────────────────────────────────
+  /reports/generate:
+    post:
+      tags: [reports]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [periodoInicio, periodoFim]
+              properties:
+                periodoInicio: { type: string, format: date }
+                periodoFim: { type: string, format: date }
+                tipo: { type: string, enum: [padrao, personalizado] }
+                filtros: { type: object }
+      responses:
+        '200':
+          description: Relatório gerado (rascunho)
+          content:
+            application/json:
+              schema: { type: object, properties: { reportId: { type: string }, status: { type: string } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    get:
+      tags: [reports]
+      responses:
+        '200':
+          description: Lista de relatórios da org (últimos 50)
+          content:
+            application/json:
+              schema: { type: object, properties: { reports: { type: array, items: { $ref: '#/components/schemas/Report' } } } }
+
+  /reports/{reportId}:
+    get:
+      tags: [reports]
+      parameters: [{ name: reportId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Detalhe do relatório, content: { application/json: { schema: { $ref: '#/components/schemas/Report' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /reports/{reportId}/approve:
+    post:
+      tags: [reports]
+      parameters: [{ name: reportId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Relatório aprovado }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: já aprovado/exportado }
+    delete:
+      tags: [reports]
+      parameters: [{ name: reportId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Revertido para rascunho }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /reports/{reportId}/export:
+    get:
+      tags: [reports]
+      parameters: [{ name: reportId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200':
+          description: PDF do relatório
+          content:
+            application/pdf: { schema: { type: string, format: binary } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: relatório não está aprovado }

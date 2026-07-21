@@ -1,0 +1,500 @@
+{
+  "generated_at": "2026-07-20T00:00:00Z",
+  "modules": [
+    {
+      "name": "assistant",
+      "path": "src/app/api/assistant",
+      "purpose": "Assistente de IA (Claude) para gestores dentro de um caso — orientação de compliance com contexto opcional do relato completo, e endpoint interno para atualizar insights.",
+      "primary_files": ["src/app/api/assistant/route.ts"],
+      "functions": [
+        { "name": "buildSystemPrompt", "file": "src/app/api/assistant/route.ts", "params": ["categoria: string", "urgencia: number", "leis: string[]", "diasEmAberto: number", "status: string", "relato?: string"], "returns": "string", "confidence": "confirmed" },
+        { "name": "POST", "file": "src/app/api/assistant/route.ts", "params": ["request: NextRequest"], "returns": "Promise<Response> (SSE stream)", "confidence": "confirmed" },
+        { "name": "PUT", "file": "src/app/api/assistant/route.ts", "params": ["request: NextRequest"], "returns": "Promise<Response>", "confidence": "confirmed" }
+      ],
+      "entities": [],
+      "business_rules": [
+        { "description": "Plano 'entrada' não tem acesso ao assistente IA (403 feature_not_available)", "location": "src/app/api/assistant/route.ts:59", "confidence": "confirmed" },
+        { "description": "Plano suspenso/cancelado bloqueia o assistente (403 plan_suspended)", "location": "src/app/api/assistant/route.ts:63", "confidence": "confirmed" },
+        { "description": "Gestor mencionado no próprio caso não pode usar o assistente sobre ele (regra S5)", "location": "src/app/api/assistant/route.ts:92", "confidence": "confirmed" },
+        { "description": "Acesso ao relato completo (includeFullReport) é opt-in explícito e gera audit log próprio (ai_full_access_granted)", "location": "src/app/api/assistant/route.ts:109", "confidence": "confirmed" },
+        { "description": "PUT (atualização de insights) restrito a role admin — endpoint interno, não exposto ao browser", "location": "src/app/api/assistant/route.ts:194", "confidence": "confirmed" }
+      ],
+      "dependencies": ["auth (verifySession)", "cases (leitura)", "messages (leitura)", "audit"],
+      "algorithms": [
+        { "description": "Streaming de resposta Claude via SSE (ReadableStream + TextEncoder), com parsing incremental de content_block_delta", "location": "src/app/api/assistant/route.ts:145-176", "confidence": "confirmed" },
+        { "description": "Cálculo de dias em aberto do caso (diasEmAberto) a partir de created_at", "location": "src/app/api/assistant/route.ts:104-105", "confidence": "confirmed" }
+      ],
+      "complexity": "medium"
+    },
+    {
+      "name": "auth",
+      "path": "src/app/api/auth",
+      "purpose": "Login/logout via Firebase session cookie e leitura de sessão atual.",
+      "primary_files": [
+        "src/app/api/auth/login/route.ts",
+        "src/app/api/auth/logout/route.ts",
+        "src/app/api/auth/me/route.ts",
+        "src/lib/utils/auth.ts"
+      ],
+      "functions": [
+        { "name": "POST (login)", "file": "src/app/api/auth/login/route.ts", "params": ["request: NextRequest"], "returns": "Promise<Response>", "confidence": "confirmed" },
+        { "name": "POST (logout)", "file": "src/app/api/auth/logout/route.ts", "params": ["request: NextRequest"], "returns": "Promise<Response>", "confidence": "confirmed" },
+        { "name": "GET (me)", "file": "src/app/api/auth/me/route.ts", "params": ["request: NextRequest"], "returns": "Promise<Response>", "confidence": "confirmed" },
+        { "name": "verifySession", "file": "src/lib/utils/auth.ts", "params": ["sessionCookie: string"], "returns": "Promise<SessionUser | null>", "confidence": "confirmed" }
+      ],
+      "entities": [
+        { "name": "SessionUser", "fields": [
+          { "name": "uid", "type": "string", "required": true },
+          { "name": "email", "type": "string", "required": true },
+          { "name": "orgId", "type": "string", "required": true },
+          { "name": "orgName", "type": "string", "required": true },
+          { "name": "role", "type": "Role", "required": true },
+          { "name": "unitId", "type": "string", "required": false },
+          { "name": "nome", "type": "string", "required": true },
+          { "name": "plano", "type": "string", "required": true }
+        ], "confidence": "confirmed" }
+      ],
+      "business_rules": [
+        { "description": "Sessão expira em 5 dias (SESSION_MAX_AGE)", "location": "src/app/api/auth/login/route.ts:6", "confidence": "confirmed" },
+        { "description": "Cookie __session é HttpOnly, Secure, SameSite=Strict", "location": "src/app/api/auth/login/route.ts:44-53", "confidence": "confirmed" },
+        { "description": "Usuário só é considerado válido se users/{uid}.ativo === true — permite desativar acesso sem revogar token", "location": "src/lib/utils/auth.ts:28", "confidence": "confirmed" },
+        { "description": "checkRevoked=false na verificação do cookie: revogação é feita via flag ativo no Firestore, evitando round-trip de rede ao Firebase", "location": "src/lib/utils/auth.ts:19-20", "confidence": "confirmed" },
+        { "description": "Logout revoga refresh tokens do usuário (adminAuth.revokeRefreshTokens) além de limpar o cookie", "location": "src/app/api/auth/logout/route.ts:20", "confidence": "confirmed" }
+      ],
+      "dependencies": ["firebase-admin (adminAuth, adminDb)", "audit"],
+      "algorithms": [],
+      "complexity": "low"
+    },
+    {
+      "name": "billing",
+      "path": "src/app/api/billing",
+      "purpose": "Gestão de assinatura e cobrança (Asaas): info do plano, dados de assinatura, faturas recentes e cancelamento.",
+      "primary_files": [
+        "src/app/api/billing/info/route.ts",
+        "src/app/api/billing/subscription/route.ts",
+        "src/app/api/billing/invoices/route.ts",
+        "src/app/api/billing/cancel/route.ts",
+        "src/lib/asaas/getSubscription.ts",
+        "src/lib/asaas/getInvoices.ts",
+        "src/lib/asaas/cancelSubscription.ts",
+        "src/lib/planos.ts"
+      ],
+      "functions": [
+        { "name": "GET (info)", "file": "src/app/api/billing/info/route.ts", "params": ["request: NextRequest"], "returns": "Promise<Response>", "confidence": "confirmed" },
+        { "name": "GET (subscription)", "file": "src/app/api/billing/subscription/route.ts", "params": ["request: NextRequest"], "returns": "Promise<Response>", "confidence": "confirmed" },
+        { "name": "GET (invoices)", "file": "src/app/api/billing/invoices/route.ts", "params": ["request: NextRequest"], "returns": "Promise<Response>", "confidence": "confirmed" },
+        { "name": "DELETE (cancel)", "file": "src/app/api/billing/cancel/route.ts", "params": ["request: NextRequest"], "returns": "Promise<Response>", "confidence": "confirmed" },
+        { "name": "getSubscription", "file": "src/lib/asaas/getSubscription.ts", "params": ["customerId: string"], "returns": "Promise<SubscriptionData | null>", "confidence": "confirmed" },
+        { "name": "getInvoices", "file": "src/lib/asaas/getInvoices.ts", "params": ["customerId: string"], "returns": "Promise<Invoice[]>", "confidence": "confirmed" },
+        { "name": "cancelSubscription", "file": "src/lib/asaas/cancelSubscription.ts", "params": ["subscriptionId: string"], "returns": "Promise<void>", "confidence": "confirmed" }
+      ],
+      "entities": [
+        { "name": "SubscriptionData", "fields": [
+          { "name": "source", "type": "\"asaas\" | \"firestore\"", "required": true },
+          { "name": "plano_ativo", "type": "string", "required": true },
+          { "name": "valor", "type": "number | null", "required": true },
+          { "name": "ciclo", "type": "\"MONTHLY\" | \"YEARLY\" | null", "required": true },
+          { "name": "proximo_vencimento", "type": "string | null", "required": true },
+          { "name": "status", "type": "\"ACTIVE\" | \"INACTIVE\" | \"SUSPENDED\" | null", "required": true },
+          { "name": "subscription_id", "type": "string | null", "required": true }
+        ], "confidence": "confirmed" },
+        { "name": "Invoice", "fields": [
+          { "name": "id", "type": "string", "required": true },
+          { "name": "valor", "type": "number", "required": true },
+          { "name": "vencimento", "type": "string", "required": true },
+          { "name": "status", "type": "\"RECEIVED\"|\"PENDING\"|\"OVERDUE\"|\"CANCELLED\"", "required": true },
+          { "name": "descricao", "type": "string | null", "required": true },
+          { "name": "invoice_url", "type": "string | null", "required": true }
+        ], "confidence": "confirmed" }
+      ],
+      "business_rules": [
+        { "description": "Todas as rotas de billing exigem role admin", "location": "src/app/api/billing/info/route.ts:13", "confidence": "confirmed" },
+        { "description": "Mapeamento de valor cobrado (R$) para plano: 117/97 = entrada, 227/197 = gestao (VALUE_TO_PLANO)", "location": "src/lib/asaas/getSubscription.ts:26-31", "confidence": "confirmed" },
+        { "description": "Se não há asaas_customer_id ou a chamada à Asaas falha, cai em fallback com dados do Firestore (firestoreFallback)", "location": "src/app/api/billing/subscription/route.ts:24-40", "confidence": "confirmed" },
+        { "description": "Cancelamento marca plano_ativo=cancelado no Firestore após sucesso na Asaas, e gera audit log assinatura_cancelada", "location": "src/app/api/billing/cancel/route.ts:36-45", "confidence": "confirmed" }
+      ],
+      "dependencies": ["auth (verifySession)", "audit", "Asaas API (externa)"],
+      "algorithms": [],
+      "complexity": "medium"
+    },
+    {
+      "name": "cases",
+      "path": "src/app/api/cases",
+      "purpose": "Criação de caso via formulário estruturado (sem IA), consulta pública de status por protocolo (track) e criação por outros canais.",
+      "primary_files": [
+        "src/app/api/cases/route.ts",
+        "src/app/api/cases/resolve/route.ts",
+        "src/app/api/cases/track/route.ts",
+        "src/lib/utils/protocol.ts"
+      ],
+      "functions": [
+        { "name": "POST (cases)", "file": "src/app/api/cases/route.ts", "params": ["request: NextRequest"], "returns": "Promise<Response>", "confidence": "confirmed" },
+        { "name": "GET (resolve)", "file": "src/app/api/cases/resolve/route.ts", "params": ["request: NextRequest"], "returns": "Promise<Response>", "confidence": "confirmed" },
+        { "name": "GET (track)", "file": "src/app/api/cases/track/route.ts", "params": ["request: NextRequest"], "returns": "Promise<Response>", "confidence": "confirmed" },
+        { "name": "generateProtocol", "file": "src/lib/utils/protocol.ts", "params": ["orgId: string"], "returns": "Promise<string>", "confidence": "confirmed" }
+      ],
+      "entities": [
+        { "name": "Case", "fields": [
+          { "name": "id", "type": "string", "required": true },
+          { "name": "org_id", "type": "string", "required": true },
+          { "name": "unit_id", "type": "string", "required": false },
+          { "name": "protocolo", "type": "string", "required": true },
+          { "name": "canal_origem", "type": "CanalOrigem", "required": true },
+          { "name": "categoria", "type": "string", "required": false },
+          { "name": "urgencia", "type": "UrgenciaNivel", "required": false },
+          { "name": "status", "type": "CaseStatus", "required": true },
+          { "name": "created_at", "type": "Timestamp", "required": true },
+          { "name": "ttl", "type": "Timestamp", "required": true },
+          { "name": "triagem_ia", "type": "TriagemIA", "required": false },
+          { "name": "historico", "type": "CaseHistoricoItem[]", "required": true },
+          { "name": "mencionados", "type": "string[]", "required": true },
+          { "name": "anexos", "type": "CaseAnexo[]", "required": true },
+          { "name": "prazo", "type": "Timestamp", "required": false },
+          { "name": "responsavel_id", "type": "string", "required": false },
+          { "name": "notas_internas", "type": "string", "required": false }
+        ], "confidence": "confirmed" }
+      ],
+      "business_rules": [
+        { "description": "protocolo segue o formato ETK-YYYY-XXXXXX com sufixo aleatório de 6 chars sem I/O/0/1, com verificação de colisão (até 3 tentativas)", "location": "src/lib/utils/protocol.ts:4-32", "confidence": "confirmed" },
+        { "description": "ttl do caso é created_at + 5 anos (retenção)", "location": "src/app/api/cases/route.ts:29", "confidence": "confirmed" },
+        { "description": "Consulta de status (resolve) nunca revela existência do protocolo em caso de not-found (mensagem genérica found:false) e nunca retorna o conteúdo do relato — apenas status/histórico", "location": "src/app/api/cases/resolve/route.ts:20-43", "confidence": "confirmed" },
+        { "description": "track é usado internamente para redirecionar do protocolo à org/slug (busca cross-org por protocolo)", "location": "src/app/api/cases/track/route.ts", "confidence": "confirmed" }
+      ],
+      "dependencies": ["messages", "audit_logs (direto via batch)"],
+      "algorithms": [
+        { "description": "Escrita atômica via Firestore batch: case + mensagens + audit log em uma única transação", "location": "src/app/api/cases/route.ts:54-83", "confidence": "confirmed" }
+      ],
+      "complexity": "medium"
+    },
+    {
+      "name": "chat",
+      "path": "src/app/api/chat",
+      "purpose": "Chatbot de escuta ativa via Claude para o denunciante — conduz coleta de relato, decide quando o relato está completo, cria o caso e dispara a triagem por IA.",
+      "primary_files": ["src/app/api/chat/route.ts", "src/lib/triagem.ts"],
+      "functions": [
+        { "name": "buildSystemPrompt", "file": "src/app/api/chat/route.ts", "params": ["orgNome: string", "unitNome?: string"], "returns": "string", "confidence": "confirmed" },
+        { "name": "createCase", "file": "src/app/api/chat/route.ts", "params": ["payload: CasePayload", "messages: ChatMessage[]", "org_id: string", "unit_id?: string"], "returns": "Promise<{protocolo, caseId}>", "confidence": "confirmed" },
+        { "name": "POST", "file": "src/app/api/chat/route.ts", "params": ["request: NextRequest"], "returns": "Promise<Response> (SSE stream)", "confidence": "confirmed" },
+        { "name": "runTriagem", "file": "src/lib/triagem.ts", "params": ["caseId: string", "orgId: string", "planoAtivo: string", "coleta: ColetaIA", "protocolo: string"], "returns": "Promise<void>", "confidence": "confirmed" },
+        { "name": "callClaude", "file": "src/lib/triagem.ts", "params": ["coleta: ColetaIA"], "returns": "Promise<TriagemResult | null>", "confidence": "confirmed" },
+        { "name": "validateTriagem", "file": "src/lib/triagem.ts", "params": ["raw: unknown"], "returns": "TriagemResult | null", "confidence": "confirmed" }
+      ],
+      "entities": [
+        { "name": "TriagemIA", "fields": [
+          { "name": "categoria", "type": "string", "required": true },
+          { "name": "subcategoria", "type": "string", "required": false },
+          { "name": "urgencia", "type": "UrgenciaNivel", "required": true },
+          { "name": "lei_aplicavel", "type": "string | string[]", "required": false },
+          { "name": "area_risco", "type": "string", "required": false },
+          { "name": "recomendacao", "type": "string", "required": false },
+          { "name": "gerado_em", "type": "Timestamp", "required": true }
+        ], "confidence": "confirmed" }
+      ],
+      "business_rules": [
+        { "description": "Chatbot nunca solicita dados identificáveis (nome, CPF, matrícula) — regra de anonimato embutida no prompt", "location": "src/app/api/chat/route.ts:41", "confidence": "confirmed" },
+        { "description": "Vocabulário controlado: usar 'contar'/'falar', nunca 'denunciar'", "location": "src/app/api/chat/route.ts:40", "confidence": "confirmed" },
+        { "description": "Coleta limitada a até 6 trocas de mensagens antes de resumir e confirmar", "location": "src/app/api/chat/route.ts:53", "confidence": "confirmed" },
+        { "description": "Fim da coleta sinalizado por tag <CASE_COMPLETE> com JSON estruturado, parseado via regex no stream", "location": "src/app/api/chat/route.ts:13,203-233", "confidence": "confirmed" },
+        { "description": "Plano 'entrada': triagem sempre manual, sem chamada à IA (runTriagem early-return)", "location": "src/lib/triagem.ts:150-163", "confidence": "confirmed" },
+        { "description": "callClaude tenta no máximo 2 vezes; se ambas falharem, marca needs_manual_review:true", "location": "src/lib/triagem.ts:113-135,167-182", "confidence": "confirmed" },
+        { "description": "Urgência >= 4 gera notificação (collection notifications) além do audit log", "location": "src/lib/triagem.ts:188-202", "confidence": "confirmed" },
+        { "description": "Categorias legais fixas: assedio_moral, assedio_sexual, discriminacao_salarial, discriminacao, fraude, desvio_etico, violacao_lgpd, seguranca_trabalho, risco_psicossocial, conflito_interesses, outro", "location": "src/lib/triagem.ts:9-13", "confidence": "confirmed" },
+        { "description": "Leis aplicáveis fixas: lei_14457, nr1, lei_14611, lgpd, clt, outro", "location": "src/lib/triagem.ts:15", "confidence": "confirmed" }
+      ],
+      "dependencies": ["cases", "messages", "protocol", "audit_logs", "Anthropic API (externa)"],
+      "algorithms": [
+        { "description": "Streaming SSE com buffer acumulado (accumulated) para detectar a tag CASE_COMPLETE inteira antes de disparar side-effects, mantendo tokens anteriores já emitidos ao cliente", "location": "src/app/api/chat/route.ts:174-234", "confidence": "confirmed" },
+        { "description": "Validação estrita do JSON de triagem retornado pelo Claude (whitelist de categoria/urgencia/leis, truncamento de recomendacao a 200 chars)", "location": "src/lib/triagem.ts:75-111", "confidence": "confirmed" }
+      ],
+      "complexity": "high"
+    },
+    {
+      "name": "checkout",
+      "path": "src/app/api/checkout",
+      "purpose": "Criação de link de pagamento Asaas para novo cliente escolher plano/ciclo.",
+      "primary_files": ["src/app/api/checkout/create/route.ts", "src/lib/asaas/createPaymentLink.ts"],
+      "functions": [
+        { "name": "POST", "file": "src/app/api/checkout/create/route.ts", "params": ["request: NextRequest"], "returns": "Promise<NextResponse>", "confidence": "confirmed" },
+        { "name": "createPaymentLink", "file": "src/lib/asaas/createPaymentLink.ts", "params": ["plano: PlanoId", "ciclo: BillingCycle"], "returns": "Promise<{url: string}>", "confidence": "confirmed" }
+      ],
+      "entities": [],
+      "business_rules": [
+        { "description": "Valores fixos por plano/ciclo: entrada mensal R$117/anual R$97, gestão mensal R$227/anual R$197 (PLANOS_CONFIG)", "location": "src/lib/asaas/createPaymentLink.ts:7-16", "confidence": "confirmed" },
+        { "description": "Ciclo default é 'mensal' quando não informado", "location": "src/app/api/checkout/create/route.ts:41", "confidence": "confirmed" },
+        { "description": "Link de pagamento é do tipo RECURRENT/CREDIT_CARD na Asaas", "location": "src/lib/asaas/createPaymentLink.ts:36-37", "confidence": "confirmed" }
+      ],
+      "dependencies": ["Asaas API (externa)", "planos (config)"],
+      "algorithms": [],
+      "complexity": "low"
+    },
+    {
+      "name": "dashboard",
+      "path": "src/app/api/dashboard",
+      "purpose": "Núcleo do painel de gestão: listagem/detalhe/atualização de casos, mensagens do gestor, mencionados, audit trail por caso, métricas, heatmap, insights de IA, notificações e administração de usuários/org.",
+      "primary_files": [
+        "src/app/api/dashboard/cases/route.ts",
+        "src/app/api/dashboard/cases/[caseId]/route.ts",
+        "src/app/api/dashboard/cases/[caseId]/audit/route.ts",
+        "src/app/api/dashboard/cases/[caseId]/mencionados/route.ts",
+        "src/app/api/dashboard/cases/[caseId]/messages/route.ts",
+        "src/app/api/dashboard/heatmap/route.ts",
+        "src/app/api/dashboard/insights/route.ts",
+        "src/app/api/dashboard/metrics/route.ts",
+        "src/app/api/dashboard/notifications/count/route.ts",
+        "src/app/api/dashboard/org/route.ts",
+        "src/app/api/dashboard/users/route.ts",
+        "src/app/api/dashboard/users/[userId]/route.ts"
+      ],
+      "functions": [
+        { "name": "GET (dashboard/cases)", "file": "src/app/api/dashboard/cases/route.ts", "params": ["request: NextRequest"], "returns": "Promise<Response>", "confidence": "confirmed" },
+        { "name": "computeStats", "file": "src/app/api/dashboard/metrics/route.ts", "params": ["docs", "uid: string", "windowStart: number", "windowEnd: number"], "returns": "PeriodStats", "confidence": "confirmed" },
+        { "name": "GET (metrics)", "file": "src/app/api/dashboard/metrics/route.ts", "params": ["request: NextRequest"], "returns": "Promise<Response>", "confidence": "confirmed" },
+        { "name": "GET (heatmap)", "file": "src/app/api/dashboard/heatmap/route.ts", "params": ["request: NextRequest"], "returns": "Promise<Response>", "confidence": "confirmed" },
+        { "name": "GET (insights)", "file": "src/app/api/dashboard/insights/route.ts", "params": ["request: NextRequest"], "returns": "Promise<Response>", "confidence": "confirmed" },
+        { "name": "GET/PATCH (cases/[caseId])", "file": "src/app/api/dashboard/cases/[caseId]/route.ts", "params": ["request", "context: {params}"], "returns": "Promise<Response>", "confidence": "confirmed" },
+        { "name": "POST (mencionados)", "file": "src/app/api/dashboard/cases/[caseId]/mencionados/route.ts", "params": ["request", "context"], "returns": "Promise<Response>", "confidence": "confirmed" },
+        { "name": "GET/POST (cases/[caseId]/messages)", "file": "src/app/api/dashboard/cases/[caseId]/messages/route.ts", "params": ["request", "context"], "returns": "Promise<Response>", "confidence": "confirmed" },
+        { "name": "GET (cases/[caseId]/audit)", "file": "src/app/api/dashboard/cases/[caseId]/audit/route.ts", "params": ["request", "context"], "returns": "Promise<Response>", "confidence": "confirmed" },
+        { "name": "GET (notifications/count)", "file": "src/app/api/dashboard/notifications/count/route.ts", "params": ["request: NextRequest"], "returns": "Promise<Response>", "confidence": "confirmed" },
+        { "name": "GET/PATCH (org)", "file": "src/app/api/dashboard/org/route.ts", "params": ["request: NextRequest"], "returns": "Promise<Response>", "confidence": "confirmed" },
+        { "name": "GET/POST (users)", "file": "src/app/api/dashboard/users/route.ts", "params": ["request: NextRequest"], "returns": "Promise<Response>", "confidence": "confirmed" },
+        { "name": "PATCH (users/[userId])", "file": "src/app/api/dashboard/users/[userId]/route.ts", "params": ["request", "context"], "returns": "Promise<Response>", "confidence": "confirmed" }
+      ],
+      "entities": [
+        { "name": "User", "fields": [
+          { "name": "id", "type": "string", "required": true },
+          { "name": "org_id", "type": "string", "required": true },
+          { "name": "unit_id", "type": "string", "required": false },
+          { "name": "nome", "type": "string", "required": true },
+          { "name": "email", "type": "string", "required": true },
+          { "name": "role", "type": "Role (admin|gestor|auditor)", "required": true },
+          { "name": "ativo", "type": "boolean", "required": true },
+          { "name": "criado_em", "type": "Timestamp", "required": true }
+        ], "confidence": "confirmed" },
+        { "name": "Org", "fields": [
+          { "name": "id", "type": "string", "required": true },
+          { "name": "nome", "type": "string", "required": true },
+          { "name": "slug", "type": "string", "required": true },
+          { "name": "plano_ativo", "type": "Plano", "required": true },
+          { "name": "logo", "type": "string", "required": false },
+          { "name": "configuracoes", "type": "OrgConfiguracoes", "required": true },
+          { "name": "users_count", "type": "number", "required": true },
+          { "name": "asaas_customer_id", "type": "string", "required": false }
+        ], "confidence": "confirmed" }
+      ],
+      "business_rules": [
+        { "description": "S3/S4: toda query filtra por org_id (isolamento multi-tenant)", "location": "src/app/api/dashboard/cases/route.ts:30", "confidence": "confirmed" },
+        { "description": "S5: gestor listado em mencionados[] do caso é excluído de listas, detalhe, métricas e heatmap (aplicado em memória em cada rota)", "location": "src/app/api/dashboard/cases/route.ts:52-53; heatmap/route.ts:34; metrics/route.ts:39; insights/route.ts:69", "confidence": "confirmed" },
+        { "description": "Paginação de casos: máx 50 itens/página, filtro de urgência aplicado em memória para evitar índice composto", "location": "src/app/api/dashboard/cases/route.ts:24,40-41", "confidence": "confirmed" },
+        { "description": "Métricas comparam período atual vs período anterior de mesmo tamanho (trend up/down/stable)", "location": "src/app/api/dashboard/metrics/route.ts:116-132", "confidence": "confirmed" },
+        { "description": "semRespostaUrgente: caso urgência>=4, não encerrado, sem atualização há mais de 48h", "location": "src/app/api/dashboard/metrics/route.ts:70-81", "confidence": "confirmed" },
+        { "description": "Insights de IA são gate por plano: 'entrada' recebe mensagem de upgrade fixa; demais usam ai_insights pré-gerado (scheduled function) ou fallback heurístico local", "location": "src/app/api/dashboard/insights/route.ts:16-24,31-41,64-116", "confidence": "confirmed" },
+        { "description": "PATCH em caso registra item em historico via arrayUnion e audit log por campo alterado (status, responsavel_id)", "location": "src/app/api/dashboard/cases/[caseId]/route.ts:104-150", "confidence": "confirmed" },
+        { "description": "Adicionar mencionado exige role admin ou gestor, e valida que o usuário pertence à mesma org", "location": "src/app/api/dashboard/cases/[caseId]/mencionados/route.ts:22,38-41", "confidence": "confirmed" },
+        { "description": "Limite de usuários por plano: entrada=1, gestao=10, enterprise=ilimitado (PLAN_USER_LIMITS), checado no servidor pois Admin SDK ignora Firestore Rules", "location": "src/app/api/dashboard/users/route.ts:9-13,79-90", "confidence": "confirmed" },
+        { "description": "Criação de usuário: senha aleatória se não informada, cria em Firebase Auth + Firestore + incrementa users_count na org", "location": "src/app/api/dashboard/users/route.ts:92-114", "confidence": "confirmed" },
+        { "description": "Ativar/desativar usuário (PATCH ativo) ajusta users_count via FieldValue.increment(±1) somente quando o valor realmente muda", "location": "src/app/api/dashboard/users/[userId]/route.ts:57-63", "confidence": "confirmed" },
+        { "description": "Somente admin pode editar org (PATCH) e listar/criar/editar usuários", "location": "src/app/api/dashboard/org/route.ts:40; users/route.ts:23,59", "confidence": "confirmed" }
+      ],
+      "dependencies": ["auth (verifySession)", "audit", "cases", "messages", "orgs", "users"],
+      "algorithms": [
+        { "description": "Heurística de insights fallback: agrega contagem por área_risco e categoria, identifica top departamento e categoria, monta texto condicional conforme concentração (topDept[1] > 1)", "location": "src/app/api/dashboard/insights/route.ts:64-107", "confidence": "confirmed" },
+        { "description": "Matriz heatmap dept×categoria construída em memória a partir de todos os casos da org (sem paginação)", "location": "src/app/api/dashboard/heatmap/route.ts:26-55", "confidence": "confirmed" }
+      ],
+      "complexity": "high"
+    },
+    {
+      "name": "messages",
+      "path": "src/app/api/messages",
+      "purpose": "Mensagens do denunciante (canal público) associadas a um caso — leitura e envio de novas mensagens de acompanhamento.",
+      "primary_files": ["src/app/api/messages/route.ts"],
+      "functions": [
+        { "name": "GET", "file": "src/app/api/messages/route.ts", "params": ["request: NextRequest"], "returns": "Promise<Response>", "confidence": "confirmed" },
+        { "name": "POST", "file": "src/app/api/messages/route.ts", "params": ["request: NextRequest"], "returns": "Promise<Response>", "confidence": "confirmed" }
+      ],
+      "entities": [
+        { "name": "Message", "fields": [
+          { "name": "id", "type": "string", "required": true },
+          { "name": "case_id", "type": "string", "required": true },
+          { "name": "org_id", "type": "string", "required": true },
+          { "name": "autor", "type": "MessageAutor (sistema|denunciante|gestor)", "required": true },
+          { "name": "texto", "type": "string", "required": true },
+          { "name": "seq", "type": "number", "required": false },
+          { "name": "timestamp", "type": "Timestamp", "required": true },
+          { "name": "anexos", "type": "MessageAnexo[]", "required": true }
+        ], "confidence": "confirmed" }
+      ],
+      "business_rules": [
+        { "description": "POST valida que o case_id pertence ao org_id informado antes de gravar a mensagem", "location": "src/app/api/messages/route.ts:48-51", "confidence": "confirmed" },
+        { "description": "Endpoint público (sem verifySession) — usado pelo portal do denunciante, não pelo dashboard do gestor", "location": "src/app/api/messages/route.ts", "confidence": "inferred" }
+      ],
+      "dependencies": ["cases (validação de vínculo)"],
+      "algorithms": [],
+      "complexity": "low"
+    },
+    {
+      "name": "orgs",
+      "path": "src/app/api/orgs",
+      "purpose": "Busca de organizações por nome (prefixo) para autocomplete/seleção de org, sem autenticação.",
+      "primary_files": ["src/app/api/orgs/search/route.ts"],
+      "functions": [
+        { "name": "GET", "file": "src/app/api/orgs/search/route.ts", "params": ["request: NextRequest"], "returns": "Promise<Response>", "confidence": "confirmed" }
+      ],
+      "entities": [],
+      "business_rules": [
+        { "description": "Busca exige mínimo 3 caracteres, senão retorna lista vazia", "location": "src/app/api/orgs/search/route.ts:7", "confidence": "confirmed" },
+        { "description": "Firestore não tem full-text search: aplica orderBy(nome_lower) + limit(100) e filtra em memória por 'includes', limitado a 10 resultados — não escala além de poucas dezenas de tenants", "location": "src/app/api/orgs/search/route.ts:13-20", "confidence": "confirmed" }
+      ],
+      "dependencies": [],
+      "algorithms": [
+        { "description": "Prefix/substring search em memória sobre até 100 docs, campo derivado nome_lower", "location": "src/app/api/orgs/search/route.ts:16-36", "confidence": "confirmed" }
+      ],
+      "complexity": "low"
+    },
+    {
+      "name": "reports",
+      "path": "src/app/api/reports",
+      "purpose": "Geração de relatório executivo mensal via Claude a partir de dados agregados de casos, fluxo de aprovação (rascunho→aprovado→exportado) e exportação em PDF.",
+      "primary_files": [
+        "src/app/api/reports/generate/route.ts",
+        "src/app/api/reports/[reportId]/route.ts",
+        "src/app/api/reports/[reportId]/approve/route.ts",
+        "src/app/api/reports/[reportId]/export/route.ts"
+      ],
+      "functions": [
+        { "name": "POST (generate)", "file": "src/app/api/reports/generate/route.ts", "params": ["request: NextRequest"], "returns": "Promise<Response>", "confidence": "confirmed" },
+        { "name": "GET (generate — lista)", "file": "src/app/api/reports/generate/route.ts", "params": ["request: NextRequest"], "returns": "Promise<Response>", "confidence": "confirmed" },
+        { "name": "GET ([reportId])", "file": "src/app/api/reports/[reportId]/route.ts", "params": ["request", "context"], "returns": "Promise<Response>", "confidence": "confirmed" },
+        { "name": "POST/DELETE (approve)", "file": "src/app/api/reports/[reportId]/approve/route.ts", "params": ["request", "context"], "returns": "Promise<Response>", "confidence": "confirmed" },
+        { "name": "GET (export)", "file": "src/app/api/reports/[reportId]/export/route.ts", "params": ["request", "context"], "returns": "Promise<Response> (application/pdf)", "confidence": "confirmed" },
+        { "name": "splitTextLines", "file": "src/app/api/reports/[reportId]/export/route.ts", "params": ["text: string", "font", "fontSize: number", "maxWidth: number"], "returns": "string[]", "confidence": "confirmed" }
+      ],
+      "entities": [
+        { "name": "Report", "fields": [
+          { "name": "id", "type": "string", "required": true },
+          { "name": "org_id", "type": "string", "required": true },
+          { "name": "periodo", "type": "{inicio: Timestamp, fim: Timestamp}", "required": true },
+          { "name": "gerado_em", "type": "Timestamp", "required": true },
+          { "name": "texto_claude", "type": "string", "required": false },
+          { "name": "aprovado", "type": "boolean", "required": true },
+          { "name": "exportado", "type": "boolean", "required": true },
+          { "name": "tipo", "type": "ReportTipo (padrao|personalizado|esg)", "required": true },
+          { "name": "status", "type": "ReportStatus (rascunho|aprovado|exportado)", "required": true },
+          { "name": "aprovado_por", "type": "string", "required": false },
+          { "name": "aprovado_em", "type": "Timestamp", "required": false },
+          { "name": "metricas", "type": "{total, resolvidos, pendentes, prazoMedio, topCategorias}", "required": false },
+          { "name": "filtros", "type": "Record<string, unknown>", "required": false }
+        ], "confidence": "confirmed" }
+      ],
+      "business_rules": [
+        { "description": "Role auditor não pode gerar, aprovar nem exportar relatórios", "location": "src/app/api/reports/generate/route.ts:26; approve/route.ts:19; export/route.ts:42", "confidence": "confirmed" },
+        { "description": "Plano suspenso/cancelado bloqueia geração de relatório", "location": "src/app/api/reports/generate/route.ts:30", "confidence": "confirmed" },
+        { "description": "Relatório 'personalizado' requer plano Gestão ou superior (não disponível no plano entrada)", "location": "src/app/api/reports/generate/route.ts:47-49", "confidence": "confirmed" },
+        { "description": "Aprovação: só admin pode reverter para rascunho (DELETE); não-auditor pode aprovar; relatório já aprovado/exportado não pode ser aprovado de novo (409)", "location": "src/app/api/reports/[reportId]/approve/route.ts:19,33-35,62", "confidence": "confirmed" },
+        { "description": "Exportação em PDF só é permitida quando status === 'aprovado'; após exportar, status muda para 'exportado' (transição unidirecional)", "location": "src/app/api/reports/[reportId]/export/route.ts:56-58,162-166", "confidence": "confirmed" },
+        { "description": "Prompt à IA explicitamente instrui a não incluir conteúdo individual de relatos e não inventar dados — apenas dados agregados", "location": "src/app/api/reports/generate/route.ts:109", "confidence": "confirmed" }
+      ],
+      "dependencies": ["cases (agregação)", "audit", "Anthropic API (externa)", "pdf-lib"],
+      "algorithms": [
+        { "description": "Agregação de métricas do período: contagem por categoria/lei, resolvidos vs pendentes, prazo médio de resolução, top-5 categorias/leis", "location": "src/app/api/reports/generate/route.ts:65-97", "confidence": "confirmed" },
+        { "description": "Geração de PDF programática com pdf-lib: layout A4 com paginação automática (checkSpace/addPage), quebra de linha por largura de fonte (splitTextLines), header/footer fixos", "location": "src/app/api/reports/[reportId]/export/route.ts:17-33,71-158", "confidence": "confirmed" }
+      ],
+      "complexity": "high"
+    },
+    {
+      "name": "upload-attachment",
+      "path": "src/app/api/upload-attachment",
+      "purpose": "Upload de anexos (imagem/vídeo/áudio/PDF) para o Firebase Storage com validação server-side de tipo real e limite de armazenamento por plano.",
+      "primary_files": ["src/app/api/upload-attachment/route.ts"],
+      "functions": [
+        { "name": "getOrgStorageUsed", "file": "src/app/api/upload-attachment/route.ts", "params": ["orgId: string"], "returns": "Promise<number>", "confidence": "confirmed" },
+        { "name": "checkStorageLimit", "file": "src/app/api/upload-attachment/route.ts", "params": ["orgId: string", "fileSize: number"], "returns": "Promise<{ok, used?, limit?}>", "confidence": "confirmed" },
+        { "name": "POST", "file": "src/app/api/upload-attachment/route.ts", "params": ["request: NextRequest"], "returns": "Promise<Response>", "confidence": "confirmed" }
+      ],
+      "entities": [],
+      "business_rules": [
+        { "description": "Regra inviolável S7: mime type validado no servidor via magic bytes (file-type), nunca confia no Content-Type do client", "location": "src/app/api/upload-attachment/route.ts:83-87", "confidence": "confirmed" },
+        { "description": "Tipos permitidos: image/jpeg, image/png, image/webp, video/mp4, video/quicktime, audio/mpeg, audio/ogg, audio/webm, application/pdf", "location": "src/app/api/upload-attachment/route.ts:39-49", "confidence": "confirmed" },
+        { "description": "Tamanho máximo de arquivo: 50 MB", "location": "src/app/api/upload-attachment/route.ts:51", "confidence": "confirmed" },
+        { "description": "Limite de armazenamento por plano: entrada 2GB, gestão 20GB, enterprise ilimitado (STORAGE_LIMITS_BYTES)", "location": "src/app/api/upload-attachment/route.ts:6-10", "confidence": "confirmed" },
+        { "description": "Falha ao calcular uso de storage é graceful degradation (permite upload) para não travar o fluxo por indisponibilidade do Storage", "location": "src/app/api/upload-attachment/route.ts:33-36", "confidence": "confirmed" },
+        { "description": "Uploads rejeitados e aceitos geram audit log (upload_rejeitado / upload_aceito) com detalhes do arquivo", "location": "src/app/api/upload-attachment/route.ts:88-101,121-134", "confidence": "confirmed" },
+        { "description": "Path de storage temporário: orgs/{org_id}/cases/temp/{uuid}/{uuid}.{ext} — nome de arquivo sempre gerado (uuid), nunca o nome original do usuário", "location": "src/app/api/upload-attachment/route.ts:109-115", "confidence": "confirmed" }
+      ],
+      "dependencies": ["audit", "file-type (lib externa)"],
+      "algorithms": [
+        { "description": "Detecção de mime type real por assinatura binária (magic bytes) via file-type, independente da extensão/Content-Type declarados", "location": "src/app/api/upload-attachment/route.ts:84-85", "confidence": "confirmed" }
+      ],
+      "complexity": "medium"
+    },
+    {
+      "name": "cross-cutting",
+      "path": "src/lib, src/middleware.ts, functions/src",
+      "purpose": "Camadas transversais usadas por todos os endpoints: inicialização Firebase (client/admin), variáveis de ambiente centralizadas, audit log, tipos de domínio compartilhados, middleware de proteção de rotas, e as 3 Firebase Functions agendadas/webhook.",
+      "primary_files": [
+        "src/lib/env.ts",
+        "src/lib/env.client.ts",
+        "src/lib/firebase/client.ts",
+        "src/lib/firebase-admin/admin.ts",
+        "src/lib/utils/audit.ts",
+        "src/lib/types/index.ts",
+        "src/middleware.ts",
+        "functions/src/index.ts",
+        "functions/src/aiInsights.ts",
+        "functions/src/scheduledReports.ts",
+        "functions/src/webhookAsaas.ts"
+      ],
+      "functions": [
+        { "name": "requireEnv", "file": "src/lib/env.ts", "params": ["key: string"], "returns": "string", "confidence": "confirmed" },
+        { "name": "logAudit", "file": "src/lib/utils/audit.ts", "params": ["params: {orgId, userId, acao, caseId?, detalhes?}"], "returns": "Promise<void>", "confidence": "confirmed" },
+        { "name": "middleware", "file": "src/middleware.ts", "params": ["request: NextRequest"], "returns": "NextResponse", "confidence": "confirmed" },
+        { "name": "generateDailyInsights", "file": "functions/src/aiInsights.ts", "params": ["onSchedule handler"], "returns": "Promise<void>", "confidence": "confirmed" },
+        { "name": "generateMonthlyReports", "file": "functions/src/scheduledReports.ts", "params": ["onSchedule handler"], "returns": "Promise<void>", "confidence": "confirmed" },
+        { "name": "webhookAsaas", "file": "functions/src/webhookAsaas.ts", "params": ["onRequest handler"], "returns": "Promise<void>", "confidence": "confirmed" },
+        { "name": "provisionOrg", "file": "functions/src/webhookAsaas.ts", "params": ["payload: AsaasWebhookPayload"], "returns": "Promise<void>", "confidence": "confirmed" }
+      ],
+      "entities": [
+        { "name": "AuditLog", "fields": [
+          { "name": "id", "type": "string", "required": true },
+          { "name": "org_id", "type": "string", "required": true },
+          { "name": "user_id", "type": "string", "required": true },
+          { "name": "acao", "type": "string", "required": true },
+          { "name": "case_id", "type": "string", "required": false },
+          { "name": "detalhes", "type": "Record<string, unknown>", "required": false },
+          { "name": "timestamp", "type": "Timestamp", "required": true }
+        ], "confidence": "confirmed" },
+        { "name": "Unit", "fields": [
+          { "name": "id", "type": "string", "required": true },
+          { "name": "org_id", "type": "string", "required": true },
+          { "name": "nome", "type": "string", "required": true },
+          { "name": "responsavel_id", "type": "string", "required": false },
+          { "name": "criado_em", "type": "Timestamp", "required": true }
+        ], "confidence": "confirmed" },
+        { "name": "WhatsappSession", "fields": [
+          { "name": "id", "type": "string", "required": true },
+          { "name": "conversation_id", "type": "string (SHA-256 do número)", "required": true },
+          { "name": "org_id", "type": "string", "required": true },
+          { "name": "status", "type": "WhatsappSessionStatus", "required": true },
+          { "name": "historico_ia", "type": "array", "required": true },
+          { "name": "created_at", "type": "Timestamp", "required": true }
+        ], "confidence": "confirmed" }
+      ],
+      "business_rules": [
+        { "description": "S1: ANTHROPIC_API_KEY só é lida em módulos com 'server-only', nunca exposta ao client", "location": "src/lib/env.ts:20", "confidence": "confirmed" },
+        { "description": "logAudit nunca lança exceção para o chamador — falha de audit log é apenas logada (console.error), não interrompe o fluxo principal", "location": "src/lib/utils/audit.ts:13-26", "confidence": "confirmed" },
+        { "description": "Middleware protege /app/:path* exigindo cookie __session, exceto /app/login", "location": "src/middleware.ts:6-18", "confidence": "confirmed" },
+        { "description": "AuditLog não tem campo ttl propositalmente — TTL do Firestore bypassaria as Rules e apagaria logs imutáveis; retenção de 20 anos via export externo", "location": "src/lib/types/index.ts:146-150", "confidence": "confirmed" },
+        { "description": "WhatsappSession.conversation_id é SHA-256 do número de telefone, nunca texto puro (regra S2) — módulo ainda não implementado (Fase 7 pendente), tipo já modelado", "location": "src/lib/types/index.ts:193-198", "confidence": "confirmed" },
+        { "description": "Webhook Asaas valida token via crypto.timingSafeEqual antes de processar qualquer payload (proteção contra timing attack)", "location": "functions/src/webhookAsaas.ts:263-279", "confidence": "confirmed" },
+        { "description": "Provisionamento de org por webhook é idempotente (verifica asaas_customer_id existente antes de criar) e usa sufixo aleatório no slug para evitar colisão/TOCTOU", "location": "functions/src/webhookAsaas.ts:129-139,151", "confidence": "confirmed" },
+        { "description": "generateDailyInsights (07h BRT) e generateMonthlyReports (dia 1, 06h BRT) rodam apenas para orgs com plano gestao/enterprise", "location": "functions/src/aiInsights.ts:12-23; functions/src/scheduledReports.ts:12-29", "confidence": "confirmed" }
+      ],
+      "dependencies": ["todos os módulos de src/app/api"],
+      "algorithms": [
+        { "description": "Geração de slug idempotente-safe a partir do nome da org: normalize NFD + remoção de diacríticos + slugify + sufixo hex aleatório", "location": "functions/src/webhookAsaas.ts:84-91,151", "confidence": "confirmed" },
+        { "description": "Determinação de plano no webhook por valor cobrado (>=197 ou anual>=97 → gestao, senão entrada)", "location": "functions/src/webhookAsaas.ts:93-98", "confidence": "confirmed" }
+      ],
+      "complexity": "high"
+    }
+  ]
+}
