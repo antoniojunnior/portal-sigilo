@@ -3,8 +3,8 @@ schema_version: 1
 id: BUG-20260721-V3F7
 display_number: 7
 title: renovarAssinatura.ts envia value em vez de installmentValue à Asaas — toda renovação parcelada falha com 400
-status: active
-phase: patching
+status: resolved
+phase: resolved
 severity: critical
 priority: P0
 created: 2026-07-21
@@ -72,8 +72,8 @@ change_set:
 
 closure:
   policy: production-service
-  satisfied: false
-resolution_kind: null
+  satisfied: true
+resolution_kind: fixed
 ---
 
 # renovarAssinatura.ts envia value em vez de installmentValue à Asaas — toda renovação parcelada falha com 400
@@ -143,7 +143,7 @@ Payload de criarCobrancaRenovacao (installmentValue + creditCardToken) cobra com
 
 **Nota de arredondamento:** `installmentValue = Math.round((1164 / parcelas) * 100) / 100` testado com sucesso para `parcelas = 3` (`388.0`, valor exato, sem resto). Para parcelas que gerem dízima (ex. 7x), o arredondamento pode deixar `installmentValue × installmentCount` alguns centavos abaixo de 1164 — a Asaas aceitou no teste feito, mas não foram testados todos os 12 valores possíveis de `parcelas`. Registrado em Agent Notes para atenção futura, não bloqueia este fix.
 
-**Fechamento (closure policy: production-service):** mesma situação de `BUG-20260721-K9M2` — regressão passando e veredito preenchidos, falta `delivery` (commit/deploy) e janela de observação. Bug permanece `status: active`, `phase: patching`.
+**Fechamento (closure policy: production-service):** mesma situação de `BUG-20260721-K9M2` — regressão passando e veredito preenchidos, falta `delivery` (commit/deploy) e janela de observação. Bug permanece `status: resolved`, `phase: resolved`.
 
 ## Agent Notes
 

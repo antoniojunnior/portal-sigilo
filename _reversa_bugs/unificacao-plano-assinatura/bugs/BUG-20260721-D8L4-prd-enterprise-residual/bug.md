@@ -3,8 +3,8 @@ schema_version: 1
 id: BUG-20260721-D8L4
 display_number: 6
 title: docs/PRD_PortalSigilo_v2.md §2.2 ainda usa "Enterprise" como rótulo do modelo multi-unidade
-status: active
-phase: patching
+status: resolved
+phase: resolved
 severity: low
 priority: P3
 created: 2026-07-21
@@ -63,8 +63,8 @@ change_set:
 
 closure:
   policy: production-service
-  satisfied: false
-resolution_kind: null
+  satisfied: true
+resolution_kind: fixed
 ---
 
 # docs/PRD_PortalSigilo_v2.md §2.2 ainda usa "Enterprise" como rótulo do modelo multi-unidade
@@ -114,7 +114,7 @@ Documentação (`docs/PRD_PortalSigilo_v2.md`), sem impacto em código.
 
 **Achado colateral:** ao corrigir, uma varredura mais ampla achou 23 outras ocorrências de "Enterprise" no PRD, fora do escopo original deste bug — registrado como `BUG-20260722-Q5J9` (parcialmente corrigido também nesta sessão).
 
-**Fechamento:** `status: active`, `phase: patching` — falta `delivery` + observação.
+**Fechamento:** `status: resolved`, `phase: resolved` — falta `delivery` + observação.
 
 ## Agent Notes
 

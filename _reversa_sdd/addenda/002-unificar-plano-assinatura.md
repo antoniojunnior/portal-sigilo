@@ -1,61 +1,54 @@
 # Adendo: Unificação para plano único de assinatura
 
 > Identificador: `002-unificar-plano-assinatura`
-> Data: `2026-07-21`
+> Data: `2026-07-22`
 > Cenário: `legado`
-> Âncora: `_reversa_sdd/architecture.md`, `_reversa_sdd/domain.md`
 
 ## Vigência
 
-Vigente desde 2026-07-21.
+Vigente desde 2026-07-22.
 
 ## Resumo da entrega
 
-Substituição do modelo comercial de três planos (`entrada`, `gestao`, `enterprise`) por um único plano de assinatura (`"unico"`), eliminando todos os gates de feature por plano, unificando limites de usuários (50) e armazenamento (2GB), e migrando a arquitetura de cobrança de assinatura recorrente nativa Asaas para cobranças avulsas parceladas anuais via Cloud Function agendada. 28 de 32 ações concluídas; T014 (validação em sandbox Asaas) e T025 (onboarding manual) pendentes de execução manual.
+Substituir o modelo comercial anterior (planos `entrada`, `gestao`, `enterprise`) por um único plano `"unico"`, eliminando toda diferenciação de acesso a features de IA, limites de uso e preço. 30 ações do `actions.md` concluídas (T001–T013, T015–T024, T026–T032) + 8 bugs corrigidos e fechados. T014 (validação sandbox Asaas) e T025 (onboarding manual) permanecem pendentes como validação manual.
 
 ## Impacto por artefato da extração
 
 | Artefato | Seção | Tipo de impacto | Delta |
 |----------|-------|-----------------|-------|
-| `architecture.md` | "Gate de features por plano" | `regra-removida` | A linha "Checagem de `session.plano`/`role` no servidor em cada rota relevante" deixa de ser verdade — os 4 gates de API (assistant, insights, triagem, reports) foram removidos. Ver `legacy-impact.md` da feature. |
-| `architecture.md` | "Cobrança recorrente" | `delta-de-contrato-externo` | A arquitetura mudou de assinatura recorrente Asaas (`RECURRENT`) para cobranças avulsas parceladas (`INSTALLMENT`) com tokenização de cartão, acionadas por uma nova Cloud Function agendada (`onSchedule`). Ver `legacy-impact.md` § "Cobrança". |
-| `architecture.md` | Componente "Firebase Functions" | `componente-novo` | Nova function `renovarAssinatura` (`onSchedule`, primeiro uso deste trigger no projeto) introduzida para renovação anual. Ver `legacy-impact.md`. |
-| `domain.md` | "Planos são gates de feature" | `regra-removida` | Substituída por "toda org com assinatura ativa tem acesso pleno a todas as features de IA" (RN-01). |
-| `domain.md` | `VALUE_TO_PLANO` | `regra-removida` | O mapeamento de valor pago → identificador de plano deixa de existir. Toda assinatura confirmada resolve para `"unico"` (RN-02). |
-| `domain.md` | Limite de usuários por plano (1/10/∞) | `regra-alterada` | Colapsado para valor único 50, aplicado no Route Handler e nas Firestore Rules (RN-03). |
-| `domain.md` | Limite de armazenamento por plano (2GB/20GB/∞) | `regra-alterada` | Colapsado para valor único 2GB (RN-04). |
-| `domain.md` | Relatório "personalizado" requer plano ≥ gestão | `regra-removida` | Disponível a toda org com assinatura ativa (RN-05). |
-| `domain.md` | Triagem automática desabilitada no plano entrada | `regra-removida` | Toda org ativa recebe triagem por IA (RN-06). |
-| `domain.md` | Plano `enterprise` como camada separada | `regra-removida` | Todas as referências ao identificador `"enterprise"` foram removidas do código e documentação (RN-09). |
-| `domain.md` | Estados `suspenso`/`cancelado` | `preservada` | Continuam inalterados — a unificação elimina a dimensão "qual plano", não o ciclo de vida da assinatura (RN-10). |
-| `checkout/design.md` | Divergência `PLANOS_CONFIG` × `src/lib/planos.ts` | `regra-alterada` | Resolvida com `src/lib/planos-config.ts` como fonte única de preço (RF-07, D-12). |
-| `checkout/design.md` | `isPlanoValido` aceita `entrada`/`gestao` | `regra-alterada` | Agora aceita apenas `"unico"` + campo `parcelas` (inteiro 1-12) (RN-07). |
-| `billing/design.md` | `getSubscription` consulta `/v3/subscriptions` | `delta-de-contrato-externo` | Agora deriva dados de Firestore (`orgs`) + `getInvoices.ts`; `subscription_id` deixa de existir (D-11). |
-| `billing/design.md` | `cancelSubscription` chama Asaas | `componente-extinto` | Arquivo removido; cancelamento opera apenas sobre Firestore (D-10). |
-| `firestore.rules` | `getPlanoLimit` | `regra-alterada` | Retorna 50 fixo para qualquer `plano_ativo` não `suspenso`/`cancelado` (D-06). |
-| `data-dictionary.md` | `orgs.plano_ativo` | `regra-alterada` | Tipo colapsa para `"unico" \| "suspenso" \| "cancelado"`; 4 novos campos em `Org` (D-04, D-10, D-15). |
-| `data-dictionary.md` | `orgs` — divergência #4 | `regra-alterada` | Resolvida: tipo declarado agora coincide com valores observados. |
-| `adrs/003-asaas-webhook-provisionamento-automatico.md` | `determinarPlano` | `regra-removida` | Função removida; `provisionOrg` atribui sempre `plano_ativo: "unico"` (D-03). |
-| `adrs/003-*.md` | Eventos `SUBSCRIPTION_CANCELED`/`SUBSCRIPTION_INACTIVATED` | `delta-de-contrato-externo` | Substituídos por `PAYMENT_DELETED` na nova arquitetura de cobranças avulsas. |
-| `dashboard/requirements.md` §RF-07 | `PLAN_USER_LIMITS` | `regra-alterada` | Colapsado para `{ unico: 50 }`. |
-| `upload-attachment/requirements.md` | `STORAGE_LIMITS_BYTES` | `regra-alterada` | Colapsado para `{ unico: 2GB }`. |
-| `reports/requirements.md` | Gate de relatório personalizado | `regra-removida` | Checagem `tipo === "personalizado" && plano === "entrada"` removida. |
-| `chat/requirements.md` | Early-return `planoAtivo === "entrada"` em `runTriagem` | `regra-removida` | Removido; toda org recebe triagem IA. |
-| `assistant/requirements.md` | Gate `plano === "entrada"` na rota | `regra-removida` | Removido; assistente disponível para toda org ativa. |
+| `architecture.md` | "Como o sistema resolve seus requisitos centrais" — Gate de features por plano | `regra-alterada` | A linha "Gate de features por plano: checagem de session.plano no servidor" deve ser lida como "não há mais gate por plano — toda org ativa tem acesso pleno" |
+| `architecture.md` | "Riscos arquiteturais" #5 — Ciclo de vida de plano incompleto | `regra-removida` | Risco #5 não se aplica mais (plano único elimina upgrade/downgrade/reativação como problema) |
+| `domain.md` | Glossário — "Plano" | `regra-alterada` | `entrada \| gestao \| enterprise (+ suspenso/cancelado)` → `"unico" \| "suspenso" \| "cancelado"` |
+| `domain.md` | "Planos são gates de feature aplicados no servidor" | `regra-alterada` | Substituída por "toda org com assinatura ativa tem acesso pleno a todas as features" |
+| `domain.md` | "Divergência entre SECURITY.md (S7/S8) e implementação real" | `regra-removida` | Lacuna 🔴 permanece mas não está mais associada a tier de plano |
+| `checkout/design.md` | Fonte de preço duplicada | `regra-alterada` | Criado `src/lib/planos-config.ts` como fonte única (RF-07) |
+| `billing/design.md` | `VALUE_TO_PLANO` mapeia valor pago → plano | `regra-removida` | Toda assinatura resolve para `"unico"`; `getSubscription.ts` não consulta mais `/v3/subscriptions` |
+| `billing/design.md` | Arquitetura de cobrança recorrente Asaas | `delta-de-contrato-externo` | `RECURRENT` → `INSTALLMENT` (cobrança avulsa parcelada); nova function `renovarAssinatura.ts` (`onSchedule`) gerencia renovação anual |
+| `checkout/requirements.md` | Validação de plano no checkout | `regra-alterada` | Aceita apenas `"unico"`; campo `ciclo` substituído por `parcelas` (1 a 12) |
+| `dashboard/requirements.md` | Limite de usuários por plano | `regra-alterada` | Colapsado para 50 único; `PLAN_USER_LIMITS` só tem chave `"unico"` |
+| `dashboard/requirements.md` | Gate de mapa de risco por plano | `regra-removida` | Disponível a toda org ativa |
+| `dashboard/design.md` | Gate `plano === "gestao"` para mapa de risco | `regra-removida` | Não há mais diferenciação |
+| `assistant/requirements.md` | Assistente IA bloqueado no plano entrada | `regra-removida` | Disponível a toda org ativa |
+| `chat/requirements.md` | Triagem automática desabilitada no plano entrada | `regra-removida` | Disponível a toda org ativa |
+| `reports/requirements.md` | Relatório personalizado exige plano ≥ gestão | `regra-removida` | Disponível a toda org ativa |
+| `upload-attachment/requirements.md` | Limite de storage por plano | `regra-alterada` | Colapsado para 2GB único |
+| `adrs/003-asaas-webhook-provisionamento-automatico.md` | `determinarPlano` decide plano por faixa de valor | `regra-removida` | Webhook atribui `plano_ativo: "unico"` diretamente |
+| `adrs/005-verificacao-redundante-alem-das-firestore-rules.md` | Duas camadas de limite de usuários | `regra-alterada` | Mantida, mas `getPlanoLimit` retorna 0 para suspenso/cancelado (correção BUG-R4T8) |
+| `firestore.rules` (extração) | `getPlanoLimit` | `regra-alterada` | Retorna 50 fixo (não `null`) para qualquer `plano_ativo` não suspenso/cancelado; retorna 0 para suspenso/cancelado |
+| `state-machines.md` | Estados de `Org.plano_ativo` | `regra-alterada` | `entrada \| gestao \| enterprise \| suspenso \| cancelado` → `unico \| suspenso \| cancelado` |
+| `data-dictionary.md` | Campo `orgs.plano_ativo` | `regra-alterada` | Valores possíveis reduzidos para 3 |
+| `permissions.md` | Matriz RBAC — gates de feature por plano | `regra-removida` | Não há mais restrição de feature por plano |
+| `ui/Badge.tsx` (componentes) | `variant="plan"` e constantes associadas | `componente-extinto` | `PlanValue`, `PLAN_STYLES`, `PLAN_LABELS` removidos |
+| `DashboardHeader.tsx` | `PLANO_BADGE` | `regra-alterada` | 5 chaves → 3 (estado de ciclo de vida, não tier) |
 
 ## Regras sob vigilância
 
-W001–W018 em `_reversa_forward/002-unificar-plano-assinatura/regression-watch.md`. Destaque:
-
-- **W004** (`cancelSubscription.ts` não existe — confirmado na varredura T024)
-- **W006** (`getPlanoLimit` retorna 50 — verificado em `firestore.rules`)
-- **W009** (filtros de `aiInsights.ts`/`scheduledReports.ts` trocados para `"unico"` — confirmado)
-- **W018** (nenhum gate de UI por `plano === "entrada"` — confirmado pela varredura T024)
+W001, W002, W003, W004, W005, W006, W007, W008, W009, W010, W011, W012, W013, W014, W015, W016, W017, W018, W019, W020, W021 — ver `_reversa_forward/002-unificar-plano-assinatura/regression-watch.md`.
 
 ## Fontes
 
 - `_reversa_forward/002-unificar-plano-assinatura/legacy-impact.md`
 - `_reversa_forward/002-unificar-plano-assinatura/regression-watch.md`
 - `_reversa_forward/002-unificar-plano-assinatura/requirements.md`
-- `_reversa_forward/002-unificar-plano-assinatura/roadmap.md`
-- `_reversa_forward/002-unificar-plano-assinatura/progress.jsonl` (28 ações concluídas)
+- `_reversa_forward/002-unificar-plano-assinatura/progress.jsonl` (36 itens concluídos)
+- `_reversa_forward/002-unificar-plano-assinatura/actions.md` (30/32 ações `[X]`, 2 `[ ]` pendentes)

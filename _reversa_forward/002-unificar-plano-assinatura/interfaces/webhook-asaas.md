@@ -18,8 +18,17 @@
 - Evento `PAYMENT_CONFIRMED`/`PAYMENT_RECEIVED` da **primeira** parcela do primeiro ano → `provisionOrg` (como hoje, idempotente) + persiste `asaas_credit_card_token` (retornado pela Asaas na cobrança) em `orgs.asaas_credit_card_token`
 - Evento `PAYMENT_CONFIRMED`/`PAYMENT_RECEIVED` das parcelas **2 a 12** do mesmo ano → **não deve re-provisionar** (idempotência de `provisionOrg` já cobre isso) nem precisa de tratamento novo além de log informativo — cada parcela é só a confirmação de mais um pagamento da mesma venda parcelada
 - Evento `PAYMENT_OVERDUE` de qualquer parcela → continua suspendendo a org (`plano_ativo = "suspenso"`), comportamento preservado
+- Evento `PAYMENT_DELETED` → cancelamento da org (`plano_ativo = "cancelado"`), implementado no switch de eventos do webhook como case explícito; cobre remoção manual de cobrança na Asaas
 - Evento `SUBSCRIPTION_CANCELED`/`SUBSCRIPTION_INACTIVATED` → deixa de existir neste desenho, já que não há mais objeto `subscription` no Asaas (Opção A usa cobranças avulsas, não assinatura) — cancelamento passaria a ser uma ação explícita no dashboard (`billing/cancel`, já existente) que apenas marca `plano_ativo = "cancelado"` e impede a próxima cobrança agendada de disparar
-- **Nova function agendada** (`onSchedule`, primeiro uso desse tipo de trigger no projeto): roda diariamente, busca orgs cujo `data_renovacao` é hoje **e `renovacao_cancelada` é `false`** (campo novo de D-10 — orgs canceladas pelo cliente, ver `interfaces/billing-cancel.md`, são puladas em vez de cobradas), e para as demais dispara uma nova cobrança avulsa (`chargeType: INSTALLMENT`, `installmentCount` = `orgs.proxima_cobranca_parcelas`) usando `orgs.asaas_credit_card_token` — sem pedir cartão novamente. Atualiza `data_renovacao` para o próximo aniversário anual após sucesso.
+- **Nova function agendada** (`onSchedule`, primeiro uso desse tipo de trigger no projeto): roda diariamente, busca orgs cujo `data_renovacao` é hoje **e `renovacao_cancelada` é `false`** (campo novo de D-10 — orgs canceladas pelo cliente, ver `interfaces/billing-cancel.md`, são puladas em vez de cobradas), e para as demais dispara uma nova cobrança avulsa usando `orgs.asaas_credit_card_token` — sem pedir cartão novamente. Usa o endpoint `/v3/payments` (não `/v3/paymentLinks`) com `installmentCount` e `installmentValue` (valor de CADA parcela = total / parcelas). A Asaas rejeita `value` (valor total) nesse endpoint com `invalid_installmentValue`. Validado em sandbox. Atualiza `data_renovacao` para o próximo aniversário anual após sucesso.
+
+## ⚠️ Limitação conhecida: parcelamento fixo em 12x
+
+`proxima_cobranca_parcelas` é hardcoded para `12` em `provisionOrg` (`functions/src/webhookAsaas.ts:150`), independentemente da escolha do cliente na tela de pagamento hospedada da Asaas. A Asaas não retorna `installmentCount` no webhook de confirmação de pagamento para cobranças criadas via `/v3/paymentLinks` — portanto o sistema não tem como saber quantas parcelas o cliente escolheu. Toda org é provisionada com 12x.
+
+O fallback em `renovarAssinatura.ts:129` (`?? 12`) mantém consistência: se o campo estiver ausente por qualquer motivo, assume 12x.
+
+**Impacto:** nenhum funcional hoje (o preço total independe do parcelamento). A limitação existe porque a Asaas (sandbox validado) não expõe `installmentCount` no payload do webhook `PAYMENT_CONFIRMED`/`PAKMENT_RECEIVED` quando a cobrança foi gerada via link de pagamento.
 
 ## Idempotência e erros
 

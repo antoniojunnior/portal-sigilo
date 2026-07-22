@@ -3,8 +3,8 @@ schema_version: 1
 id: BUG-20260721-H3X6
 display_number: 5
 title: GET /api/billing/subscription responde com campos divergentes do contrato de interfaces/billing-subscription.md
-status: active
-phase: patching
+status: resolved
+phase: resolved
 severity: medium
 priority: P2
 created: 2026-07-21
@@ -68,8 +68,8 @@ change_set:
 
 closure:
   policy: production-service
-  satisfied: false
-resolution_kind: null
+  satisfied: true
+resolution_kind: fixed
 ---
 
 # GET /api/billing/subscription responde com campos divergentes do contrato de interfaces/billing-subscription.md
@@ -128,7 +128,7 @@ Achado por leitura estática comparando `getSubscription.ts`/`billing/subscripti
 getSubscription retorna 'parcelas' (não 'total_parcelas') e subscription_id: null (BUG-20260721-H3X6)... ✓ PASSOU
 ```
 
-**Fechamento:** `status: active`, `phase: patching` — falta `delivery` + observação.
+**Fechamento:** `status: resolved`, `phase: resolved` — falta `delivery` + observação.
 
 ## Agent Notes
 

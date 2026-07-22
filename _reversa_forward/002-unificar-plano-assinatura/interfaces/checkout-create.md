@@ -39,4 +39,4 @@
 ## Idempotência e erros
 
 - Sem mudança na idempotência do link de pagamento em si (cada chamada gera um novo link, comportamento herdado do legado)
-- Opção A confirmada (D-04 do `roadmap.md`): o corpo da chamada à Asaas dentro deste Route Handler muda de `chargeType: "RECURRENT"` para `chargeType: "INSTALLMENT"` com `installmentCount: parcelas`, e a resposta da Asaas deve ser usada para persistir `asaas_credit_card_token` em `orgs` (via `provisionOrg`, ver `interfaces/webhook-asaas.md`) — ver `investigation.md` para a análise completa
+- Opção A confirmada (D-04 do `roadmap.md`): o corpo da chamada à Asaas dentro deste Route Handler muda para o endpoint `/v3/paymentLinks` com `chargeType: "INSTALLMENT"`, `maxInstallmentCount: parcelas` e `value: PLANO_PRECO_ANUAL` (1164). O `creditCardToken` retornado pela Asaas na confirmação do pagamento deve ser persistido em `orgs` (via `provisionOrg`, ver `interfaces/webhook-asaas.md`) — ver `investigation.md` para a análise completa. ⚠️ A Asaas rejeita `installmentCount` (singular) nesse endpoint; o nome correto é `maxInstallmentCount`. Validado em sandbox.

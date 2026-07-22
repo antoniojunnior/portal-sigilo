@@ -79,7 +79,7 @@ const LABEL_BASE =
   "inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider whitespace-nowrap leading-none";
 
 /**
- * Semantic badge for urgency levels (1–5), case status, subscription plan, and channel origin.
+ * Semantic badge for urgency levels (1–5), case status, and channel origin.
  */
 export function Badge({
   variant = "default",

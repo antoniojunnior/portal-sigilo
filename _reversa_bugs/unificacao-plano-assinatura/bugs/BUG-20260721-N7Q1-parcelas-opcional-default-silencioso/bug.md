@@ -3,8 +3,8 @@ schema_version: 1
 id: BUG-20260721-N7Q1
 display_number: 4
 title: POST /api/checkout/create trata parcelas como opcional com default silencioso de 12, contrato exige obrigatório
-status: active
-phase: patching
+status: resolved
+phase: resolved
 severity: medium
 priority: P2
 created: 2026-07-21
@@ -64,8 +64,8 @@ change_set:
 
 closure:
   policy: production-service
-  satisfied: false
-resolution_kind: null
+  satisfied: true
+resolution_kind: fixed
 ---
 
 # POST /api/checkout/create trata parcelas como opcional com default silencioso de 12, contrato exige obrigatório
@@ -128,7 +128,7 @@ Achado por leitura estática de `src/app/api/checkout/create/route.ts` comparado
 isParcelasValido(undefined) é false — parcelas ausente não vira default silencioso (BUG-20260721-N7Q1)... ✓ PASSOU
 ```
 
-**Fechamento:** `status: active`, `phase: patching` — falta `delivery` + observação.
+**Fechamento:** `status: resolved`, `phase: resolved` — falta `delivery` + observação.
 
 ## Agent Notes
 

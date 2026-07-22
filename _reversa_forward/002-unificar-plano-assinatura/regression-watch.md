@@ -26,6 +26,9 @@
 | W016 | `legacy-impact.md` § "Cobrança" | `DELETE /api/billing/cancel` não importa `getSubscription` nem `cancelSubscription` | `ausência` | Import de `getSubscription` ou `cancelSubscription` em `billing/cancel/route.ts` |
 | W017 | `legacy-impact.md` § "Cobrança" | `renovarAssinatura.ts` existe e é uma `onSchedule` function | `presença` | Arquivo ausente ou não exportando `renovarAssinatura` como agendada |
 | W018 | `legacy-impact.md` § "Gates de feature" | Nenhum componente de UI contém gate `user.plano === "entrada"` para assistente, relatórios ou CSV | `ausência` | `user?.plano === "entrada"` ou `user.plano === "entrada"` em qualquer arquivo `src/app/` |
+| W019 | `legacy-impact.md` § "Correções pós-auditoria" | `renovarAssinatura.ts` tem comentário `CANONICAL: src/lib/planos-config.ts` acima de `PLANO_PRECO_ANUAL` | `presença` | Comentário ausente ou valor diferente de `src/lib/planos-config.ts` sem atualização simultânea |
+| W020 | `legacy-impact.md` § "Correções pós-auditoria" | Nenhum branch `else` com string "Enterprise" sobrevive em `casos/page.tsx` para o botão de CSV | `ausência` | `"Exportação disponível nos planos Gestão e Enterprise"` em qualquer arquivo `src/app/` |
+| W021 | `legacy-impact.md` § "Correções pós-auditoria" | `interfaces/webhook-asaas.md` documenta evento `PAYMENT_DELETED` | `presença` | Seção "Depois" sem menção a `PAYMENT_DELETED` |
 
 ## Histórico de re-extrações
 
@@ -56,3 +59,12 @@ RFs implementados (confirmados via inspeção de código nesta execução):
 
 - RF-01 a RF-12: todos os Must e Should implementados conforme actions.md
 - T014 (validação sandbox Asaas) e T025 (onboarding manual) permanecem pendentes como validação manual
+
+Correções pós-auditoria (4ª rodada, A001–A006) aplicadas em 2026-07-22:
+
+- A001 (MEDIUM): comentário canônico adicionado em `renovarAssinatura.ts`
+- A002 (MEDIUM): branch morto removido de `casos/page.tsx`; `canExportCSV` eliminado
+- A003 (MEDIUM): interfaces corrigidas com nomes reais de campos Asaas
+- A004 (LOW): `PAYMENT_DELETED` documentado em `webhook-asaas.md`
+- A005 (LOW): limitação do parcelamento fixo documentada
+- A006 (LOW): JSDoc de `Badge.tsx` corrigido

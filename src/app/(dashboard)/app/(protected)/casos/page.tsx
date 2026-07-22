@@ -202,7 +202,6 @@ function CasosContent() {
   }
 
   const hasActiveFilters = !!(statusFilter || urgencyFilter || channelFilter || protocolSearch);
-  const canExportCSV = true;
 
   return (
     <>
@@ -239,10 +238,9 @@ function CasosContent() {
                 </Button>
               )}
 
-              {/* CSV export — plan-gated */}
+              {/* CSV export */}
               <div className="flex-shrink-0">
-                {canExportCSV ? (
-                  <Button
+                <Button
                     variant="secondary"
                     size="sm"
                     disabled={cases.length === 0}
@@ -252,15 +250,6 @@ function CasosContent() {
                   >
                     Exportar CSV
                   </Button>
-                ) : (
-                  <span
-                    title="Exportação disponível nos planos Gestão e Enterprise"
-                    className="flex h-10 items-center gap-2 px-4 rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-xs text-[var(--color-text-tertiary)] cursor-default select-none"
-                  >
-                    <Download size={16} strokeWidth={1.8} />
-                    Exportar CSV
-                  </span>
-                )}
               </div>
             </div>
           </div>

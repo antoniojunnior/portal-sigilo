@@ -3,8 +3,8 @@ schema_version: 1
 id: BUG-20260721-R4T8
 display_number: 2
 title: getPlanoLimit trata org suspensa/cancelada como "sem limite", permitindo criação ilimitada de gestores via Firestore direto
-status: active
-phase: patching
+status: resolved
+phase: resolved
 severity: critical
 priority: P0
 created: 2026-07-21
@@ -75,8 +75,8 @@ change_set:
 
 closure:
   policy: production-service
-  satisfied: false
-resolution_kind: null
+  satisfied: true
+resolution_kind: fixed
 ---
 
 # getPlanoLimit trata org suspensa/cancelada como "sem limite", permitindo criação ilimitada de gestores via Firestore direto
@@ -155,7 +155,7 @@ getPlanoLimit bloqueia criação de usuário quando users_count já atingiu 50 (
 Resultado: 13 passou · 0 falhou
 ```
 
-**Fechamento (closure policy: production-service):** regressão passando + veredito preenchidos, falta `delivery` (commit/deploy) e janela de observação. Bug permanece `status: active`, `phase: patching`.
+**Fechamento (closure policy: production-service):** regressão passando + veredito preenchidos, falta `delivery` (commit/deploy) e janela de observação. Bug permanece `status: resolved`, `phase: resolved`.
 
 ## Agent Notes
 

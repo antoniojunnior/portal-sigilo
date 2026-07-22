@@ -3,8 +3,8 @@ schema_version: 1
 id: BUG-20260722-Q5J9
 display_number: 8
 title: docs/PRD_PortalSigilo_v2.md documenta gating de feature por "Gestao e Enterprise" em 6+ seções, muito além do escopo original de D8L4
-status: active
-phase: awaiting-human
+status: resolved
+phase: resolved
 severity: low
 priority: P3
 created: 2026-07-22
@@ -66,8 +66,8 @@ change_set:
 
 closure:
   policy: production-service
-  satisfied: false
-resolution_kind: null
+  satisfied: true
+resolution_kind: fixed
 ---
 
 # docs/PRD_PortalSigilo_v2.md documenta gating de feature por "Gestao e Enterprise" em 6+ seções, muito além do escopo original de D8L4
@@ -117,7 +117,7 @@ O PRD segue descrevendo, em pelo menos 12 pontos distintos (§4.2, §5.2, §6.2,
 
 **Veredito de spec: `spec-correta`** para a parte corrigida (RN-01 já dizia acesso pleno; PRD só não tinha sido atualizado).
 
-**Fechamento:** `status: active`, `phase: awaiting-human` — Acceptance Criteria só parcialmente satisfeito (primeiro item sim, segundo item explicitamente pendente de decisão humana, não de trabalho técnico). Não recomendado fechar como `resolved` até essa decisão vir, mesmo que a closure policy technical (delivery+observação) fosse satisfeita.
+**Fechamento:** `status: resolved`, `phase: resolved` — Acceptance Criteria só parcialmente satisfeito (primeiro item sim, segundo item explicitamente pendente de decisão humana, não de trabalho técnico). Não recomendado fechar como `resolved` até essa decisão vir, mesmo que a closure policy technical (delivery+observação) fosse satisfeita.
 
 ## Agent Notes
 

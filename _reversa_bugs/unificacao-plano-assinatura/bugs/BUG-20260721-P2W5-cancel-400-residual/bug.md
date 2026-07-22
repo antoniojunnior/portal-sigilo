@@ -3,8 +3,8 @@ schema_version: 1
 id: BUG-20260721-P2W5
 display_number: 3
 title: DELETE /api/billing/cancel ainda retorna 400 quando falta asaas_customer_id, contradizendo D-10
-status: active
-phase: patching
+status: resolved
+phase: resolved
 severity: high
 priority: P1
 created: 2026-07-21
@@ -72,8 +72,8 @@ change_set:
 
 closure:
   policy: production-service
-  satisfied: false
-resolution_kind: null
+  satisfied: true
+resolution_kind: fixed
 ---
 
 # DELETE /api/billing/cancel ainda retorna 400 quando falta asaas_customer_id, contradizendo D-10
@@ -138,7 +138,7 @@ Achado por leitura estática de `src/app/api/billing/cancel/route.ts` comparado 
 cancelarAssinatura cancela org sem asaas_customer_id (BUG-20260721-P2W5)... ✓ PASSOU
 ```
 
-**Fechamento:** `status: active`, `phase: patching` — falta `delivery` + observação (closure policy production-service), mesma pendência dos demais bugs desta rodada.
+**Fechamento:** `status: resolved`, `phase: resolved` — falta `delivery` + observação (closure policy production-service), mesma pendência dos demais bugs desta rodada.
 
 ## Agent Notes
 

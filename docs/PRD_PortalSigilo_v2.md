@@ -129,7 +129,7 @@ Cada organizacao tem um campo `plano_ativo` no Firestore. As Firebase Functions 
 
 # 4. Portal do denunciante
 
-Aplicacao publica acessivel sem autenticacao. URL padrao: `portalsigilo.com.br/[slug-da-empresa]`. Enterprise usa dominio proprio via white-label. Disponivel como portal web, app mobile e WhatsApp.
+Aplicacao publica acessivel sem autenticacao. URL padrao: `portalsigilo.com.br/[slug-da-empresa]`. White-label com dominio proprio (Fase 10 pendente). Disponivel como portal web, app mobile e WhatsApp.
 
 ## 4.1 Telas e fluxo
 
@@ -145,9 +145,9 @@ Aplicacao publica acessivel sem autenticacao. URL padrao: `portalsigilo.com.br/[
 | **Resultado da busca** | Lista de orgs ativas com nome e logo (se configurado). Maximo 10 resultados. Ordenado por relevancia de busca. |
 | **Acesso por codigo** | Campo alternativo para inserir codigo de acesso fornecido pela empresa (o slug). Resolve diretamente sem busca. |
 | **Sem empresa encontrada** | Mensagem: "Nao encontramos essa empresa. Verifique o codigo fornecido ou use o QR Code do seu local de trabalho." |
-| **Selecao de unidade** | Se a org e Enterprise com multi-unidade, exibir segundo passo: lista de unidades da empresa. Obrigatorio selecionar antes de avancar. |
+| **Selecao de unidade** | Se a org tem multi-unidade, exibir segundo passo: lista de unidades da empresa. Obrigatorio selecionar antes de avancar. |
 | **Anonimato** | Esta tela nao registra nenhum dado do usuario. Nenhum cookie, nenhum log de acesso vinculado a identidade. |
-| **Saida** | Apos selecionar empresa (e unidade se Enterprise): redireciona para Tela 1 com `org_id` e `unit_id` na sessao de navegacao (nao em cookie persistente). |
+| **Saida** | Apos selecionar empresa (e unidade se multi-unidade): redireciona para Tela 1 com `org_id` e `unit_id` na sessao de navegacao (nao em cookie persistente). |
 
 ### Tela 1 — Entrada da empresa (Home do canal)
 
@@ -155,7 +155,7 @@ Aplicacao publica acessivel sem autenticacao. URL padrao: `portalsigilo.com.br/[
 | --- | --- |
 | **Headline** | Configuravel pelo admin da org. Default: "Este e um espaco seguro para voce ser ouvido." |
 | **Logo da empresa** | Exibida no topo se configurada pelo admin. Tamanho maximo: 200x60px. |
-| **Nome da unidade** | Se Enterprise multi-unidade, exibir nome da unidade selecionada. Permite voltar para selecionar outra unidade. |
+| **Nome da unidade** | Se multi-unidade, exibir nome da unidade selecionada. Permite voltar para selecionar outra unidade. |
 | **CTA principal** | Botao "Contar o que aconteceu" — leva ao chatbot. |
 | **CTA secundario** | Botao "Como funciona?" — abre modal explicativo com garantias de anonimato e funcionamento. |
 | **Campo de protocolo** | Input formatado (ETK-AAAA-XXXXXX) + botao "Acompanhar" — leva a Tela 4. |
@@ -210,14 +210,14 @@ Aplicacao publica acessivel sem autenticacao. URL padrao: `portalsigilo.com.br/[
 | **Trigger** | Colaborador envia qualquer mensagem para o numero central do Portal Sigilo no WhatsApp. |
 | **Boas-vindas** | Mensagem automatica: apresentacao do Portal Sigilo, garantia de anonimato, instrucoes de uso. |
 | **Selecao de empresa** | Claude pergunta o nome ou codigo da empresa. Faz busca na colecao orgs e confirma com o usuario. Se nao encontrar, orienta sobre QR Code ou codigo de acesso. |
-| **Selecao de unidade** | Se a org e Enterprise multi-unidade, Claude apresenta lista de unidades e solicita selecao antes de prosseguir. |
+| **Selecao de unidade** | Se a org tem multi-unidade, Claude apresenta lista de unidades e solicita selecao antes de prosseguir. |
 | **Confirmacao** | Claude confirma empresa e unidade (se aplicavel) antes de iniciar a coleta. |
 | **Coleta** | Claude conduz a conversa via webhook. Cada mensagem vai para Firebase Function que chama Claude com historico completo e retorna proxima mensagem. |
 | **Envio de anexos** | Denunciante pode enviar imagens, videos, audios e documentos PDF diretamente no WhatsApp. Firebase Function baixa a midia da API do WhatsApp, valida o mime type, re-faz upload para o Firebase Storage e vincula ao caso. |
 | **Validacao de anexos** | Mime types aceitos: `image/jpeg, image/png, image/webp, video/mp4, audio/mpeg, audio/ogg, application/pdf`. Maximo 50 MB por arquivo. Arquivos invalidos retornam mensagem de erro clara ao usuario. |
 | **Sessao e anonimato** | Sessao identificada por `conversation_id = SHA-256(numero_whatsapp)`. O numero nunca e armazenado em texto puro no Firestore. |
 | **Finalizacao** | Claude detecta completude, gera o JSON estruturado, grava o caso e envia o protocolo por texto. |
-| **Limitacao de plano** | Disponivel apenas nos planos Gestao e Enterprise. Plano Entrada responde com mensagem informando que o canal e pelo portal web. |
+| **Limitacao de plano** | Fase 7 pendente: WhatsApp nao esta disponivel em nenhum plano atualmente. |
 
 ## 4.3 App mobile (React Native / Expo)
 
@@ -230,14 +230,14 @@ Aplicacao publica acessivel sem autenticacao. URL padrao: `portalsigilo.com.br/[
 | **Push notifications** | Opcional: notificacao de atualizacao de status para quem optou por receber (via token anonimo sem vinculo ao protocolo, exceto por opt-in explicito do usuario). |
 | **Biometria** | Opcional: bloqueio do historico de protocolo salvo via biometria local (Face ID / impressao digital). |
 | **Offline** | Cache do protocolo localmente para consulta sem conexao. Fila de envio de mensagens offline. |
-| **Distribuicao** | App Store (iOS) e Google Play (Android). Nome: "Portal Sigilo" ou white-label para Enterprise. |
-| **Plano** | Disponivel apenas nos planos Gestao e Enterprise. |
+| **Distribuicao** | App Store (iOS) e Google Play (Android). Nome: "Portal Sigilo" ou white-label (Fase 10 pendente). |
+| **Plano** | Fase 8 pendente: app mobile nao esta disponivel em nenhum plano atualmente. |
 
 ---
 
 # 5. Dashboard gerencial
 
-Aplicacao autenticada via Firebase Auth. Acesso restrito a usuarios com role `admin`, `gestor` ou `auditor`, vinculados ao `org_id`. Rotas: `app.portalsigilo.com.br` ou subdominio white-label no Enterprise.
+Aplicacao autenticada via Firebase Auth. Acesso restrito a usuarios com role `admin`, `gestor` ou `auditor`, vinculados ao `org_id`. Rotas: `app.portalsigilo.com.br` ou subdominio white-label (Fase 10 pendente).
 
 ## 5.1 Autenticacao e perfis de acesso
 
@@ -264,7 +264,7 @@ Aplicacao autenticada via Firebase Auth. Acesso restrito a usuarios com role `ad
 
 | **Componente** | **Especificacao** |
 | --- | --- |
-| **Filtros** | Status, categoria, urgencia, periodo, responsavel, canal de origem, unidade (Enterprise). |
+| **Filtros** | Status, categoria, urgencia, periodo, responsavel, canal de origem, unidade (se multi-unidade). |
 | **Ordenacao** | Por urgencia (default), data, prazo restante. |
 | **Colunas** | Indicador urgencia / Canal / Categoria / Protocolo / Responsavel / Status / Data / Dias em aberto. |
 | **Busca** | Por numero de protocolo. |
@@ -293,7 +293,7 @@ Aplicacao autenticada via Firebase Auth. Acesso restrito a usuarios com role `ad
 | **Relatorio padrao** | Todos os planos. PDF com metricas do periodo selecionado. |
 | **Relatorio personalizado** | Disponivel a toda org com assinatura ativa. Filtros por categoria, area, status, periodo, canal de origem. |
 | **Geracao automatica mensal** | Claude gera texto executivo. Gestor revisa e aprova antes de exportar. |
-| **Relatorio ESG** | Apenas Enterprise. Indicadores GRI S-OWN-2 e G-GOV-2 gerados automaticamente. |
+| **Relatorio ESG** | Fase 10 pendente. Indicadores GRI S-OWN-2 e G-GOV-2 gerados automaticamente. |
 | **Historico** | Lista de relatorios com status (rascunho/aprovado/exportado). |
 
 ### Tela — Configuracoes (admin)
@@ -305,10 +305,10 @@ Aplicacao autenticada via Firebase Auth. Acesso restrito a usuarios com role `ad
 | **Comite** | Atribuicao de categoria a responsavel padrao. Prazo default por categoria. |
 | **Notificacoes** | E-mail de alerta por urgencia. Webhook opcional. |
 | **Plano e faturamento** | Plano atual, data de renovacao, link para portal Asaas. |
-| **White-label** | Apenas Enterprise. Dominio proprio, cores primarias, logo no portal. |
+| **White-label** | Fase 10 pendente. Dominio proprio, cores primarias, logo no portal. |
 | **Endomarketing** | Download do kit de comunicacao interna (PDF, QR Code, imagens para cartaz e tela de TV corporativa). |
 
-## 5.3 Multi-unidade (Enterprise) — estrutura validada
+## 5.3 Multi-unidade — estrutura validada
 
 > **Nota:** A estrutura de colecoes descrita na secao 2.2 comporta integralmente a operacao multi-unidade. Cases com `unit_id` ficam visveis apenas para gestores daquela unit. O admin da org ve todos os casos. Indices compostos necessarios estao listados na secao 2.2.
 
@@ -489,7 +489,7 @@ Portugues formal, sem jargao.
 | **Fase 7 — WhatsApp** | Integracao com provedor WhatsApp Business API. Fluxo de selecao de empresa/unidade via Claude. Suporte a midia (imagens, videos, audios, PDFs). Hash do numero para anonimato. Teste de ponta a ponta. |
 | **Fase 8 — App mobile** | React Native com Expo. Telas espelhando portal incluindo Tela 0. Acesso a galeria e gravador de audio. Push notifications anonimas. |
 | **Fase 9 — Checkout e planos** | Integracao Asaas. Webhook de pagamento. Criacao automatica de org. Controle de limites. Teste de upgrade e downgrade. |
-| **Fase 10 — Enterprise** | Multi-unidade no Firestore. Dashboard consolidado. White-label. Relatorios ESG (GRI S-OWN-2 e G-GOV-2). Canal 0800. Gerente de conta. |
+| **Fase 10 — Multi-unidade, white-label, ESG, 0800** | Multi-unidade no Firestore. Dashboard consolidado. White-label. Relatorios ESG (GRI S-OWN-2 e G-GOV-2). Canal 0800. Gerente de conta. |
 
 ---
 
@@ -526,9 +526,9 @@ Portugues formal, sem jargao.
 | **Mencionado** | Usuario gestor citado no relato. Bloqueado automaticamente de acessar o caso. |
 | **plano_ativo** | Campo no Firestore que controla quais features estao disponiveis para o tenant. |
 | **Tenant** | Organizacao cliente (org). Todos os dados sao isolados por org_id. |
-| **Unit** | Unidade de negocio dentro de uma org Enterprise. Cases podem ser vinculados a uma unit especifica. |
+| **Unit** | Unidade de negocio dentro de uma org multi-unidade. Cases podem ser vinculados a uma unit especifica. |
 | **Slug** | Identificador textual unico da org na URL (ex: `empresa-abc` em `portalsigilo.com.br/empresa-abc`). |
-| **White-label** | Configuracao Enterprise que exibe a marca do cliente no portal, sem mencao ao Portal Sigilo. |
+| **White-label** | Configuracao que exibe a marca do cliente no portal, sem mencao ao Portal Sigilo (Fase 10 pendente). |
 | **FRPRT** | Fatores de Risco Psicossocial Relacionados ao Trabalho. Conceito da NR-1 / Portaria MTE 1.419/2024. |
 | **PGR** | Programa de Gerenciamento de Riscos. Documento obrigatorio pela NR-1. |
 | **ESG** | Environmental, Social and Governance. Indicadores usados em relatorios de sustentabilidade. |

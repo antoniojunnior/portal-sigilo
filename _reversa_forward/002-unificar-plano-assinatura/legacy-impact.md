@@ -41,6 +41,10 @@
 | `scripts/test-rules.ts` | Testes | `regra-alterada` | LOW | Novo cenário de `getPlanoLimit` para `"unico"` |
 | `docs/PRD_PortalSigilo_v2.md` | Documentação | `regra-alterada` | LOW | Tabela de planos reescrita |
 | `docs/SECURITY.md` | Documentação | `regra-alterada` | LOW | Título S4 sem "(Enterprise)" |
+| `functions/src/renovarAssinatura.ts` | Renovação anual | `regra-alterada` | LOW | Adicionado commentário apontando fonte canônica do preço (resolução de A001 do `/reversa-audit`) |
+| `src/components/ui/Badge.tsx` | UI | `regra-alterada` | LOW | Comentário JSDoc corrigido (removido "subscription plan", resolução de A006 do `/reversa-audit`) |
+| `interfaces/checkout-create.md` | Documentação de contrato | `regra-alterada` | LOW | Contrato externo corrigido para nomes reais dos campos Asaas (resolução de A003 do `/reversa-audit`) |
+| `interfaces/webhook-asaas.md` | Documentação de contrato | `regra-alterada` | LOW | Documentado `PAYMENT_DELETED`, endpoint `/v3/payments` da renovação, e limitação do parcelamento fixo (resolução de A003/A004/A005 do `/reversa-audit`) |
 
 ## Diff conceitual por componente
 
@@ -58,6 +62,17 @@ Todos os 6 gates de feature no backend (`assistant`, `insights`, `triagem`, `rep
 
 ### Functions agendadas
 Filtros de elegibilidade em `aiInsights.ts` e `scheduledReports.ts` trocam de `plano_ativo in ["gestao","enterprise"]` para `"unico"`. Nova function `renovarAssinatura.ts` introduz `onSchedule` como novo tipo de trigger no projeto.
+
+### Correções pós-auditoria (4ª rodada — A001 a A006)
+
+| ID | Severidade | O quê | Como foi resolvido |
+|----|-----------|-------|-------------------|
+| A001 | MEDIUM | Preço 1164 duplicado em `renovarAssinatura.ts` sem referência à fonte canônica | Adicionado comentário `CANONICAL: src/lib/planos-config.ts` apontando a fonte única — aceito como limitação arquitetural (pacotes separados `src/` e `functions/` não compartilham imports) |
+| A002 | MEDIUM | Branch morto com string "Enterprise" em `casos/page.tsx` | `else` inteiro removido; `canExportCSV` eliminado por ser sempre `true`; botão de exportação renderizado diretamente |
+| A003 | MEDIUM | `interfaces/checkout-create.md` e `webhook-asaas.md` com nomes de campo Asaas errados | Atualizados: `installmentCount` → `maxInstallmentCount` em `/v3/paymentLinks`; documentado `/v3/payments` com `installmentValue` na renovação |
+| A004 | LOW | Evento `PAYMENT_DELETED` não documentado | Adicionado à seção "Depois" de `webhook-asaas.md` |
+| A005 | LOW | `proxima_cobranca_parcelas` hardcoded para 12 sem documentação | Documentada a limitação em nova seção "⚠️ Limitação conhecida" em `webhook-asaas.md` |
+| A006 | LOW | Comentário "subscription plan" obsoleto em `Badge.tsx` | JSDoc corrigido para "case status, and channel origin" |
 
 ## Preservadas
 
