@@ -1,11 +1,22 @@
 import "server-only";
 import { ASAAS_API_KEY, ASAAS_BASE_URL } from "@/lib/env";
 
+export type PaymentStatus =
+  | "RECEIVED"
+  | "PENDING"
+  | "OVERDUE"
+  | "CANCELLED"
+  | "CONFIRMED"
+  | "RECEIVED_IN_CASH"
+  | "REFUNDED"
+  | "CHARGEBACK_REQUESTED"
+  | "CHARGEBACK_DISPUTE";
+
 export interface Invoice {
   id: string;
   valor: number;
   vencimento: string;
-  status: "RECEIVED" | "PENDING" | "OVERDUE" | "CANCELLED";
+  status: PaymentStatus;
   descricao: string | null;
   invoice_url: string | null;
 }

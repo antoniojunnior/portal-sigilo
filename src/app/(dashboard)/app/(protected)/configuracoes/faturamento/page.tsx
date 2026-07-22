@@ -17,15 +17,26 @@ interface SubscriptionData {
   valor: number | null;
   ciclo: "MONTHLY" | "YEARLY" | null;
   proximo_vencimento: string | null;
-  status: "ACTIVE" | "INACTIVE" | "SUSPENDED" | null;
+  status: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "DISPUTED" | null;
   subscription_id: string | null;
 }
+
+type InvoiceStatus =
+  | "RECEIVED"
+  | "PENDING"
+  | "OVERDUE"
+  | "CANCELLED"
+  | "CONFIRMED"
+  | "RECEIVED_IN_CASH"
+  | "REFUNDED"
+  | "CHARGEBACK_REQUESTED"
+  | "CHARGEBACK_DISPUTE";
 
 interface Invoice {
   id: string;
   valor: number;
   vencimento: string;
-  status: "RECEIVED" | "PENDING" | "OVERDUE" | "CANCELLED";
+  status: InvoiceStatus;
   descricao: string | null;
   invoice_url: string | null;
 }
@@ -54,11 +65,23 @@ const STATUS_BADGE: Record<string, { label: string; className: string }> = {
     label: "INATIVO",
     className: "bg-[var(--color-bg-tertiary)] text-[var(--color-text-tertiary)]",
   },
+  DISPUTED: {
+    label: "EM DISPUTA",
+    className: "bg-[var(--color-danger-surface)] text-[var(--color-danger)]",
+  },
 };
 
-const INVOICE_STATUS: Record<Invoice["status"], { label: string; className: string }> = {
+const INVOICE_STATUS: Record<InvoiceStatus, { label: string; className: string }> = {
   RECEIVED: {
     label: "Pago",
+    className: "bg-[var(--color-success-surface)] text-[var(--color-success)]",
+  },
+  CONFIRMED: {
+    label: "Pago",
+    className: "bg-[var(--color-success-surface)] text-[var(--color-success)]",
+  },
+  RECEIVED_IN_CASH: {
+    label: "Pago (dinheiro)",
     className: "bg-[var(--color-success-surface)] text-[var(--color-success)]",
   },
   PENDING: {
@@ -73,6 +96,23 @@ const INVOICE_STATUS: Record<Invoice["status"], { label: string; className: stri
     label: "Cancelado",
     className: "bg-[var(--color-bg-tertiary)] text-[var(--color-text-tertiary)]",
   },
+  REFUNDED: {
+    label: "Estornado",
+    className: "bg-[var(--color-danger-surface)] text-[var(--color-danger)]",
+  },
+  CHARGEBACK_REQUESTED: {
+    label: "Chargeback solicitado",
+    className: "bg-[var(--color-danger-surface)] text-[var(--color-danger)]",
+  },
+  CHARGEBACK_DISPUTE: {
+    label: "Chargeback em disputa",
+    className: "bg-[var(--color-danger-surface)] text-[var(--color-danger)]",
+  },
+};
+
+const FALLBACK_INVOICE_BADGE = {
+  label: "Status desconhecido",
+  className: "bg-[var(--color-bg-tertiary)] text-[var(--color-text-tertiary)]",
 };
 
 function formatDate(iso: string): string {
@@ -341,7 +381,7 @@ export default function FaturamentoPage() {
                     </thead>
                     <tbody className="divide-y divide-[var(--color-border)]">
                       {invoices.map((inv) => {
-                        const badge = INVOICE_STATUS[inv.status];
+                        const badge = INVOICE_STATUS[inv.status] ?? FALLBACK_INVOICE_BADGE;
                         return (
                           <tr key={inv.id} className="hover:bg-[var(--color-bg-secondary)]/30 transition-colors">
                             <td className="py-3 pr-4 text-[var(--color-text-secondary)]">

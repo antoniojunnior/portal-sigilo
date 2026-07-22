@@ -10,7 +10,7 @@
 import { adminDb } from "../src/lib/firebase-admin/admin";
 import { cancelarAssinatura } from "../src/app/api/billing/cancel/route";
 import { isPlanoValido, isParcelasValido } from "../src/app/api/checkout/create/route";
-import { getSubscription } from "../src/lib/asaas/getSubscription";
+import { getSubscription, mapInvoiceStatusToSubscriptionStatus } from "../src/lib/asaas/getSubscription";
 
 const ORG_CANCEL_TESTE = "test-billing-fix-cancel";
 const ORG_SUBSCRIPTION_TESTE = "test-billing-fix-subscription";
@@ -95,11 +95,56 @@ async function runTests(): Promise<void> {
         renovacao_cancelada: false,
       });
 
-      const sub = await getSubscription(ASAAS_CUSTOMER_TESTE);
+      const sub = await getSubscription(ORG_SUBSCRIPTION_TESTE);
       if (!sub) throw new Error("getSubscription retornou null");
       if (sub.subscription_id !== null) throw new Error("subscription_id deveria ser null");
       if (sub.parcelas !== 3) throw new Error(`parcelas esperado 3, veio ${sub.parcelas}`);
       if ("total_parcelas" in sub) throw new Error("campo total_parcelas não deveria mais existir");
+    }
+  );
+
+  // ── BUG-20260722-T6R2: mapeamento de status de pagamento completo ────────
+  await test(
+    "mapInvoiceStatusToSubscriptionStatus mapeia os 3 buckets explicitamente (BUG-20260722-T6R2)",
+    async () => {
+      const ativos: Array<Parameters<typeof mapInvoiceStatusToSubscriptionStatus>[0]> = [
+        "CONFIRMED",
+        "RECEIVED",
+        "RECEIVED_IN_CASH",
+      ];
+      for (const s of ativos) {
+        const r = mapInvoiceStatusToSubscriptionStatus(s);
+        if (r !== "ACTIVE") throw new Error(`status Asaas '${s}' deveria mapear para ACTIVE, veio '${r}'`);
+      }
+
+      const disputados: Array<Parameters<typeof mapInvoiceStatusToSubscriptionStatus>[0]> = [
+        "REFUNDED",
+        "CHARGEBACK_REQUESTED",
+        "CHARGEBACK_DISPUTE",
+      ];
+      for (const s of disputados) {
+        const r = mapInvoiceStatusToSubscriptionStatus(s);
+        if (r !== "DISPUTED") throw new Error(`status Asaas '${s}' deveria mapear para DISPUTED (não ACTIVE), veio '${r}'`);
+      }
+
+      if (mapInvoiceStatusToSubscriptionStatus("OVERDUE") !== "SUSPENDED") {
+        throw new Error("status Asaas 'OVERDUE' deveria mapear para SUSPENDED");
+      }
+      if (mapInvoiceStatusToSubscriptionStatus("CANCELLED") !== "INACTIVE") {
+        throw new Error("status Asaas 'CANCELLED' deveria mapear para INACTIVE");
+      }
+    }
+  );
+
+  // ── BUG-20260722-T6R2: getSubscription contra sandbox real (6/6 pagamentos CONFIRMED) ──
+  await test(
+    "getSubscription retorna status ACTIVE para customer real com pagamentos CONFIRMED (BUG-20260722-T6R2)",
+    async () => {
+      const sub = await getSubscription(ORG_SUBSCRIPTION_TESTE);
+      if (!sub) throw new Error("getSubscription retornou null");
+      if (sub.status !== "ACTIVE") {
+        throw new Error(`status esperado 'ACTIVE' (payment real é CONFIRMED), veio '${sub.status}'`);
+      }
     }
   );
 }
