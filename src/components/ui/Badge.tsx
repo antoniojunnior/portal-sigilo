@@ -85,7 +85,6 @@ export function Badge({
   variant = "default",
   urgency,
   status,
-  plan,
   channel,
   className = "",
   children,

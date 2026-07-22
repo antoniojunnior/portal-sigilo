@@ -1,6 +1,6 @@
 export { Button } from "./Button";
 export { Badge } from "./Badge";
-export type { UrgencyLevel as BadgeUrgencyLevel, StatusValue, ChannelValue, PlanValue } from "./Badge";
+export type { UrgencyLevel as BadgeUrgencyLevel, StatusValue, ChannelValue } from "./Badge";
 
 export { Input } from "./Input";
 export { Textarea } from "./Textarea";
