@@ -1,4 +1,4 @@
-<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-07-22 a partir de 8 bugs (todos resolved) -->
+<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-07-22 a partir de 9 bugs (8 resolved, 1 active) -->
 
 # Índice de Bugs — unificacao-plano-assinatura
 
@@ -7,7 +7,7 @@
 | Status | Contagem |
 |---|---|
 | open | 0 |
-| active | 0 |
+| active | 1 |
 | resolved | 8 |
 
 ## Resumo por phase
@@ -15,10 +15,13 @@
 | Phase | Contagem |
 |---|---|
 | resolved | 8 |
+| delivering | 1 |
 
 ## Bugs abertos / ativos
 
-Nenhum bug ativo.
+| # | ID | Prioridade | Severidade | Título | Caminho |
+|---|----|-----------|-----------|--------|---------|
+| 9 | BUG-20260722-T6R2 | P1 | high | getInvoices/getSubscription mapeiam status de pagamento Asaas de forma incompleta — fix aplicado, aguardando delivery + observação | `bugs/BUG-20260722-T6R2-status-pagamento-mapeamento-incompleto/` |
 
 ## Resolvidos
 

@@ -1,4 +1,4 @@
-<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-07-22 a partir de 8 bugs (todos resolved) -->
+<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-07-22 a partir de 9 bugs (8 resolved, 1 open) -->
 
 # Matriz BUG ↔ SPEC — unificacao-plano-assinatura
 
@@ -15,8 +15,8 @@
 | `interfaces/billing-cancel.md` | — | BUG-20260721-P2W5 |
 | `interfaces/checkout-create.md` | — | BUG-20260721-N7Q1 |
 | `requirements.md#RF-02` | — | BUG-20260721-N7Q1 |
-| `roadmap.md#D-11` | — | BUG-20260721-H3X6 |
-| `interfaces/billing-subscription.md` | — | BUG-20260721-H3X6 |
+| `roadmap.md#D-11` | BUG-20260722-T6R2 | BUG-20260721-H3X6 |
+| `interfaces/billing-subscription.md` | BUG-20260722-T6R2 | BUG-20260721-H3X6 |
 | `roadmap.md#D-16` | — | BUG-20260721-D8L4 |
 | `requirements.md#RF-11` | — | BUG-20260721-D8L4, BUG-20260722-Q5J9 |
 | `requirements.md#RN-01` | — | BUG-20260722-Q5J9 |
@@ -25,8 +25,8 @@ Todos os locators acima são relativos a `_reversa_forward/002-unificar-plano-as
 
 ## Linha spec-gap
 
-Nenhum bug carrega o label `spec-gap`. Todos os 8 têm `spec_verdict: spec-correta` (nenhum exigiu adendo).
+BUG-20260722-T6R2 tem `spec_verdict: spec-gap` — `interfaces/billing-subscription.md` nunca definiu o mapeamento de estorno/chargeback. Os outros 8 bugs têm `spec_verdict: spec-correta` (nenhum exigiu adendo).
 
 ## Adendos vigentes
 
-Nenhum adendo de bug em `_reversa_sdd/addenda/`.
+- `_reversa_sdd/addenda/bug-BUG-20260722-T6R2-v001.md` — adendo aditivo (spec-gap), vigente desde 2026-07-22. Documenta o mapeamento completo `payment.status` → `SubscriptionData.status`, incluindo o novo valor `DISPUTED`.

@@ -52,3 +52,22 @@ W001, W002, W003, W004, W005, W006, W007, W008, W009, W010, W011, W012, W013, W0
 - `_reversa_forward/002-unificar-plano-assinatura/requirements.md`
 - `_reversa_forward/002-unificar-plano-assinatura/progress.jsonl` (36 itens concluídos)
 - `_reversa_forward/002-unificar-plano-assinatura/actions.md` (30/32 ações `[X]`, 2 `[ ]` pendentes)
+
+## Atualização 2026-07-22
+
+`T014` e `T025` fechados — `actions.md` agora com **32/32 ações `[X]`**, entrega completa. Detalhe da validação em `actions.md` §"Notas de execução" e `investigation.md`.
+
+Impactos adicionais em relação à versão original deste adendo (achados durante a validação de ponta a ponta, fora do `legacy-impact.md` original):
+
+| Artefato | Seção | Tipo de impacto | Delta |
+|----------|-------|-----------------|-------|
+| `functions/src/index.ts` | Registro de Cloud Functions | `componente-novo` | `renovarAssinatura` (criada por T018) não estava exportada — a function nunca seria implantada; corrigido |
+| `billing/design.md` | Consulta de assinatura (tela de faturamento) | `regra-alterada` | `getSubscription` muda de assinatura: recebe `orgId` (não `customerId`); `firestoreFallback()` duplicado na rota removido, elimina o caminho que mascarava a correção original de D-11 |
+| `docs/PRD_PortalSigilo_v2.md` | §8.2 Controle de limites por plano | `regra-alterada` | Reescrita para não contradizer as demais seções sobre gates de IA já removidos |
+| (fora do escopo desta feature) | Modelo Claude hardcoded em 4 arquivos (`assistant`, `reports/generate`, `aiInsights`, `scheduledReports`) | `regra-alterada` | `claude-sonnet-4-20250514` (404) → `claude-sonnet-4-6`; bug pré-existente, não relacionado à unificação de planos, encontrado durante validação real com a Anthropic API |
+
+Validação real registrada: cobrança/tokenização confirmada em sandbox Asaas (2 chamadas reais, `creditCardToken` reutilizável), reset+reseed idempotente (2 execuções contra Firebase Emulator), limites e gates de UI (`npm run test:rules` 13/13, grep), cancelamento/faturamento (`npm run test:billing-fixes` 3/3 contra Firestore real), features de IA validadas com resposta real da Anthropic API (protocolo `ETK-2026-2JTKD8`).
+
+Não verificado nesta rodada (recomendado antes de produção real): renderização visual da página `/planos` e dos badges de estado (D-14) num navegador; disparo manual de `generateDailyInsights`/`generateMonthlyReports` (D-13); simulação de invocação concorrente da function de renovação no mesmo dia (idempotência D-15, `ultima_cobranca_ciclo`) — a lógica foi revisada em código, não exercitada sob concorrência real.
+
+Fonte adicional: commit `70dbd47` ("fix: bugs criticos encontrados rodando onboarding.md de ponta a ponta contra emuladores + sandbox real").

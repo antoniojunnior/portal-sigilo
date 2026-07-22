@@ -93,4 +93,4 @@ Passo a passo para um humano validar a feature manualmente pela primeira vez, em
 
 ## 14. Notas de execução
 
-<!-- Reservado para /reversa-coding registrar observações que surgirem durante a execução real. -->
+Execução detalhada registrada em `actions.md` (seção "Notas de execução", T025, 2026-07-22). Resumo: reset+reseed, limites, checkout/cobrança, cancelamento/faturamento, features de IA e remoção de identificadores antigos confirmados 🟢 (emulador Firestore/Auth, sandbox Asaas real, e validação manual do usuário via chatbot real). Badges visuais de estado (D-14), disparo manual das functions agendadas de insights/relatórios (D-13) e dupla invocação concorrente da renovação (D-15) seguem 🟡, não verificados nesta rodada — exigem navegador ou simulação de concorrência real.

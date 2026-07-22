@@ -98,3 +98,7 @@ Regras que foram alteradas ou removidas:
 - 🟢 Checkout aceita `entrada`/`gestao` — **alterada**: aceita apenas `"unico"` + `parcelas` (RN-07)
 - 🟢 Ciclo de cobrança mensal/anual — **alterada**: apenas anual com parcelamento (RN-08)
 - 🟢 Plano `enterprise` como camada separada — **removida**: todas as referências eliminadas (RN-09)
+
+## Validação (T014, T025 — 2026-07-22)
+
+Nenhum componente novo impactado por esta rodada (T014/T025 são ações de validação, não de código). Confirmado contra ambiente real: cobrança/tokenização Asaas (sandbox), reset+reseed idempotente (Firebase Emulator), limites e gates de UI (Firestore Emulator + grep), cancelamento/faturamento (Firestore real), features de IA (chamada real à Anthropic API). Detalhe em `actions.md` §"Notas de execução".

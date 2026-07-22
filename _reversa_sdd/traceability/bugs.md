@@ -1,4 +1,4 @@
-<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-07-22 a partir de 8 bugs (todos resolved) -->
+<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-07-22 a partir de 9 bugs (8 resolved, 1 open) -->
 
 # Rastreabilidade Spec ↔ Bug
 
@@ -19,6 +19,7 @@ Espelho do lado da spec. Source of truth: cada `_reversa_bugs/<contexto>/bugs/<I
 ## `_reversa_forward/002-unificar-plano-assinatura/roadmap.md#D-11`
 
 - BUG-20260721-H3X6 (resolved/fixed, P2): GET /api/billing/subscription responde com campos divergentes — `_reversa_bugs/unificacao-plano-assinatura/bugs/BUG-20260721-H3X6-subscription-contrato-divergente/`
+- BUG-20260722-T6R2 (active/delivering, P1, fixed): getInvoices/getSubscription mapeiam status de pagamento Asaas de forma incompleta — `_reversa_bugs/unificacao-plano-assinatura/bugs/BUG-20260722-T6R2-status-pagamento-mapeamento-incompleto/`
 
 ## `_reversa_forward/002-unificar-plano-assinatura/roadmap.md#D-16`
 
@@ -57,6 +58,7 @@ Espelho do lado da spec. Source of truth: cada `_reversa_bugs/<contexto>/bugs/<I
 ## `_reversa_forward/002-unificar-plano-assinatura/interfaces/billing-subscription.md`
 
 - BUG-20260721-H3X6 (resolved/fixed, P2): ver acima
+- BUG-20260722-T6R2 (active/delivering, P1, fixed): ver acima
 
 ## `_reversa_sdd/adrs/005-verificacao-redundante-alem-das-firestore-rules.md`
 

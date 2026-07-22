@@ -12,6 +12,8 @@
 | BUG-20260721-H3X6 | related-to (derivada) | BUG-20260721-P2W5 | proposed | — |
 | BUG-20260722-Q5J9 | related-to | BUG-20260721-D8L4 | confirmed | docs/PRD_PortalSigilo_v2.md |
 | BUG-20260721-D8L4 | related-to (derivada) | BUG-20260722-Q5J9 | confirmed | idem |
+| BUG-20260722-T6R2 | related-to | BUG-20260721-H3X6 | confirmed | evidence/reproduction.md |
+| BUG-20260721-H3X6 | related-to (derivada) | BUG-20260722-T6R2 | confirmed | idem |
 
 ## Sem relações
 

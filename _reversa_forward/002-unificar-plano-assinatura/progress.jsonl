@@ -41,3 +41,5 @@
 {"ts":"2026-07-22T12:00:04Z","action":"A005","status":"done","files":["_reversa_forward/002-unificar-plano-assinatura/interfaces/webhook-asaas.md"]}
 {"ts":"2026-07-22T12:00:05Z","action":"A006","status":"done","files":["src/components/ui/Badge.tsx"]}
 
+{"ts":"2026-07-22T20:15:00Z","action":"T014","status":"done","files":["_reversa_forward/002-unificar-plano-assinatura/investigation.md"]}
+{"ts":"2026-07-22T20:15:01Z","action":"T025","status":"done","files":["_reversa_forward/002-unificar-plano-assinatura/actions.md","_reversa_forward/002-unificar-plano-assinatura/onboarding.md"]}

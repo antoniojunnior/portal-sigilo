@@ -1,0 +1,73 @@
+diff --git a/src/lib/asaas/getSubscription.ts b/src/lib/asaas/getSubscription.ts
+index fbb58ba..6d7091a 100644
+--- a/src/lib/asaas/getSubscription.ts
++++ b/src/lib/asaas/getSubscription.ts
+@@ -8,12 +8,38 @@ export interface SubscriptionData {
+   valor: number | null;
+   ciclo: "YEARLY" | null;
+   proximo_vencimento: string | null;
+-  status: "ACTIVE" | "INACTIVE" | "SUSPENDED" | null;
++  status: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "DISPUTED" | null;
+   subscription_id: null;
+   parcelas: number | null;
+   renovacao_cancelada: boolean;
+ }
+ 
++/**
++ * BUG-20260722-T6R2: mapeamento explícito por status real da Asaas (não via default).
++ * REFUNDED/CHARGEBACK_* → DISPUTED (decisão de produto: não reaproveitar SUSPENDED,
++ * admin precisa distinguir estorno/disputa de simples atraso).
++ */
++export function mapInvoiceStatusToSubscriptionStatus(
++  status: Invoice["status"]
++): SubscriptionData["status"] {
++  switch (status) {
++    case "CONFIRMED":
++    case "RECEIVED":
++    case "RECEIVED_IN_CASH":
++      return "ACTIVE";
++    case "OVERDUE":
++      return "SUSPENDED";
++    case "CANCELLED":
++      return "INACTIVE";
++    case "REFUNDED":
++    case "CHARGEBACK_REQUESTED":
++    case "CHARGEBACK_DISPUTE":
++      return "DISPUTED";
++    default:
++      return "ACTIVE";
++  }
++}
++
+ export async function getSubscription(orgId: string): Promise<SubscriptionData | null> {
+   const orgDoc = await adminDb.collection("orgs").doc(orgId).get();
+ 
+@@ -27,26 +53,14 @@ export async function getSubscription(orgId: string): Promise<SubscriptionData |
+   const customerId = orgData.asaas_customer_id as string | undefined;
+ 
+   let valor: number | null = null;
+-  let status: "ACTIVE" | "INACTIVE" | "SUSPENDED" | null = null;
++  let status: SubscriptionData["status"] = null;
+ 
+   if (customerId) {
+     const invoices = await getInvoices(customerId);
+     if (invoices.length > 0) {
+       const lastInvoice: Invoice = invoices[0];
+       valor = lastInvoice.valor;
+-      switch (lastInvoice.status) {
+-        case "RECEIVED":
+-          status = "ACTIVE";
+-          break;
+-        case "OVERDUE":
+-          status = "SUSPENDED";
+-          break;
+-        case "CANCELLED":
+-          status = "INACTIVE";
+-          break;
+-        default:
+-          status = "ACTIVE";
+-      }
++      status = mapInvoiceStatusToSubscriptionStatus(lastInvoice.status);
+     }
+   }
+ 
