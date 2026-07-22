@@ -465,12 +465,12 @@ Portugues formal, sem jargao.
 
 | **Limite** | **Implementacao** |
 | --- | --- |
-| **Usuarios gestores** | Firestore Rule nega criacao de user se `count >= limite do plano`. |
-| **Armazenamento** | Firebase Function verifica storage utilizado antes de aceitar upload. Retorna 403 se excedido. |
-| **WhatsApp / app** | Firestore Rule e UI bloqueiam acesso se `plano_ativo` nao incluir o canal. |
-| **Triagem IA** | Function verifica plano antes de chamar Claude. Plano Entrada: grava sem triagem. |
-| **Relatorios personalizados** | UI desabilita opcoes avancadas se plano for Entrada. |
-| **Multi-unidade** | Colecao `units` bloqueada por Firestore Rule se `plano != enterprise`. |
+| **Usuarios gestores** | Firestore Rule nega criacao de user se `count >= 50` (limite unico, nao varia mais por plano). |
+| **Armazenamento** | Firebase Function verifica storage utilizado antes de aceitar upload (limite unico de 2GB). Retorna 403 se excedido. |
+| **WhatsApp / app** | Nao implementado (Fase 7 pendente). Se implementado no futuro, nao tera diferenciacao por plano — toda org com assinatura ativa tera acesso. |
+| **Triagem IA** | Function nao diferencia mais por plano — toda org com assinatura ativa recebe triagem automatica por IA. |
+| **Relatorios personalizados** | Disponivel a qualquer org com assinatura ativa, sem diferenciacao por plano. |
+| **Multi-unidade** | Nao implementado (roadmap futuro, ver secao 5.3 e `_reversa_bugs/.../BUG-20260722-Q5J9-*` para decisao pendente sobre o que sobra do conceito Enterprise). |
 
 ---
 

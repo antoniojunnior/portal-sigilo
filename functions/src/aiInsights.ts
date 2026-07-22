@@ -71,7 +71,7 @@ export const generateDailyInsights = onSchedule(
         const prompt = `Você é um assistente de compliance. Analise brevemente os dados da org "${orgNome}" da última semana e gere exatamente 3 insights curtos (máx 150 caracteres cada) para o gestor de compliance. Formato JSON: {"insights":["insight1","insight2","insight3"]}. Dados: ${totalCases} relatos, categorias: ${topCats}, casos urgentes: ${urgentCount}. Não invente dados.`;
 
         const response = await anthropic.messages.create({
-          model: "claude-sonnet-4-20250514",
+          model: "claude-sonnet-4-6",
           max_tokens: 400,
           messages: [{ role: "user", content: prompt }],
         });

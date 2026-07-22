@@ -105,7 +105,7 @@ Gere relatório executivo em português formal:
 Não inclua conteúdo individual de relatos. Não invente dados.`;
 
   const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-sonnet-4-6",
     max_tokens: 4000,
     messages: [{ role: "user", content: prompt }],
   });

@@ -14,40 +14,39 @@ export interface SubscriptionData {
   renovacao_cancelada: boolean;
 }
 
-export async function getSubscription(customerId: string): Promise<SubscriptionData | null> {
-  const orgSnap = await adminDb
-    .collection("orgs")
-    .where("asaas_customer_id", "==", customerId)
-    .limit(1)
-    .get();
+export async function getSubscription(orgId: string): Promise<SubscriptionData | null> {
+  const orgDoc = await adminDb.collection("orgs").doc(orgId).get();
 
-  if (orgSnap.empty) return null;
+  if (!orgDoc.exists) return null;
 
-  const orgData = orgSnap.docs[0].data();
+  const orgData = orgDoc.data()!;
   const planoAtivo = orgData.plano_ativo as string | undefined;
   const dataRenovacao = orgData.data_renovacao as { toDate?: () => Date } | undefined;
   const proximaCobrancaParcelas = (orgData.proxima_cobranca_parcelas as number | undefined) ?? 12;
   const renovacaoCancelada = (orgData.renovacao_cancelada as boolean) ?? false;
+  const customerId = orgData.asaas_customer_id as string | undefined;
 
   let valor: number | null = null;
   let status: "ACTIVE" | "INACTIVE" | "SUSPENDED" | null = null;
 
-  const invoices = await getInvoices(customerId);
-  if (invoices.length > 0) {
-    const lastInvoice: Invoice = invoices[0];
-    valor = lastInvoice.valor;
-    switch (lastInvoice.status) {
-      case "RECEIVED":
-        status = "ACTIVE";
-        break;
-      case "OVERDUE":
-        status = "SUSPENDED";
-        break;
-      case "CANCELLED":
-        status = "INACTIVE";
-        break;
-      default:
-        status = "ACTIVE";
+  if (customerId) {
+    const invoices = await getInvoices(customerId);
+    if (invoices.length > 0) {
+      const lastInvoice: Invoice = invoices[0];
+      valor = lastInvoice.valor;
+      switch (lastInvoice.status) {
+        case "RECEIVED":
+          status = "ACTIVE";
+          break;
+        case "OVERDUE":
+          status = "SUSPENDED";
+          break;
+        case "CANCELLED":
+          status = "INACTIVE";
+          break;
+        default:
+          status = "ACTIVE";
+      }
     }
   }
 
