@@ -1,0 +1,83 @@
+--- a/functions/src/renovarAssinatura.ts
++++ b/functions/src/renovarAssinatura.ts
+@@ -16,6 +16,42 @@
+ function getEndOfToday(): Date {
+   const now = new Date();
+   return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+ }
+
++const PLANO_PRECO_ANUAL = 1164;
++
++function getAsaasBaseUrl(): string {
++  return process.env.ASAAS_SANDBOX === "true"
++    ? "https://sandbox.asaas.com/api"
++    : "https://api.asaas.com/api";
++}
++
++/**
++ * Cria a cobrança de renovação anual reutilizando o creditCardToken salvo.
++ * A Asaas exige `installmentValue` (valor de CADA parcela) quando `installmentCount`
++ * é enviado — não `value` (valor total), que a API rejeita com invalid_installmentValue.
++ */
++export async function criarCobrancaRenovacao(
++  customerId: string,
++  creditCardToken: string,
++  parcelas: number
++): Promise<Response> {
++  const apiKey = process.env.ASAAS_API_KEY;
++  if (!apiKey) {
++    throw new Error("ASAAS_API_KEY não configurada");
++  }
++  const installmentValue = Math.round((PLANO_PRECO_ANUAL / parcelas) * 100) / 100;
++  return fetch(`${getAsaasBaseUrl()}/v3/payments`, {
++    method: "POST",
++    headers: {
++      "Content-Type": "application/json",
++      access_token: apiKey,
++    },
++    body: JSON.stringify({
++      customer: customerId,
++      billingType: "CREDIT_CARD",
++      installmentCount: parcelas,
++      installmentValue,
++      creditCardToken,
++      dueDate: new Date().toISOString().split("T")[0],
++      description: `Portal Sigilo — Renovação anual (${parcelas}x)`,
++    }),
++  });
++}
++
+ async function atualizarPlanoOrg(
+   customerId: string,
+   novoStatus: "suspenso",
+   acao: string
+@@ -97,10 +133,7 @@
+     const apiKey = process.env.ASAAS_API_KEY;
+-    const baseUrl =
+-      process.env.ASAAS_SANDBOX === "true"
+-        ? "https://sandbox.asaas.com/api"
+-        : "https://api.asaas.com/api";
+
+     if (!apiKey) {
+@@ -152,22 +185,7 @@
+
+       try {
+-        const res = await fetch(`${baseUrl}/v3/payments`, {
+-          method: "POST",
+-          headers: {
+-            "Content-Type": "application/json",
+-            access_token: apiKey,
+-          },
+-          body: JSON.stringify({
+-            customer: customerId,
+-            billingType: "CREDIT_CARD",
+-            value: 1164,
+-            installmentCount: parcelas,
+-            creditCardToken: token,
+-            dueDate: new Date().toISOString().split("T")[0],
+-            description: `Portal Sigilo — Renovação anual (${parcelas}x)`,
+-          }),
+-        });
++        const res = await criarCobrancaRenovacao(customerId, token, parcelas);
+
+         if (!res.ok) {

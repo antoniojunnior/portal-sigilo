@@ -2,46 +2,43 @@ import "server-only";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createPaymentLink } from "@/lib/asaas/createPaymentLink";
-import type { BillingCycle } from "@/lib/types";
 
-type PlanoId = "entrada" | "gestao";
+const PLANO_VALIDO = "unico" as const;
 
-function isPlanoValido(plano: unknown): plano is PlanoId {
-  return plano === "entrada" || plano === "gestao";
+export function isPlanoValido(plano: unknown): plano is typeof PLANO_VALIDO {
+  return plano === PLANO_VALIDO;
 }
 
-function isCicloValido(ciclo: unknown): ciclo is BillingCycle {
-  return ciclo === "mensal" || ciclo === "anual";
+export function isParcelasValido(parcelas: unknown): parcelas is number {
+  return typeof parcelas === "number" && Number.isInteger(parcelas) && parcelas >= 1 && parcelas <= 12;
 }
 
 export async function POST(request: NextRequest) {
-  let body: { plano?: unknown; ciclo?: unknown };
+  let body: { plano?: unknown; parcelas?: unknown };
   try {
-    body = (await request.json()) as { plano?: unknown; ciclo?: unknown };
+    body = (await request.json()) as { plano?: unknown; parcelas?: unknown };
   } catch {
     return NextResponse.json({ error: "Corpo da requisição inválido" }, { status: 400 });
   }
 
-  const { plano, ciclo } = body;
+  const { plano, parcelas } = body;
 
   if (!isPlanoValido(plano)) {
     return NextResponse.json(
-      { error: "Plano inválido. Valores aceitos: entrada, gestao" },
+      { error: "Plano inválido. Único valor aceito: unico" },
       { status: 400 }
     );
   }
 
-  if (ciclo !== undefined && !isCicloValido(ciclo)) {
+  if (!isParcelasValido(parcelas)) {
     return NextResponse.json(
-      { error: "Ciclo inválido. Valores aceitos: mensal, anual" },
+      { error: "Parcelamento inválido. Valores aceitos: inteiro de 1 a 12" },
       { status: 400 }
     );
   }
-
-  const cicloFinal: BillingCycle = isCicloValido(ciclo) ? ciclo : "mensal";
 
   try {
-    const { url } = await createPaymentLink(plano, cicloFinal);
+    const { url } = await createPaymentLink(plano, parcelas);
     return NextResponse.json({ url });
   } catch (err) {
     const message = err instanceof Error ? err.message : "";

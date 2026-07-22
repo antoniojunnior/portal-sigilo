@@ -1,0 +1,56 @@
+diff --git a/src/lib/asaas/createPaymentLink.ts b/src/lib/asaas/createPaymentLink.ts
+index 4ea60f4..45a73fd 100644
+--- a/src/lib/asaas/createPaymentLink.ts
++++ b/src/lib/asaas/createPaymentLink.ts
+@@ -1,30 +1,15 @@
+ import "server-only";
+ import { ASAAS_API_KEY, ASAAS_BASE_URL } from "@/lib/env";
+-import type { BillingCycle } from "@/lib/types";
+-
+-export type PlanoId = "entrada" | "gestao";
+-
+-const PLANOS_CONFIG = {
+-  entrada: {
+-    mensal: { nome: "Portal Sigilo — Entrada (Mensal)", value: 117.0, cycle: "MONTHLY" },
+-    anual:  { nome: "Portal Sigilo — Entrada (Anual)",  value: 97.0,  cycle: "YEARLY" },
+-  },
+-  gestao: {
+-    mensal: { nome: "Portal Sigilo — Gestão (Mensal)", value: 227.0, cycle: "MONTHLY" },
+-    anual:  { nome: "Portal Sigilo — Gestão (Anual)",  value: 197.0, cycle: "YEARLY" },
+-  },
+-} as const;
++import { PLANO_PRECO_ANUAL } from "@/lib/planos-config";
+ 
+ export async function createPaymentLink(
+-  plano: PlanoId,
+-  ciclo: BillingCycle
++  plano: string,
++  parcelas: number
+ ): Promise<{ url: string }> {
+   if (!ASAAS_API_KEY) {
+     throw new Error("ASAAS_API_KEY não configurada");
+   }
+ 
+-  const config = PLANOS_CONFIG[plano][ciclo];
+-
+   const res = await fetch(`${ASAAS_BASE_URL}/v3/paymentLinks`, {
+     method: "POST",
+     headers: {
+@@ -32,12 +17,12 @@ export async function createPaymentLink(
+       access_token: ASAAS_API_KEY,
+     },
+     body: JSON.stringify({
+-      name: config.nome,
++      name: "Portal Sigilo — Plano Único (Anual)",
+       billingType: "CREDIT_CARD",
+-      chargeType: "RECURRENT",
+-      cycle: config.cycle,
+-      value: config.value,
+-      description: `Assinatura ${config.nome}`,
++      chargeType: "INSTALLMENT",
++      maxInstallmentCount: parcelas,
++      value: PLANO_PRECO_ANUAL,
++      description: "Assinatura anual do Portal Sigilo — Plano Único",
+     }),
+   });
+ 

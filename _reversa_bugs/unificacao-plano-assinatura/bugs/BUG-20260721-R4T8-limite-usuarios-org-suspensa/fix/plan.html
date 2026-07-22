@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plano de correção · BUG-20260721-R4T8</title>
+<style>
+  :root { --bg:#0f1117; --panel:#161a23; --border:#2a2f3d; --text:#e4e6eb; --text-dim:#9aa0ac; --red:#f04747; --amber:#f0a020; --green:#3ba55d; --blue:#5865f2; }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:24px; background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; max-width: 980px; }
+  h1 { font-size:1.4rem; margin:0 0 4px; }
+  h2 { font-size:1.05rem; border-bottom:1px solid var(--border); padding-bottom:6px; margin-top:32px; }
+  .meta { color:var(--text-dim); font-size:0.85rem; margin-bottom:20px; }
+  .badges { display:flex; gap:8px; margin-bottom:20px; flex-wrap: wrap; }
+  .badge { padding:4px 10px; border-radius:999px; font-size:0.75rem; font-weight:600; border:1px solid var(--border); }
+  .badge.critical { color:var(--red); border-color:var(--red); }
+  .badge.p0 { color:var(--amber); border-color:var(--amber); }
+  section.card { background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:16px 20px; margin-bottom:16px; }
+  table { width:100%; border-collapse:collapse; font-size:0.85rem; }
+  th, td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--border); vertical-align: top; }
+  th { color:var(--text-dim); font-weight:600; font-size:0.72rem; text-transform:uppercase; }
+  code { background:#1c2130; padding:1px 5px; border-radius:4px; font-size:0.85em; }
+  pre { background:#0b0d13; border:1px solid var(--border); border-radius:8px; padding:12px 14px; overflow-x:auto; font-size:0.8rem; line-height:1.5; }
+  a { color:var(--blue); text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  .diff-add { color:var(--green); }
+  .diff-rem { color:var(--red); }
+  .risk-baixa { color:var(--green); font-weight:700; }
+  svg { width:100%; max-width:600px; height:180px; background:var(--panel); border:1px solid var(--border); border-radius:10px; }
+  .node rect { fill:#1c2130; stroke:var(--red); stroke-width:2; rx:8; }
+  .node text { fill:var(--text); font-size:11px; }
+</style>
+</head>
+<body>
+
+<h1>Plano de correção · Org suspensa/cancelada cria gestores ilimitados</h1>
+<div class="meta">BUG-20260721-R4T8 (#2) · contexto unificacao-plano-assinatura · gerado 2026-07-21</div>
+<div class="badges"><span class="badge critical">critical</span><span class="badge p0">P0</span></div>
+
+<section class="card">
+<h2 style="margin-top:0; border:none;">Defeito e causa raiz</h2>
+<p><code>firestore.rules#getPlanoLimit</code> retorna <code>null</code> ("sem limite") para <code>suspenso</code>/<code>cancelado</code> — sentinela herdado de quando <code>null</code> significava "plano Enterprise, sem limite real". A Rule de <code>create</code> em <code>users</code> interpreta <code>null</code> como liberado, sem checar contagem. <strong>Confirmado</strong> contra emulador Firestore real: teste de org suspensa criando usuário deveria falhar e não falhou (antes do fix).</p>
+</section>
+
+<section class="card">
+<h2 style="margin-top:0; border:none;">Estratégia</h2>
+<p><strong>Correção direta.</strong> Trocar o sentinela <code>null</code> por <code>0</code> pros dois estados bloqueados. <code>0</code> naturalmente barra qualquer criação via <code>getOrgUsersCount(...) &lt; getPlanoLimit(...)</code> (contagem nunca é negativa), sem precisar reescrever a lógica da Rule consumidora.</p>
+<pre><span class="diff-rem">// atual</span>
+return plano == 'suspenso' || plano == 'cancelado' ? null : 50;
+
+<span class="diff-add">// corrigido</span>
+return plano == 'suspenso' || plano == 'cancelado' ? 0 : 50;</pre>
+</section>
+
+<h2>Correction Change Set proposto</h2>
+<table>
+<thead><tr><th>CHG</th><th>Tipo</th><th>Artefato</th><th>Propósito</th></tr></thead>
+<tbody>
+<tr><td>CHG-001</td><td>code</td><td><code>firestore.rules</code></td><td><code>getPlanoLimit</code> retorna <code>0</code> (não <code>null</code>) para suspenso/cancelado</td></tr>
+<tr><td>CHG-002</td><td>code</td><td><code>src/app/api/dashboard/users/route.ts</code></td><td>Fallback <code>?? 1</code> → <code>?? 0</code> em <code>PLAN_USER_LIMITS[...]</code> para plano não mapeado (mesma classe de bug, defesa secundária)</td></tr>
+</tbody>
+</table>
+
+<h2>Testes planejados</h2>
+<p>Já escritos e demonstrados red em <code>scripts/test-rules.ts</code> (Teste 12: org suspensa bloqueada; Teste 13: limite 50 atingido bloqueado — este já passava). Rodam contra emulador Firestore real via <code>npm run test:rules</code>.</p>
+
+<h2>Riscos</h2>
+<p class="risk-baixa">Risco: baixa</p>
+<ul>
+<li>2 arquivos, troca de sentinela, sem migração de dado.</li>
+<li>Comportamento fica só mais restritivo (nunca mais permissivo) — reduz superfície de risco, não aumenta.</li>
+<li>Fora desta correção: não investiguei se <code>getPlanoLimit</code> ou <code>PLAN_USER_LIMITS</code> têm outro consumidor além da Rule/rota de criação de usuário já mapeados.</li>
+</ul>
+
+<h2>Mini-grafo</h2>
+<svg viewBox="0 0 600 180" xmlns="http://www.w3.org/2000/svg">
+  <a href="../bug.md"><g class="node" transform="translate(30,60)"><rect width="200" height="60"></rect><text x="10" y="22">#2 R4T8 (este bug)</text><text x="10" y="38" font-size="9" fill="#9aa0ac">firestore.rules + route.ts</text><text x="10" y="52" font-size="9" fill="#f04747">critical · diagnosing</text></g></a>
+</svg>
+<p style="color:var(--text-dim); font-size:0.85rem;">Sem relações registradas com outros bugs deste contexto.</p>
+
+</body>
+</html>

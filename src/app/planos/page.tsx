@@ -2,16 +2,15 @@
 
 import { useState } from "react";
 import { PLANOS } from "@/lib/planos";
-import type { BillingCycle } from "@/lib/types";
 import { BillingToggle } from "./BillingToggle";
 import { PlanoCard } from "./PlanoCard";
 
 export default function PlanosPage() {
-  const [ciclo, setCiclo] = useState<BillingCycle>("anual");
+  const [parcelas, setParcelas] = useState(12);
 
   return (
     <main data-portal className="min-h-screen bg-[var(--color-bg-secondary)] px-4 py-16">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-2xl">
         <div className="mb-4 flex justify-center">
           <p className="text-[var(--text-xs)] text-[var(--color-text-tertiary)]">
             LGPD · ISO 27001 · Criptografia ponta a ponta · Suporte incluso
@@ -26,18 +25,18 @@ export default function PlanosPage() {
             Implante um canal de denúncias LGPD-compliant em minutos — sem jurídico, sem infraestrutura.
           </p>
           <div className="mt-8 flex justify-center">
-            <BillingToggle value={ciclo} onChange={setCiclo} />
+            <BillingToggle value={parcelas} onChange={setParcelas} />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div>
           {PLANOS.map((plano) => (
-            <PlanoCard key={plano.id} plano={plano} ciclo={ciclo} />
+            <PlanoCard key={plano.id} plano={plano} parcelas={parcelas} />
           ))}
         </div>
 
         <p className="mt-10 text-center text-[var(--text-sm)] text-[var(--color-text-tertiary)]">
-          Sem fidelidade no plano mensal. Cancele quando quiser.
+          Assinatura anual. Cancele quando quiser.
         </p>
       </div>
     </main>

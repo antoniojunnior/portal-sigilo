@@ -28,9 +28,15 @@ const PROJECT_ID = "portal-sigilo";
 
 const ORG_A = "test-org-a";
 const ORG_B = "test-org-b";
+const ORG_UNICO = "test-org-unico";
 const USER_ORG_A = "test-user-org-a";
 const USER_ORG_B = "test-user-org-b";
 const USER_MENCIONADO = "test-user-mencionado";
+const USER_NOVO_UNICO = "test-user-novo-unico";
+const ORG_SUSPENSA = "test-org-suspensa";
+const USER_ADMIN_SUSPENSA = "test-user-admin-suspensa";
+const ORG_NO_LIMITE = "test-org-no-limite";
+const USER_ADMIN_NO_LIMITE = "test-user-admin-no-limite";
 const CASE_NORMAL_ID = "test-case-normal";
 const CASE_MENCIONADO_ID = "test-case-mencionado";
 const AUDIT_LOG_ID = "test-audit-log";
@@ -100,6 +106,57 @@ async function setupTestData(testEnv: RulesTestEnvironment): Promise<void> {
       user_id: USER_ORG_A,
       acao: "case_criado",
       timestamp: new Date(),
+    });
+
+    // Org sob plano único para teste de getPlanoLimit
+    await db.doc(`orgs/${ORG_UNICO}`).set({
+      id: ORG_UNICO,
+      nome: "Org Teste Único",
+      slug: "org-teste-unico",
+      plano_ativo: "unico",
+      users_count: 0,
+    });
+
+    // Usuário da Org Único (admin)
+    await db.doc(`users/${USER_NOVO_UNICO}`).set({
+      id: USER_NOVO_UNICO,
+      org_id: ORG_UNICO,
+      role: "admin",
+      ativo: true,
+    });
+
+    // Org suspensa, para teste de BUG-20260721-R4T8 (getPlanoLimit não pode
+    // tratar suspenso/cancelado como "sem limite")
+    await db.doc(`orgs/${ORG_SUSPENSA}`).set({
+      id: ORG_SUSPENSA,
+      nome: "Org Teste Suspensa",
+      slug: "org-teste-suspensa",
+      plano_ativo: "suspenso",
+      users_count: 0,
+    });
+
+    await db.doc(`users/${USER_ADMIN_SUSPENSA}`).set({
+      id: USER_ADMIN_SUSPENSA,
+      org_id: ORG_SUSPENSA,
+      role: "admin",
+      ativo: true,
+    });
+
+    // Org "unico" já no limite de 50 usuários, para teste do caso negativo
+    // (limite atingido) de BUG-20260721-R4T8
+    await db.doc(`orgs/${ORG_NO_LIMITE}`).set({
+      id: ORG_NO_LIMITE,
+      nome: "Org Teste No Limite",
+      slug: "org-teste-no-limite",
+      plano_ativo: "unico",
+      users_count: 50,
+    });
+
+    await db.doc(`users/${USER_ADMIN_NO_LIMITE}`).set({
+      id: USER_ADMIN_NO_LIMITE,
+      org_id: ORG_NO_LIMITE,
+      role: "admin",
+      ativo: true,
     });
   });
 }
@@ -249,6 +306,59 @@ async function runTests(testEnv: RulesTestEnvironment): Promise<void> {
           org_id: ORG_A,
           conversation_id: "hash-teste",
           status: "iniciada",
+        })
+      );
+    }
+  );
+
+  // ── Teste 11: getPlanoLimit retorna 50 para plano "unico" ────────────────
+  // users_count < 50 → criação permitida
+  await test(
+    "getPlanoLimit retorna 50 para plano_ativo='unico' — criação de usuário abaixo do limite deve ser permitida",
+    async () => {
+      const adminUnico = testEnv.authenticatedContext(USER_NOVO_UNICO);
+      const db = adminUnico.firestore();
+      await assertSucceeds(
+        setDoc(doc(db, "users", "test-user-dentro-limite"), {
+          id: "test-user-dentro-limite",
+          org_id: ORG_UNICO,
+          role: "gestor",
+          ativo: true,
+        })
+      );
+    }
+  );
+
+  // ── Teste 12: org suspensa NÃO pode criar usuário (BUG-20260721-R4T8) ────
+  // getPlanoLimit tratava suspenso/cancelado como "sem limite" (null), regressão
+  await test(
+    "getPlanoLimit bloqueia criação de usuário para plano_ativo='suspenso' (BUG-20260721-R4T8)",
+    async () => {
+      const adminSuspensa = testEnv.authenticatedContext(USER_ADMIN_SUSPENSA);
+      const db = adminSuspensa.firestore();
+      await assertFails(
+        setDoc(doc(db, "users", "test-user-org-suspensa"), {
+          id: "test-user-org-suspensa",
+          org_id: ORG_SUSPENSA,
+          role: "gestor",
+          ativo: true,
+        })
+      );
+    }
+  );
+
+  // ── Teste 13: org "unico" no limite (50) NÃO pode criar o 51º usuário ────
+  await test(
+    "getPlanoLimit bloqueia criação de usuário quando users_count já atingiu 50 (BUG-20260721-R4T8)",
+    async () => {
+      const adminNoLimite = testEnv.authenticatedContext(USER_ADMIN_NO_LIMITE);
+      const db = adminNoLimite.firestore();
+      await assertFails(
+        setDoc(doc(db, "users", "test-user-51-no-limite"), {
+          id: "test-user-51-no-limite",
+          org_id: ORG_NO_LIMITE,
+          role: "gestor",
+          ativo: true,
         })
       );
     }

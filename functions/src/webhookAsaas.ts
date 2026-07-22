@@ -17,21 +17,15 @@ interface AsaasWebhookPayload {
     | "PAYMENT_CONFIRMED"
     | "PAYMENT_RECEIVED"
     | "PAYMENT_OVERDUE"
-    | "SUBSCRIPTION_CANCELED"
-    | "SUBSCRIPTION_INACTIVATED";
+    | "PAYMENT_DELETED";
   payment?: {
     id: string;
     customer: string;
-    subscription?: string;
     value: number;
+    netValue: number;
     billingType: string;
     description?: string;
-  };
-  subscription?: {
-    id: string;
-    customer: string;
-    status: string;
-    cycle: "MONTHLY" | "YEARLY";
+    creditCardToken?: string;
   };
 }
 
@@ -90,13 +84,6 @@ function gerarSlug(nome: string): string {
     .replace(/^-|-$/g, "");
 }
 
-function determinarPlano(payload: AsaasWebhookPayload): "entrada" | "gestao" {
-  const valor = payload.payment?.value ?? 0;
-  const ciclo = payload.subscription?.cycle;
-  if (valor >= 197 || (ciclo === "YEARLY" && valor >= 97)) return "gestao";
-  return "entrada";
-}
-
 async function logAuditFunction(
   orgId: string,
   acao: string,
@@ -120,7 +107,7 @@ async function logAuditFunction(
 // ─── Provisionamento de org ───────────────────────────────────────────────────
 
 async function provisionOrg(payload: AsaasWebhookPayload): Promise<void> {
-  const customerId = payload.payment?.customer ?? payload.subscription?.customer;
+  const customerId = payload.payment?.customer;
   if (!customerId) {
     logger.warn("[webhookAsaas] Payload sem customer id — ignorado.");
     return;
@@ -138,30 +125,31 @@ async function provisionOrg(payload: AsaasWebhookPayload): Promise<void> {
     return;
   }
 
-  const planoAtivo = determinarPlano(payload);
   const orgId = crypto.randomUUID();
 
-  // WH-002: buscar email e nome reais do cliente via API Asaas
   const dadosCliente = await buscarDadosCliente(customerId);
   const adminEmail =
     dadosCliente?.email ?? `admin-${orgId.slice(0, 8)}@portalsigilo-pending.com`;
   const nomeOrg = dadosCliente?.nome ?? `Org ${customerId.slice(-6)}`;
 
-  // WH-003: sempre adicionar sufixo aleatório — elimina TOCTOU race condition
   const slug = `${gerarSlug(nomeOrg)}-${crypto.randomBytes(3).toString("hex")}`;
 
   const agora = FieldValue.serverTimestamp();
   const dataRenovacao = new Date();
-  dataRenovacao.setMonth(dataRenovacao.getMonth() + 1);
+  dataRenovacao.setFullYear(dataRenovacao.getFullYear() + 1);
 
-  // Criar org
+  const anoAtual = new Date().getFullYear();
+
   await db.collection("orgs").doc(orgId).set({
     id: orgId,
     nome: nomeOrg,
     slug,
-    plano_ativo: planoAtivo,
+    plano_ativo: "unico",
     asaas_customer_id: customerId,
-    asaas_subscription_id: payload.payment?.subscription ?? payload.subscription?.id ?? null,
+    asaas_credit_card_token: payload.payment?.creditCardToken ?? null,
+    proxima_cobranca_parcelas: 12,
+    renovacao_cancelada: false,
+    ultima_cobranca_ciclo: anoAtual,
     data_inicio: agora,
     data_renovacao: admin.firestore.Timestamp.fromDate(dataRenovacao),
     criado_em: agora,
@@ -188,7 +176,6 @@ async function provisionOrg(payload: AsaasWebhookPayload): Promise<void> {
     throw err;
   }
 
-  // Criar documento do usuário
   await db.collection("users").doc(adminUid).set({
     id: adminUid,
     org_id: orgId,
@@ -198,16 +185,13 @@ async function provisionOrg(payload: AsaasWebhookPayload): Promise<void> {
     criado_em: agora,
   });
 
-  // Incrementar users_count após criar admin inicial
   await db.collection("orgs").doc(orgId).update({ users_count: FieldValue.increment(1) });
 
-  // Audit log
   await logAuditFunction(orgId, "org_created", {
-    plano: planoAtivo,
+    plano: "unico",
     asaas_customer_id: customerId,
   });
 
-  // E-mail de boas-vindas (falha não bloqueia provisionamento)
   try {
     await db.collection("mail").add({
       to: adminEmail,
@@ -217,7 +201,7 @@ async function provisionOrg(payload: AsaasWebhookPayload): Promise<void> {
           <h1>Bem-vindo ao Portal Sigilo!</h1>
           <p>Sua organização foi provisionada com sucesso.</p>
           <ul>
-            <li><strong>Plano:</strong> ${planoAtivo}</li>
+            <li><strong>Plano:</strong> Único (anual)</li>
             <li><strong>E-mail de acesso:</strong> ${adminEmail}</li>
             <li><strong>Senha temporária:</strong> ${senhaTemporaria}</li>
           </ul>
@@ -230,10 +214,10 @@ async function provisionOrg(payload: AsaasWebhookPayload): Promise<void> {
     logger.error("[webhookAsaas] Falha ao enviar e-mail de boas-vindas (não crítico):", emailErr);
   }
 
-  logger.info("[webhookAsaas] Org provisionada:", { orgId, planoAtivo, customerId });
+  logger.info("[webhookAsaas] Org provisionada:", { orgId, customerId });
 }
 
-// ─── Suspensão / Cancelamento ─────────────────────────────────────────────────
+// ─── Suspensão ─────────────────────────────────────────────────────────────────
 
 async function atualizarPlanoOrg(
   customerId: string,
@@ -291,8 +275,7 @@ export const webhookAsaas = onRequest(async (req, res) => {
   }
 
   try {
-    const customerId =
-      payload.payment?.customer ?? payload.subscription?.customer ?? "";
+    const customerId = payload.payment?.customer ?? "";
 
     switch (payload.event) {
       case "PAYMENT_CONFIRMED":
@@ -306,15 +289,13 @@ export const webhookAsaas = onRequest(async (req, res) => {
         }
         break;
 
-      case "SUBSCRIPTION_CANCELED":
-      case "SUBSCRIPTION_INACTIVATED":
+      case "PAYMENT_DELETED":
         if (customerId) {
           await atualizarPlanoOrg(customerId, "cancelado", "plan_canceled");
         }
         break;
 
       default:
-        // Evento não tratado — retornar 200 para conformidade com retry policy Asaas
         logger.info("[webhookAsaas] Evento ignorado:", payload.event);
     }
 

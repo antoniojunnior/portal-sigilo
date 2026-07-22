@@ -8,7 +8,7 @@
 
 ## 1. Resumo executivo
 
-Substituir o modelo comercial atual de dois planos self-service (`entrada` e `gestao`) e do plano `enterprise` por um **único plano de assinatura** ("unico"), eliminando toda diferenciação de acesso a features, limites de uso e preço. Resolve a fragmentação de gates de feature espalhados por 6+ pontos do backend e a divergência de fonte de preço já documentada como débito técnico na extração reversa. Como a aplicação ainda não tem clientes pagantes reais (apenas ambiente de testes), a transição de dados não exige migração — a base de teste é reiniciada e repovoada já sob a nova lógica. Não descreve como será implementado — apenas o que deve passar a ser verdade sobre o produto.
+Substituir o modelo comercial atual de dois planos self-service (`entrada` e `gestao`) e do plano `enterprise` por um **único plano de assinatura** ("unico"), eliminando toda diferenciação de acesso a features de IA (Inteligência Artificial), limites de uso e preço. Resolve a fragmentação de gates de feature espalhados por 6+ pontos do backend e a divergência de fonte de preço já documentada como débito técnico na extração reversa. Como a aplicação ainda não tem clientes pagantes reais (apenas ambiente de testes), a transição de dados não exige migração — a base de teste é reiniciada e repovoada já sob a nova lógica. Não descreve como será implementado — apenas o que deve passar a ser verdade sobre o produto.
 
 ## 2. Contexto a partir do legado
 
@@ -97,12 +97,15 @@ Substituir o modelo comercial atual de dois planos self-service (`entrada` e `ge
 | Tipo | Requisito | Evidência ou justificativa | Confidência |
 |------|-----------|----------------------------|-------------|
 | Segurança | A checagem redundante de limite no servidor (Route Handler + Firestore Rule) deve ser preservada mesmo com valor único (50 usuários) — não eliminar a camada de defesa documentada em `_reversa_sdd/adrs/005-verificacao-redundante-alem-das-firestore-rules.md`, só simplificar o valor comparado | `_reversa_sdd/adrs/005-*.md` | 🟢 |
-| Compatibilidade de billing | O modelo de cobrança anual com parcelamento de fatura em até 12x deve ser validado tecnicamente contra a API do Asaas e contra `functions/src/webhookAsaas.ts` — a extração reversa (`_reversa_sdd/adrs/003-*.md`) documenta resolução de plano por faixa de valor pago em ciclo mensal/anual simples, não parcelamento de fatura em ciclo anual. Investigação técnica de viabilidade fica a cargo de `/reversa-plan` (`investigation.md`), não é decisão de produto em aberto. | `_reversa_sdd/adrs/003-asaas-webhook-provisionamento-automatico.md` | 🟡 |
+| Compatibilidade de billing | O modelo de cobrança anual com parcelamento de fatura em até 12x deve ser tecnicamente viável no provedor de pagamento já integrado ao legado (Asaas) — a extração reversa (`_reversa_sdd/adrs/003-*.md`) documenta resolução de plano por faixa de valor pago em ciclo mensal/anual simples, não parcelamento de fatura em ciclo anual. Investigação técnica de viabilidade e o levantamento dos pontos de código exatos afetados ficam a cargo de `/reversa-plan` (`investigation.md`), não é decisão de produto em aberto. | `_reversa_sdd/adrs/003-asaas-webhook-provisionamento-automatico.md` | 🟡 |
+| Idempotência e falha de cobrança | A rotina de renovação anual deve ser idempotente por ciclo — disparar a renovação mais de uma vez para o mesmo ano não pode gerar cobrança duplicada ao cliente. Se a cobrança de renovação falhar, o acesso da org deve ser suspenso (`plano_ativo = "suspenso"`), reaproveitando o mesmo comportamento já existente para pagamento em atraso — sem retentativa automática nem período de carência. | Confirmado pelo dono do negócio (2026-07-21, durante `/reversa-plan`); adicionado retroativamente ao requirements após achado em 2ª rodada de `/reversa-audit` e `/reversa-quality` (idempotência não estava explícita nesta versão original do documento) | 🟢 |
 | Compatibilidade retroativa | `audit_logs` históricos que referenciam `plano: "entrada"`/`"gestao"`/`"enterprise"` em `detalhes` não são alterados pelo reset de banco de teste (regra de imutabilidade S6) se esses logs persistirem fora do escopo de dados removidos; caso o reset também limpe `audit_logs`, a regra de imutabilidade S6 não se aplica a dados de teste descartados | `_reversa_sdd/data-dictionary.md#audit_logs`, regra inviolável S6 | 🟡 |
 | Consistência de dados | O tipo `Plano` em `src/lib/types/index.ts` precisa refletir o novo conjunto de valores válidos de `plano_ativo`: apenas `"unico"` + os estados operacionais já existentes (`suspenso`/`cancelado`) — sem `entrada`, `gestao` ou `enterprise` | `_reversa_sdd/data-dictionary.md` (divergência #4 já registrada) | 🟢 |
 | Ambiente | O script de reset/reseed (RF-10) só pode rodar contra o projeto Firebase de **testes** — o dono do negócio confirmou que a aplicação ainda não está em uso pelo público, mas o script não deve assumir isso silenciosamente; deve haver uma salvaguarda explícita (ex.: variável de ambiente ou flag de confirmação) antes de apagar dados | Confirmação do dono do negócio nesta sessão | 🟢 |
 
 ## 7. Critérios de Aceitação
+
+> RF-07 (fonte única de preço), RF-09 (remoção do identificador `enterprise` do código) e RF-11 (atualização de documentação) não têm cenário Gherkin dedicado abaixo — são requisitos estruturais/documentais, verificados por inspeção direta de código ou de arquivo (ver critério de aceite de cada um em §5), não por comportamento observável de usuário.
 
 ```gherkin
 Cenário: Novo cliente contrata o plano único
@@ -143,7 +146,7 @@ Cenário: Reseed de ambiente de teste
   Então a base é reiniciada e passa a conter exatamente 1 org no plano "unico", com 2 usuários gestores (1 admin, 1 não-admin), 5 departamentos e entre 1 e 3 casos por departamento, cobrindo múltiplas categorias de categoria_legal e múltiplos estágios de Case.status
 ```
 
-## 8. Prioridade MoSCoW
+## 8. Prioridade MoSCoW (Must / Should / Could / Won't)
 
 | Item | MoSCoW | Justificativa |
 |------|--------|----------------|
@@ -163,10 +166,12 @@ Cenário: Reseed de ambiente de teste
 
 Nenhuma lacuna 🔴 bloqueante. Todas as decisões de produto que estavam pendentes na sessão anterior (identificador do plano, preço/ciclo/parcelamento, limite de usuários, limite de armazenamento, destino do Enterprise, estratégia de dados, especificação do reseed) foram confirmadas diretamente pelo dono do negócio nesta sessão de reexecução.
 
-Um ponto fica sinalizado como **investigação técnica** (não bloqueia a escrita deste requirements, mas deve ser resolvido em `/reversa-plan`): confirmar se `functions/src/webhookAsaas.ts` já suporta o evento de cobrança de assinatura anual parcelada em até 12x da API do Asaas, ou se precisa de tratamento novo (ver RNF §6, "Compatibilidade de billing").
+Um ponto fica sinalizado como **investigação técnica** (não bloqueia a escrita deste requirements, mas deve ser resolvido em `/reversa-plan`): confirmar se o mecanismo de webhook de pagamento já em uso suporta o evento de cobrança de assinatura anual parcelada em até 12x da API do provedor de pagamento, ou se precisa de tratamento novo (ver RNF §6, "Compatibilidade de billing").
 
 ## 11. Histórico de alterações
 
 | Data | Alteração | Autor |
 |------|-----------|-------|
 | 2026-07-21 | Versão inicial gerada por `/reversa-requirements`, a partir da reexecução da feature `001-unificar-plano-assinatura` com decisões de negócio já fechadas pelo dono do negócio (identificador, preço/ciclo/parcelamento, limites, remoção do Enterprise, estratégia de reset+reseed) | reversa |
+| 2026-07-21 | Edição manual pós-`/reversa-quality` (veredito Reprovado, 4 itens): nova RNF de idempotência/falha de cobrança de renovação (Q-014); RNF de billing reescrita sem caminho de arquivo de código (Q-018); nota em §7 sobre RF-07/RF-09/RF-11 sem Gherkin (Q-010); "IA" e "MoSCoW" expandidos na 1ª ocorrência (Q-016) | reversa |
+| 2026-07-21 | Edição manual pós-2ª `/reversa-quality` (veredito Aprovado com ressalvas, 1 item): §10 reescrita sem o caminho `functions/src/webhookAsaas.ts`, fechando o residual de Q-018 | reversa |

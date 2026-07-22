@@ -1,0 +1,151 @@
+diff --git a/docs/PRD_PortalSigilo_v2.md b/docs/PRD_PortalSigilo_v2.md
+index 2668e3d..b7512b2 100644
+--- a/docs/PRD_PortalSigilo_v2.md
++++ b/docs/PRD_PortalSigilo_v2.md
+@@ -12,7 +12,7 @@ Plataforma inteligente de integridade, escuta interna e prevencao de riscos
+ | **Data** | Abril 2026 |
+ | **Status** | Draft — para uso com Claude Code |
+ | **Produto** | Portal web + App Android/iOS + WhatsApp + Dashboard |
+-| **Planos cobertos** | Entrada · Gestao · Enterprise |
++| **Planos cobertos** | Plano Único |
+ | **Alteracoes v2** | Tela 0 (boas-vindas + selecao de empresa); anexos em chat e WhatsApp; modelo Firestore multi-tenant validado; marco legal ampliado e certificado |
+ 
+ ---
+@@ -65,12 +65,12 @@ O produto e multi-tenant: uma unica instancia da plataforma atende dezenas de em
+ 
+ ## 2.2 Modelo de dados Firestore — multi-tenant validado
+ 
+-A estrutura de colecoes foi projetada para garantir isolamento total entre tenants (orgs) e suportar multi-unidade no Enterprise. O campo `org_id` e obrigatorio em todo documento fora da colecao `orgs`.
++A estrutura de colecoes foi projetada para garantir isolamento total entre tenants (orgs) e suportar organizacoes multi-unidade. O campo `org_id` e obrigatorio em todo documento fora da colecao `orgs`.
+ 
+ | **Colecao** | **Descricao e campos principais** |
+ | --- | --- |
+ | **orgs** | Organizacao cliente (tenant). `id, nome, slug, plano_ativo, url_canal, logo, dominios_white_label[], criado_em, configuracoes (categorias, boas-vindas, prazo_padrao_dias)`. |
+-| **units** | Unidade de negocio (somente Enterprise). `id, org_id, nome, responsavel_id, criado_em`. Cada unit tem gestores proprios e visibilidade isolada de casos. |
++| **units** | Unidade de negocio (organizacoes multi-unidade). `id, org_id, nome, responsavel_id, criado_em`. Cada unit tem gestores proprios e visibilidade isolada de casos. |
+ | **users** | Gestores. `id, org_id, unit_id (opcional), nome, email, role (admin\|gestor\|auditor), ativo, criado_em`. |
+ | **cases** | Denuncias. `id, org_id, unit_id (opcional), protocolo, canal_origem (web\|whatsapp\|app\|0800), categoria, urgencia, status, created_at, triagem_ia{}, historico[], mencionados[], anexos[]{nome,tipo,tamanho,storage_path}`. |
+ | **messages** | Chat anonimo por caso. `id, case_id, org_id, autor (sistema\|denunciante\|gestor), texto, timestamp, anexos[]{nome,tipo,storage_path}`. |
+@@ -78,7 +78,7 @@ A estrutura de colecoes foi projetada para garantir isolamento total entre tenan
+ | **reports** | Relatorios. `id, org_id, unit_id (opcional), periodo, gerado_em, texto_claude, aprovado, exportado, tipo (padrao\|personalizado\|esg)`. |
+ | **whatsapp_sessions** | Sessoes WhatsApp. `id, conversation_id (hash do numero — nao numero em si), org_id, unit_id, case_id (apos criacao), status, historico_ia[], created_at`. O numero do usuario NUNCA e armazenado em texto puro. |
+ 
+-> **Nota:** Compatibilidade multi-unidade: a colecao `units` e subordinada a `orgs` via `org_id`. Cases podem ter `unit_id` opcional. No dashboard Enterprise, queries filtram por `org_id` e, quando aplicavel, por `unit_id`. O Firestore suporta este modelo nativamente sem necessidade de subcollections. Indices compostos necessarios: `cases(org_id, status, created_at)` e `cases(org_id, unit_id, status)`.
++> **Nota:** Compatibilidade multi-unidade: a colecao `units` e subordinada a `orgs` via `org_id`. Cases podem ter `unit_id` opcional. No dashboard, queries filtram por `org_id` e, quando aplicavel, por `unit_id`. O Firestore suporta este modelo nativamente sem necessidade de subcollections. Indices compostos necessarios: `cases(org_id, status, created_at)` e `cases(org_id, unit_id, status)`.
+ 
+ ## 2.3 Seguranca e LGPD — regras criticas
+ 
+@@ -105,26 +105,25 @@ A estrutura de colecoes foi projetada para garantir isolamento total entre tenan
+ 
+ Cada organizacao tem um campo `plano_ativo` no Firestore. As Firebase Functions e as Firestore Rules aplicam os limites em runtime.
+ 
+-| **Recurso** | **Entrada** | **Gestao** | **Enterprise** |
+-| --- | --- | --- | --- |
+-| **Preco anual** | R$ 97/mes | R$ 197/mes | Sob consulta |
+-| **Preco mensal** | R$ 117/mes | R$ 227/mes | Sob consulta |
+-| **Usuarios gestores** | 1 | Ate 10 | Ilimitado |
+-| **Armazenamento** | 2 GB | 20 GB | Ilimitado |
+-| **SLA suporte** | 48h | 4h uteis | 2h uteis |
+-| **Portal web** | Sim | Sim | Sim |
+-| **WhatsApp nativo** | Nao | Sim | Sim |
+-| **App Android/iOS** | Nao | Sim | Sim |
+-| **Canal 0800** | Nao | Nao | Sim |
+-| **Triagem por IA** | Nao | Sim | Sim |
+-| **Alertas criticos** | Nao | Sim | Sim |
+-| **Assistente IA gestor** | Nao | Sim | Sim |
+-| **Mapa de risco** | Nao | Sim | Sim |
+-| **Relatorios personalizados** | Nao | Sim | Sim |
+-| **Relatorios ESG** | Nao | Nao | Sim |
+-| **Multi-unidade** | Nao | Nao | Sim |
+-| **White-label** | Nao | Nao | Sim |
+-| **Gerente de conta** | Nao | Nao | Sim |
++| **Recurso** | **Plano Único** |
++| --- | --- |
++| **Preco** | R$ 1.164/ano (parcelamento em até 12x sem juros) |
++| **Usuarios gestores** | Até 50 |
++| **Armazenamento** | 2 GB |
++| **SLA suporte** | 4h úteis |
++| **Portal web** | Sim |
++| **WhatsApp nativo** | Não (Fase 7 pendente) |
++| **App Android/iOS** | Não (Fase 8 pendente) |
++| **Canal 0800** | Não (Fase 10 pendente) |
++| **Triagem por IA** | Sim |
++| **Alertas críticos** | Sim |
++| **Assistente IA gestor** | Sim |
++| **Mapa de risco** | Sim |
++| **Relatorios personalizados** | Sim |
++| **Relatorios ESG** | Não (Fase 10 pendente) |
++| **Multi-unidade** | Não (Fase 10 pendente) |
++| **White-label** | Não (Fase 10 pendente) |
++| **Gerente de conta** | Não (Fase 10 pendente) |
+ 
+ ---
+ 
+@@ -256,9 +255,9 @@ Aplicacao autenticada via Firebase Auth. Acesso restrito a usuarios com role `ad
+ | --- | --- |
+ | **Metricas principais** | 4 cards: Casos no periodo / Em aberto / Resolvidos / Tempo medio de resolucao. Comparativo vs periodo anterior. |
+ | **Lista de casos recentes** | Ultimos 10 casos com: indicador de urgencia (cor), titulo da categoria, protocolo, status, data. Clique abre detalhe. |
+-| **Mapa de risco por area** | Grid de celulas coloridas (verde/amarelo/vermelho) por departamento. Apenas Gestao e Enterprise. |
++| **Mapa de risco por area** | Grid de celulas coloridas (verde/amarelo/vermelho) por departamento. Disponivel a toda org com assinatura ativa. |
+ | **Grafico de categorias** | Barras horizontais com distribuicao de tipos de denuncias nos ultimos 6 meses. |
+-| **Assistente IA** | Painel lateral com alertas proativos e input para perguntas. Apenas Gestao e Enterprise. |
++| **Assistente IA** | Painel lateral com alertas proativos e input para perguntas. Disponivel a toda org com assinatura ativa. |
+ | **Filtro de periodo** | Seletor de data no topo. Default: mes atual. |
+ 
+ ### Tela — Lista de casos
+@@ -269,7 +268,7 @@ Aplicacao autenticada via Firebase Auth. Acesso restrito a usuarios com role `ad
+ | **Ordenacao** | Por urgencia (default), data, prazo restante. |
+ | **Colunas** | Indicador urgencia / Canal / Categoria / Protocolo / Responsavel / Status / Data / Dias em aberto. |
+ | **Busca** | Por numero de protocolo. |
+-| **Exportacao** | CSV e PDF da lista filtrada. Apenas Gestao e Enterprise. |
++| **Exportacao** | CSV e PDF da lista filtrada. Disponivel a toda org com assinatura ativa. |
+ | **Paginacao** | Padrao 10 itens por pagina. Opcoes: 20 e 50. |
+ 
+ ### Tela — Detalhe do caso
+@@ -277,7 +276,7 @@ Aplicacao autenticada via Firebase Auth. Acesso restrito a usuarios com role `ad
+ | **Componente** | **Especificacao** |
+ | --- | --- |
+ | **Header** | Protocolo, canal de origem, categoria, urgencia (badge colorido), data de criacao, prazo restante. |
+-| **Triagem IA** | Card com: categoria detectada, subcategoria, urgencia (1-5), lei aplicavel, area de risco, recomendacao. Apenas Gestao e Enterprise. |
++| **Triagem IA** | Card com: categoria detectada, subcategoria, urgencia (1-5), lei aplicavel, area de risco, recomendacao. Disponivel a toda org com assinatura ativa. |
+ | **Historico** | Timeline de movimentacoes: criacao, mudancas de status, atribuicoes, notas. |
+ | **Chat anonimo** | Interface de mensagens com o denunciante. Historico completo. Input para nova mensagem. Suporte a upload de arquivos pelo gestor para o denunciante responder. |
+ | **Visualizacao de anexos** | Lista de arquivos enviados pelo denunciante. Preview inline para imagens. Download autenticado para todos os tipos. Player de audio/video inline. |
+@@ -285,14 +284,14 @@ Aplicacao autenticada via Firebase Auth. Acesso restrito a usuarios com role `ad
+ | **Status** | Dropdown: Aguardando triagem / Em apuracao / Pendente de informacao / Encerrado sem infracao / Encerrado com acao. |
+ | **Prazo** | Input de data. Alerta visual se proximo do vencimento (5 dias). |
+ | **Notas internas** | Campo de texto livre visivel apenas a gestores. Nao compartilhado com denunciante. |
+-| **Assistente IA** | Chat contextual ao lado. Metadados do caso (nao relato bruto). Apenas Gestao e Enterprise. |
++| **Assistente IA** | Chat contextual ao lado. Metadados do caso (nao relato bruto). Disponivel a toda org com assinatura ativa. |
+ 
+ ### Tela — Relatorios
+ 
+ | **Componente** | **Especificacao** |
+ | --- | --- |
+ | **Relatorio padrao** | Todos os planos. PDF com metricas do periodo selecionado. |
+-| **Relatorio personalizado** | Gestao e Enterprise. Filtros por categoria, area, status, periodo, canal de origem. |
++| **Relatorio personalizado** | Disponivel a toda org com assinatura ativa. Filtros por categoria, area, status, periodo, canal de origem. |
+ | **Geracao automatica mensal** | Claude gera texto executivo. Gestor revisa e aprova antes de exportar. |
+ | **Relatorio ESG** | Apenas Enterprise. Indicadores GRI S-OWN-2 e G-GOV-2 gerados automaticamente. |
+ | **Historico** | Lista de relatorios com status (rascunho/aprovado/exportado). |
+@@ -362,7 +361,7 @@ Encerre com acolhimento.
+ - Quando Claude retorna JSON estruturado, Function grava caso no Firestore com status `aguardando_triagem`.
+ - Notificacao enviada para o gestor responsavel pela categoria.
+ 
+-## 6.2 Ponto 2 — Triagem automatica (Gestao e Enterprise)
++## 6.2 Ponto 2 — Triagem automatica
+ 
+ ### Objetivo
+ 
+@@ -394,9 +393,9 @@ Nao invente informacoes.
+ - Function chama Claude com o JSON do relato + system prompt.
+ - Valida e tipifica o retorno JSON antes de gravar.
+ - Atualiza o documento com `triagem_ia` e muda status para `triado`.
+-- Se urgencia >= 4 e plano Gestao ou Enterprise: dispara alerta imediato para admin.
++- Se urgencia >= 4: dispara alerta imediato para admin.
+ 
+-## 6.3 Ponto 3 — Assistente para gestores (Gestao e Enterprise)
++## 6.3 Ponto 3 — Assistente para gestores
+ 
+ ### Objetivo
+ 

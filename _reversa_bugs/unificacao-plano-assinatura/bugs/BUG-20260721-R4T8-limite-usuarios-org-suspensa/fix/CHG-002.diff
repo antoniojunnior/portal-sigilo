@@ -1,0 +1,26 @@
+diff --git a/src/app/api/dashboard/users/route.ts b/src/app/api/dashboard/users/route.ts
+index 2171a60..83f60a7 100644
+--- a/src/app/api/dashboard/users/route.ts
++++ b/src/app/api/dashboard/users/route.ts
+@@ -7,9 +7,7 @@ import type { NextRequest } from "next/server";
+ import type { Role } from "@/lib/types";
+ 
+ const PLAN_USER_LIMITS: Record<string, number | null> = {
+-  entrada: 1,
+-  gestao: 10,
+-  enterprise: null,
++  unico: 50,
+ };
+ 
+ export async function GET(request: NextRequest) {
+@@ -80,7 +78,9 @@ export async function POST(request: NextRequest) {
+     const orgDoc = await adminDb.collection("orgs").doc(session.orgId).get();
+     if (!orgDoc.exists) return Response.json({ error: "Organização não encontrada" }, { status: 404 });
+     const orgData = orgDoc.data()!;
+-    const planLimit = PLAN_USER_LIMITS[orgData.plano_ativo as string] ?? 1;
++    // Fallback 0 (não 1) para plano_ativo fora do mapa (suspenso/cancelado) — bloqueia toda
++    // criação, igual à Firestore Rule (BUG-20260721-R4T8: fallback 1 permitia 1 usuário indevido)
++    const planLimit = PLAN_USER_LIMITS[orgData.plano_ativo as string] ?? 0;
+     const usersCount = (orgData.users_count as number) ?? 0;
+     if (planLimit !== null && usersCount >= planLimit) {
+       return Response.json(

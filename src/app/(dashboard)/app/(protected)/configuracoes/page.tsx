@@ -55,9 +55,7 @@ const ROLE_OPTIONS: { value: Role; label: string }[] = [
 ];
 
 const PLANO_LABELS: Record<string, string> = {
-  entrada: "Entrada",
-  gestao: "Gestão",
-  enterprise: "Enterprise",
+  unico: "Plano Único",
 };
 
 export default function ConfiguracoesPage() {
@@ -517,9 +515,7 @@ export default function ConfiguracoesPage() {
                         <Badge className="bg-[var(--color-primary)] text-white border-none text-[var(--text-2xs)] font-bold">ATIVO</Badge>
                       </div>
                       <p className="text-[var(--text-xs)] text-[var(--color-text-tertiary)] leading-relaxed">
-                        {user.plano === "entrada" ? "Ideal para pequenas empresas (1 gestor, sem IA)." :
-                         user.plano === "gestao" ? "Completo para times em crescimento (Até 10 gestores, IA, WhatsApp)." :
-                         "Solução enterprise ilimitada com todas as funcionalidades e suporte prioritário."}
+                        Acesso pleno a todas as funcionalidades: IA, múltiplos gestores, relatórios e suporte.
                       </p>
                     </div>
                     <div className="flex flex-col gap-2">

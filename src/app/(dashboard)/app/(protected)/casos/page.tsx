@@ -202,7 +202,7 @@ function CasosContent() {
   }
 
   const hasActiveFilters = !!(statusFilter || urgencyFilter || channelFilter || protocolSearch);
-  const canExportCSV = user?.plano !== "entrada";
+  const canExportCSV = true;
 
   return (
     <>

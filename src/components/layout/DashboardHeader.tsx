@@ -10,9 +10,7 @@ import { LogoSigilo } from "@/components/portal/LogoSigilo";
 import useSWR from "swr";
 
 const PLANO_BADGE: Record<string, { label: string; className: string }> = {
-  entrada: { label: "Entrada", className: "bg-[var(--color-bg-tertiary)] text-[var(--color-text-tertiary)]" },
-  gestao: { label: "Gestão", className: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" },
-  enterprise: { label: "Enterprise", className: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300" },
+  unico: { label: "Ativo", className: "bg-[var(--color-primary-surface)] text-[var(--color-primary-dark)]" },
   suspenso: { label: "Suspenso", className: "bg-[var(--color-danger-surface)] text-[var(--color-danger)]" },
   cancelado: { label: "Cancelado", className: "bg-[var(--color-danger-surface)] text-[var(--color-danger)]" },
 };

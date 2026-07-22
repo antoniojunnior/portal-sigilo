@@ -18,7 +18,7 @@ org_id obrigatório em TODO documento (exceto orgs).
 Toda query ao Firestore filtra por org_id.
 Firestore Rules negam acesso se org_id do token != org_id do documento.
 
-### S4 — Isolamento multi-unidade (Enterprise)
+### S4 — Isolamento multi-unidade
 Gestores com escopo de unidade só veem cases com seu unit_id.
 Admins da org veem todos os cases da org.
 

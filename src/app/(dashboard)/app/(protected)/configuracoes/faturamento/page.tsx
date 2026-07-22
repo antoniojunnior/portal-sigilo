@@ -31,9 +31,8 @@ interface Invoice {
 }
 
 const PLANO_LABELS: Record<string, string> = {
-  entrada: "Entrada",
-  gestao: "Gestão",
-  enterprise: "Enterprise",
+  unico: "Ativo",
+  suspenso: "Suspenso",
   cancelado: "Cancelado",
 };
 

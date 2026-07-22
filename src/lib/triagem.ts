@@ -146,22 +146,6 @@ export async function runTriagem(
   const caseRef = adminDb.collection("cases").doc(caseId);
   const auditRef = adminDb.collection("audit_logs").doc();
 
-  // Plano Entrada: triagem manual, sem IA
-  if (planoAtivo === "entrada") {
-    batch.update(caseRef, { triagem_manual: true });
-    batch.set(auditRef, {
-      id: auditRef.id,
-      org_id: orgId,
-      user_id: "sistema",
-      acao: "triagem_manual_indicada",
-      case_id: caseId,
-      detalhes: { motivo: "plano_entrada" },
-      timestamp: new Date(),
-    });
-    await batch.commit();
-    return;
-  }
-
   const triagem = await callClaude(coleta);
 
   if (!triagem) {

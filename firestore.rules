@@ -73,11 +73,13 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Retorna o limite de usuários do plano: 1 (entrada), 10 (gestao), null (enterprise/sem limite).
+    // Retorna o limite de usuários do plano: 50 para qualquer plano ativo que não seja suspenso/cancelado.
+    // suspenso/cancelado retornam 0 (bloqueia toda criação), não null — null antes significava
+    // "sem limite" (herdado do antigo tier Enterprise) e permitia criação ilimitada por engano (BUG-20260721-R4T8).
     // Usa users_count denormalizado em orgs — mais eficiente que getAfter() count query.
     function getPlanoLimit(orgId) {
       let plano = get(/databases/$(database)/documents/orgs/$(orgId)).data.plano_ativo;
-      return plano == 'entrada' ? 1 : (plano == 'gestao' ? 10 : null);
+      return plano == 'suspenso' || plano == 'cancelado' ? 0 : 50;
     }
 
     function getOrgUsersCount(orgId) {

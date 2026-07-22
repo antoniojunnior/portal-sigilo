@@ -9,13 +9,10 @@ export type StatusValue =
   | "encerrado_sem_infracao"
   | "encerrado_com_acao";
 
-/** Subscription plan */
-export type PlanValue = "entrada" | "gestao" | "enterprise";
-
 /** Channel origin */
 export type ChannelValue = "web" | "whatsapp" | "app" | "0800";
 
-type Variant = "urgency" | "status" | "plan" | "channel" | "default";
+type Variant = "urgency" | "status" | "channel" | "default";
 
 interface BadgeProps {
   variant?: Variant;
@@ -23,8 +20,6 @@ interface BadgeProps {
   urgency?: UrgencyLevel;
   /** For status badges */
   status?: StatusValue;
-  /** For plan badges */
-  plan?: PlanValue;
   /** For channel badges */
   channel?: ChannelValue;
   className?: string;
@@ -61,18 +56,6 @@ const STATUS_LABELS: Record<StatusValue, string> = {
   pendente_informacao: "Pendente de informação",
   encerrado_sem_infracao: "Encerrado — sem infração",
   encerrado_com_acao: "Encerrado com ação",
-};
-
-const PLAN_STYLES: Record<PlanValue, string> = {
-  entrada: "bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] border-[var(--color-border)]",
-  gestao: "bg-[var(--color-primary-surface)] text-[var(--color-primary-dark)] border-[var(--color-primary)]/20",
-  enterprise: "bg-[var(--color-accent-surface)] text-[var(--color-accent-dark)] border-[var(--color-accent)]/20",
-};
-
-const PLAN_LABELS: Record<PlanValue, string> = {
-  entrada: "Entrada",
-  gestao: "Gestão",
-  enterprise: "Enterprise",
 };
 
 const CHANNEL_STYLES: Record<ChannelValue, string> = {
@@ -136,14 +119,6 @@ export function Badge({
     return (
       <span className={[LABEL_BASE, STATUS_STYLES[status], className].filter(Boolean).join(" ")}>
         {STATUS_LABELS[status]}
-      </span>
-    );
-  }
-
-  if (variant === "plan" && plan) {
-    return (
-      <span className={[BASE, PLAN_STYLES[plan], className].filter(Boolean).join(" ")}>
-        {PLAN_LABELS[plan]}
       </span>
     );
   }

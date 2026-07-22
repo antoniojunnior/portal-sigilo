@@ -64,8 +64,33 @@ Passo a passo para um humano validar a feature manualmente pela primeira vez, em
 ## 9. Checklist de documentação
 
 1. Confirme que `docs/PRD_PortalSigilo_v2.md` §3 não lista mais `entrada`/`gestao`/`enterprise`
-2. Busque `"enterprise"` em todo o código-fonte (`grep -rn "enterprise" src/ functions/ firestore.rules`) e confirme que não há mais ocorrência ativa (fora de comentários históricos ou `audit_logs` de teste, se preservados)
+2. Confirme que `docs/SECURITY.md#S4` não cita mais "Enterprise" no título (D-16, corrige A005 do `/reversa-audit`, 2ª rodada)
+3. Busque `"enterprise"` em todo o código-fonte e docs (`grep -rn "enterprise" src/ functions/ firestore.rules docs/`) e confirme que não há mais ocorrência ativa (fora de comentários históricos ou `audit_logs` de teste, se preservados)
 
-## 10. Notas de execução
+## 10. Validar functions agendadas de insights/relatórios (D-13, corrige A001 do `/reversa-audit`, 2ª rodada)
+
+1. Confirme no código-fonte que `functions/src/aiInsights.ts` e `functions/src/scheduledReports.ts` filtram orgs por `plano_ativo == "unico"`, não mais por `in ["gestao","enterprise"]`
+2. Dispare manualmente `generateDailyInsights` em ambiente de teste (ex.: emulador de Functions ou invocação direta) contra a org mockada (`plano_ativo: "unico"`) e confirme que `orgs.ai_insights` é atualizado
+3. Confirme em `GET /api/dashboard/insights` que os insights exibidos vêm de `orgs.ai_insights` (`source: "ai_scheduled"`), não do fallback heurístico
+4. Dispare manualmente `generateMonthlyReports` e confirme que um documento é criado em `reports` para a org mockada
+
+## 11. Validar idempotência da renovação anual (D-15, corrige A003 do `/reversa-audit`, 2ª rodada)
+
+1. Simule duas invocações da function agendada de renovação no mesmo dia para a mesma org (mesmo `data_renovacao`)
+2. Confirme que a segunda invocação não dispara uma nova cobrança (checagem de `orgs.ultima_cobranca_ciclo` contra o ano corrente) e apenas loga que a org já foi processada neste ciclo
+
+## 12. Validar badges de estado (D-14, corrige A002 do `/reversa-audit`, 2ª rodada)
+
+1. No header do dashboard e em "Configurações", confirme que o badge da org mockada (`plano_ativo: "unico"`) exibe "Ativo", não "Entrada"/"Gestão"/"Enterprise"
+2. Reverta manualmente a org para `"suspenso"` e depois `"cancelado"` e confirme que o badge acompanha o estado corretamente nos três lugares (`DashboardHeader.tsx`, `configuracoes/page.tsx`, `configuracoes/faturamento/page.tsx`)
+
+## 13. Validar remoção dos gates de UI residuais (D-17, corrige A001 do `/reversa-audit`, 3ª rodada)
+
+1. Na lista de casos, confirme que o botão de exportar CSV aparece habilitado para a org mockada (`plano_ativo: "unico"`), sem checagem de plano
+2. Acesse `/app/relatorios` e confirme que a página carrega normalmente (sem o antigo bloqueio de upgrade), independente do plano
+3. Abra o detalhe de um caso e confirme que o botão real do assistente de IA aparece, não o bloco de cadeado "disponível nos planos Gestão e Enterprise"
+4. Busque `"entrada"` e `"gestao"` em todo o código-fonte (`grep -rn '"entrada"\|"gestao"' src/ functions/`) e confirme que não há mais nenhuma comparação residual de gate por plano (fora de comentários históricos)
+
+## 14. Notas de execução
 
 <!-- Reservado para /reversa-coding registrar observações que surgirem durante a execução real. -->

@@ -4,9 +4,7 @@ import { fileTypeFromBuffer } from "file-type";
 import type { NextRequest } from "next/server";
 
 const STORAGE_LIMITS_BYTES: Record<string, number | null> = {
-  entrada: 2 * 1024 * 1024 * 1024,   // 2 GB
-  gestao: 20 * 1024 * 1024 * 1024,   // 20 GB
-  enterprise: null,                   // ilimitado
+  unico: 2 * 1024 * 1024 * 1024,   // 2 GB
 };
 
 async function getOrgStorageUsed(orgId: string): Promise<number> {
@@ -22,8 +20,8 @@ async function checkStorageLimit(orgId: string, fileSize: number): Promise<{ ok:
   try {
     const orgDoc = await adminDb.collection("orgs").doc(orgId).get();
     if (!orgDoc.exists) return { ok: true };
-    const plano = (orgDoc.data()?.plano_ativo as string) ?? "entrada";
-    const limit = STORAGE_LIMITS_BYTES[plano] ?? STORAGE_LIMITS_BYTES.entrada!;
+    const plano = (orgDoc.data()?.plano_ativo as string) ?? "unico";
+    const limit = STORAGE_LIMITS_BYTES[plano] ?? STORAGE_LIMITS_BYTES.unico!;
     if (limit === null) return { ok: true };
     const used = await getOrgStorageUsed(orgId);
     if (used + fileSize > limit) {

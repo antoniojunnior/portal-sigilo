@@ -1,0 +1,12 @@
+diff --git a/package.json b/package.json
+index 5d2d899..ec2220d 100644
+--- a/package.json
++++ b/package.json
+@@ -9,6 +9,7 @@
+     "lint": "eslint",
+     "seed": "npx ts-node --compiler-options '{\"module\":\"CommonJS\",\"esModuleInterop\":true}' scripts/seed-emulator.ts",
+     "test:rules": "npx ts-node --compiler-options '{\"module\":\"CommonJS\",\"esModuleInterop\":true}' scripts/test-rules.ts",
++    "test:asaas": "DOTENV_CONFIG_PATH=.env.local TS_NODE_PROJECT=./scripts/tsconfig.scripts.json npx ts-node -r dotenv/config -r ./scripts/_shims/register.js -r tsconfig-paths/register scripts/test-asaas-billing-payloads.ts",
+     "seed:remote": "DOTENV_CONFIG_PATH=.env.local npx ts-node -r dotenv/config --compiler-options '{\"module\":\"CommonJS\",\"esModuleInterop\":true}' scripts/seed-remote.ts"
+   },
+   "dependencies": {

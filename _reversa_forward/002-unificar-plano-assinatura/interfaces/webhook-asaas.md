@@ -24,5 +24,5 @@
 ## Idempotência e erros
 
 - `provisionOrg` mantém a checagem por `asaas_customer_id` — nenhuma mudança de comportamento aí
-- A nova function agendada precisa ser idempotente por org+ciclo (ex.: não disparar duas vezes no mesmo aniversário se rodar mais de uma vez no mesmo dia) — usar um campo tipo `ultima_cobranca_ciclo` (ano) para checagem, análogo ao padrão de idempotência já usado em `provisionOrg`
+- A nova function agendada precisa ser idempotente por org+ciclo (ex.: não disparar duas vezes no mesmo aniversário se rodar mais de uma vez no mesmo dia) — usa o campo `orgs.ultima_cobranca_ciclo` (ano) para essa checagem (D-15 do `roadmap.md`, corrige A003 do `/reversa-audit`, 2ª rodada), análogo ao padrão de idempotência já usado em `provisionOrg`: se `ultima_cobranca_ciclo` já for o ano corrente no momento da execução, a org é pulada nesse disparo
 - **Falha ao cobrar a renovação (cartão recusado, token expirado ou qualquer erro ao criar/confirmar a nova cobrança `INSTALLMENT`): suspende o acesso da org imediatamente** (`plano_ativo = "suspenso"`), chamando a mesma função `atualizarPlanoOrg(customerId, "suspenso", "plan_suspended")` já usada hoje para o evento `PAYMENT_OVERDUE` — decisão confirmada pelo dono do negócio em 2026-07-21 (D-09 do `roadmap.md`). Não há retentativa automática nem período de carência; a primeira falha confirmada já suspende

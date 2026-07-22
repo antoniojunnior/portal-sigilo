@@ -10,19 +10,7 @@ export async function GET(request: NextRequest) {
     const session = await verifySession(sessionCookie);
     if (!session) return Response.json({ error: "Sessão inválida" }, { status: 401 });
 
-    const { orgId, uid, plano } = session;
-
-    // Plano Entrada não tem insights por IA
-    if (plano === "entrada") {
-      return Response.json({
-        summary: "Upgrade para acessar insights de IA.",
-        highlight: null,
-        description: "Insights automáticos disponíveis nos planos Gestão e Enterprise.",
-        recommendations: ["Divulgue o canal internamente.", "Monitore os relatos recebidos.", "Mantenha os prazos em dia."],
-        generatedAt: new Date().toISOString(),
-        source: "plano_gate",
-      });
-    }
+    const { orgId, uid } = session;
 
     // Tentar ler insights gerados pela scheduled function
     const orgDoc = await adminDb.collection("orgs").doc(orgId).get();

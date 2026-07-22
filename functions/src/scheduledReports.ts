@@ -25,7 +25,7 @@ export const generateMonthlyReports = onSchedule(
 
     const orgsSnap = await db
       .collection("orgs")
-      .where("plano_ativo", "in", ["gestao", "enterprise"])
+      .where("plano_ativo", "==", "unico")
       .get();
 
     if (orgsSnap.empty) {

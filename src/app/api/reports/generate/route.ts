@@ -44,10 +44,6 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "periodoInicio e periodoFim são obrigatórios" }, { status: 400 });
   }
 
-  if (tipo === "personalizado" && session.plano === "entrada") {
-    return Response.json({ error: "Relatórios personalizados requerem plano Gestão ou superior." }, { status: 403 });
-  }
-
   const inicio = new Date(periodoInicio);
   const fim = new Date(periodoFim);
 

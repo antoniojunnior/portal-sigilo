@@ -1,29 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Check, X } from "lucide-react";
+import { Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { clientEnv } from "@/lib/env.client";
-import type { PlanoConfig, BillingCycle } from "@/lib/types";
+import type { PlanoConfig } from "@/lib/types";
 
 export interface PlanoCardProps {
   plano: PlanoConfig;
-  ciclo: BillingCycle;
-  isCurrentPlan?: boolean;
-  onAction?: () => void;
+  parcelas: number;
 }
 
-function getCTA(planoId: string, destaque: boolean | undefined, ciclo: BillingCycle): string {
-  if (planoId === "entrada") {
-    return ciclo === "anual" ? "Garantir desconto anual" : "Começar agora";
-  }
-  if (destaque) {
-    return ciclo === "anual" ? "Garantir desconto anual" : "Escolher o mais popular";
-  }
-  return ciclo === "anual" ? "Garantir desconto anual" : "Contratar";
-}
-
-export function PlanoCard({ plano, ciclo, onAction }: PlanoCardProps) {
+export function PlanoCard({ plano, parcelas }: PlanoCardProps) {
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -34,7 +21,7 @@ export function PlanoCard({ plano, ciclo, onAction }: PlanoCardProps) {
       const res = await fetch("/api/checkout/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plano: plano.id, ciclo }),
+        body: JSON.stringify({ plano: plano.id, parcelas }),
       });
       const data = (await res.json()) as { url?: string; error?: string };
       if (!res.ok || !data.url) {
@@ -49,103 +36,71 @@ export function PlanoCard({ plano, ciclo, onAction }: PlanoCardProps) {
     }
   }
 
-  function handleEnterprise() {
-    window.location.href = clientEnv.salesContact;
-  }
-
-  const isEnterprise = plano.id === "enterprise";
-  const preco = ciclo === "anual" ? plano.precoAnual : plano.precoMensal;
+  const precoAnual = plano.precoAnual ?? 0;
+  const valorParcela = parcelas > 1 ? Math.ceil(precoAnual / parcelas) : precoAnual;
 
   return (
     <div
       className={[
-        "relative flex flex-col rounded-2xl border p-6 transition-shadow",
-        "shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)]",
-        plano.destaque
-          ? "border-2 border-[var(--color-primary)] bg-[var(--color-primary-surface)] md:-translate-y-1 md:shadow-[var(--shadow-lg)]"
-          : "border border-[var(--color-border)] bg-[var(--color-card)]",
+        "relative flex flex-col rounded-2xl border p-8 transition-shadow",
+        "shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)]",
+        "border-2 border-[var(--color-primary)] bg-[var(--color-primary-surface)]",
       ].filter(Boolean).join(" ")}
     >
-      {plano.destaque && (
-        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[var(--color-primary)] px-3 py-1 text-[var(--text-xs)] font-semibold text-white">
-          Mais popular
-        </span>
-      )}
+      <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[var(--color-primary)] px-4 py-1 text-[var(--text-xs)] font-semibold text-white">
+        Plano único
+      </span>
 
-      <div className="mb-4">
+      <div className="mb-6">
         <h2 className="text-[var(--text-xl)] font-bold text-[var(--color-text-primary)]">
           {plano.nome}
         </h2>
         {plano.tagline && (
-          <p className="mt-1 text-[var(--text-sm)] text-[var(--color-text-tertiary)]">
+          <p className="mt-2 text-[var(--text-sm)] text-[var(--color-text-secondary)]">
             {plano.tagline}
           </p>
         )}
-        <div className="mt-3">
-          {isEnterprise ? (
-            <p className="text-[var(--text-xl)] font-bold text-[var(--color-text-primary)]">
-              Sob consulta
-            </p>
-          ) : ciclo === "anual" ? (
+        <div className="mt-4">
+          {parcelas === 1 ? (
             <>
               <div className="flex items-baseline gap-1">
                 <span className="text-[var(--text-3xl)] font-bold text-[var(--color-text-primary)]">
-                  R$ {preco}
+                  R$ {precoAnual.toLocaleString("pt-BR")}
                 </span>
-                <span className="text-[var(--text-sm)] text-[var(--color-text-tertiary)]">/mês</span>
+                <span className="text-[var(--text-sm)] text-[var(--color-text-tertiary)]">/ano</span>
               </div>
-              <p className="mt-1 text-[var(--text-sm)] text-[var(--color-text-tertiary)]">
-                R$ {(preco! * 12).toLocaleString("pt-BR")} cobrados anualmente
-              </p>
-              {plano.economiaAnual && (
-                <span className="mt-2 inline-block rounded-full bg-[var(--color-success-surface)] px-3 py-1 text-[var(--text-xs)] font-semibold text-[var(--color-success)]">
-                  Economia de R$ {plano.economiaAnual}/ano
-                </span>
-              )}
-              <p className="mt-1 text-[var(--text-sm)] text-[var(--color-text-tertiary)] line-through">
-                R$ {plano.precoMensal}/mês
+              <p className="mt-1 text-[var(--text-xs)] text-[var(--color-text-tertiary)]">
+                Pagamento único anual
               </p>
             </>
           ) : (
             <>
               <div className="flex items-baseline gap-1">
                 <span className="text-[var(--text-3xl)] font-bold text-[var(--color-text-primary)]">
-                  R$ {preco}
+                  {parcelas}x R$ {valorParcela.toLocaleString("pt-BR")}
                 </span>
-                <span className="text-[var(--text-sm)] text-[var(--color-text-tertiary)]">/mês</span>
               </div>
               <p className="mt-1 text-[var(--text-sm)] text-[var(--color-text-tertiary)]">
-                ou R$ {plano.precoAnual}/mês no plano anual
+                R$ {precoAnual.toLocaleString("pt-BR")} no total, em {parcelas}x sem juros
               </p>
             </>
           )}
         </div>
       </div>
 
-      <ul className="mb-6 flex-1 space-y-2">
+      <ul className="mb-8 flex-1 space-y-3">
         {plano.features.map((f) => (
           <li
             key={f.descricao}
-            className={[
-              "flex items-center gap-2 text-[var(--text-sm)]",
-              f.disponivel
-                ? "text-[var(--color-text-secondary)]"
-                : "text-[var(--color-text-disabled)]",
-            ].filter(Boolean).join(" ")}
+            className="flex items-center gap-3 text-[var(--text-sm)] text-[var(--color-text-secondary)]"
           >
-            {f.disponivel ? (
-              <Check className="h-4 w-4 shrink-0 text-[var(--color-success)]" />
-            ) : (
-              <X className="h-4 w-4 shrink-0 text-[var(--color-text-disabled)]" />
-            )}
-            <span className={f.disponivel ? "" : "line-through opacity-50"}>
-              {f.descricao}
-            </span>
+            <Check className="h-4 w-4 shrink-0 text-[var(--color-success)]" />
+            <span>{f.descricao}</span>
           </li>
         ))}
       </ul>
 
-      <div className="mt-auto space-y-2">
+      <div className="mt-auto space-y-3">
         {erro && (
           <p
             role="alert"
@@ -154,26 +109,18 @@ export function PlanoCard({ plano, ciclo, onAction }: PlanoCardProps) {
             {erro}
           </p>
         )}
-        {isEnterprise ? (
-          <Button
-            variant="secondary"
-            size="lg"
-            fullWidth
-            onClick={onAction ?? handleEnterprise}
-          >
-            Falar com vendas
-          </Button>
-        ) : (
-          <Button
-            variant={plano.destaque ? "primary" : "secondary"}
-            size="lg"
-            fullWidth
-            loading={loading}
-            onClick={onAction ?? handleContratar}
-          >
-            {getCTA(plano.id, plano.destaque, ciclo)}
-          </Button>
-        )}
+        <Button
+          variant="primary"
+          size="lg"
+          fullWidth
+          loading={loading}
+          onClick={handleContratar}
+        >
+          Contratar agora
+        </Button>
+        <p className="text-center text-[var(--text-xs)] text-[var(--color-text-tertiary)]">
+          Cartão tokenizado. Cobrado automaticamente a cada ano.
+        </p>
       </div>
     </div>
   );

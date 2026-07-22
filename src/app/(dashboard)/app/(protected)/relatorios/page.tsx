@@ -19,23 +19,6 @@ interface ReportSummary {
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
-function PlanGate() {
-  return (
-    <div className="flex flex-col items-center justify-center py-32 px-6 text-center max-w-xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-1000">
-      <div className="w-24 h-24 rounded-[2rem] flex items-center justify-center mb-8 bg-gradient-to-br from-[var(--color-primary-surface)] to-[var(--color-bg-secondary)] shadow-[var(--shadow-sm)] border border-[var(--color-border)]">
-        <Lock size={36} strokeWidth={1.2} className="text-[var(--color-primary)]" />
-      </div>
-      <h2 className="text-3xl font-bold text-[var(--color-text-primary)] mb-4">Relatórios de IA</h2>
-      <p className="text-lg text-[var(--color-text-secondary)] mb-10 leading-relaxed max-w-md">
-        Geração automática de relatórios executivos disponível nos planos <strong className="text-[var(--color-text-primary)]">Gestão</strong> e <strong className="text-[var(--color-text-primary)]">Enterprise</strong>.
-      </p>
-      <Link href="/app/configuracoes" className="inline-flex items-center gap-3 px-10 py-4 rounded-2xl bg-[var(--color-primary)] text-white font-bold text-base shadow-[var(--shadow-md)] transition-all hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5">
-        Conhecer Planos <ChevronRight size={20} />
-      </Link>
-    </div>
-  );
-}
-
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
     rascunho: { label: "Rascunho", color: "bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]", icon: <Clock size={11} /> },
@@ -56,7 +39,7 @@ export default function RelatoriosPage() {
   const [generateError, setGenerateError] = useState<string | null>(null);
 
   const { data, isLoading, mutate } = useSWR<{ reports: ReportSummary[] }>(
-    user && user.plano !== "entrada" ? "/api/reports/generate" : null,
+    user ? "/api/reports/generate" : null,
     fetcher,
     { refreshInterval: 60000 }
   );
@@ -90,19 +73,6 @@ export default function RelatoriosPage() {
   }, [mutate]);
 
   if (!user) return null;
-
-  if (user.plano === "entrada") {
-    return (
-      <>
-        <DashboardHeader />
-        <main className="pb-28 lg:pb-10 overflow-y-auto h-full">
-          <div className="mx-auto max-w-[1280px] px-4 py-6 md:px-6 md:py-8">
-            <PlanGate />
-          </div>
-        </main>
-      </>
-    );
-  }
 
   const reports = data?.reports ?? [];
 

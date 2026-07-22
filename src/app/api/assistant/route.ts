@@ -56,10 +56,6 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "Sessão inválida" }, { status: 401 });
   }
 
-  if (session.plano === "entrada") {
-    return Response.json({ error: "feature_not_available", plano: session.plano }, { status: 403 });
-  }
-
   if (session.plano === "suspenso" || session.plano === "cancelado") {
     return Response.json({ error: "plan_suspended", plano: session.plano }, { status: 403 });
   }

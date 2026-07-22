@@ -1,0 +1,29 @@
+# Vocabulário controlado de area/module/feature para o Reversa Bugs.
+# Semeado a partir de _reversa_sdd/architecture.md, c4-components.md e inventory.md em 2026-07-21.
+# Novos termos propostos pelos agentes ficam em Agent Notes do bug, nunca inventados direto aqui.
+
+area:
+  - saas-core   # único produto, Portal Sigilo (SaaS multi-tenant de canal de denúncias)
+
+module:
+  - route-handlers      # src/app/api/**/route.ts
+  - firebase-functions  # functions/src/* (webhookAsaas, generateDailyInsights, generateMonthlyReports)
+  - client-ui           # src/app/**/page.tsx, src/components/*
+  - lib-shared          # src/lib/* (auth, audit, protocol, triagem, asaas/*, planos, env)
+  - firestore-rules     # firestore.rules
+
+feature:
+  - assistant
+  - auth
+  - billing
+  - cases
+  - chat
+  - checkout
+  - dashboard
+  - messages
+  - orgs
+  - reports
+  - upload-attachment
+  - planos-unificacao   # feature 002-unificar-plano-assinatura, unificação para plano único
+  - cross-cutting
+  - unclassified

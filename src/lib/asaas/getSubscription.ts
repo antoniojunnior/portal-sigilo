@@ -1,59 +1,65 @@
 import "server-only";
-import { ASAAS_API_KEY, ASAAS_BASE_URL } from "@/lib/env";
+import { adminDb } from "@/lib/firebase-admin/admin";
+import { getInvoices, type Invoice } from "@/lib/asaas/getInvoices";
 
 export interface SubscriptionData {
-  source: "asaas" | "firestore";
+  source: "firestore";
   plano_ativo: string;
   valor: number | null;
-  ciclo: "MONTHLY" | "YEARLY" | null;
+  ciclo: "YEARLY" | null;
   proximo_vencimento: string | null;
   status: "ACTIVE" | "INACTIVE" | "SUSPENDED" | null;
-  subscription_id: string | null;
+  subscription_id: null;
+  parcelas: number | null;
+  renovacao_cancelada: boolean;
 }
-
-interface AsaasSubscription {
-  id: string;
-  status: string;
-  value: number;
-  cycle: string;
-  nextDueDate: string;
-}
-
-interface AsaasListResponse {
-  data?: AsaasSubscription[];
-}
-
-const VALUE_TO_PLANO: Record<number, string> = {
-  117: "entrada",
-  97: "entrada",
-  227: "gestao",
-  197: "gestao",
-};
 
 export async function getSubscription(customerId: string): Promise<SubscriptionData | null> {
-  if (!ASAAS_API_KEY) return null;
+  const orgSnap = await adminDb
+    .collection("orgs")
+    .where("asaas_customer_id", "==", customerId)
+    .limit(1)
+    .get();
 
-  try {
-    const res = await fetch(
-      `${ASAAS_BASE_URL}/v3/subscriptions?customer=${encodeURIComponent(customerId)}&status=ACTIVE&limit=1`,
-      { headers: { access_token: ASAAS_API_KEY } }
-    );
-    if (!res.ok) return null;
+  if (orgSnap.empty) return null;
 
-    const data = (await res.json()) as AsaasListResponse;
-    const sub = data.data?.[0];
-    if (!sub) return null;
+  const orgData = orgSnap.docs[0].data();
+  const planoAtivo = orgData.plano_ativo as string | undefined;
+  const dataRenovacao = orgData.data_renovacao as { toDate?: () => Date } | undefined;
+  const proximaCobrancaParcelas = (orgData.proxima_cobranca_parcelas as number | undefined) ?? 12;
+  const renovacaoCancelada = (orgData.renovacao_cancelada as boolean) ?? false;
 
-    return {
-      source: "asaas",
-      plano_ativo: VALUE_TO_PLANO[sub.value] ?? "gestao",
-      valor: sub.value ?? null,
-      ciclo: (sub.cycle as "MONTHLY" | "YEARLY") ?? null,
-      proximo_vencimento: sub.nextDueDate ?? null,
-      status: (sub.status as "ACTIVE" | "INACTIVE" | "SUSPENDED") ?? null,
-      subscription_id: sub.id ?? null,
-    };
-  } catch {
-    return null;
+  let valor: number | null = null;
+  let status: "ACTIVE" | "INACTIVE" | "SUSPENDED" | null = null;
+
+  const invoices = await getInvoices(customerId);
+  if (invoices.length > 0) {
+    const lastInvoice: Invoice = invoices[0];
+    valor = lastInvoice.valor;
+    switch (lastInvoice.status) {
+      case "RECEIVED":
+        status = "ACTIVE";
+        break;
+      case "OVERDUE":
+        status = "SUSPENDED";
+        break;
+      case "CANCELLED":
+        status = "INACTIVE";
+        break;
+      default:
+        status = "ACTIVE";
+    }
   }
+
+  return {
+    source: "firestore",
+    plano_ativo: planoAtivo ?? "unico",
+    valor,
+    ciclo: "YEARLY",
+    proximo_vencimento: dataRenovacao?.toDate?.()?.toISOString?.() ?? null,
+    status,
+    subscription_id: null,
+    parcelas: proximaCobrancaParcelas,
+    renovacao_cancelada: renovacaoCancelada,
+  };
 }

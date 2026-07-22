@@ -7,94 +7,73 @@
 > - `_reversa_forward/002-unificar-plano-assinatura/roadmap.md`
 > - `_reversa_forward/002-unificar-plano-assinatura/actions.md`
 > - `_reversa_forward/002-unificar-plano-assinatura/investigation.md`, `data-delta.md`, `onboarding.md`, `interfaces/*.md` (apoio)
-> - `_reversa_sdd/domain.md`, `_reversa_sdd/architecture.md` (coerência com o legado)
+> - `_reversa_sdd/domain.md` (regra 🟢 sobre gates de plano)
+> - Código real: `src/app/(dashboard)/app/(protected)/casos/page.tsx`, `.../casos/[caseId]/page.tsx`, `.../relatorios/page.tsx`, e busca ampla por `plano`/`plano_ativo` em `src/` e `functions/`
 >
 > Este relatório é estritamente leitor. Nenhum dos artefatos analisados foi alterado.
+>
+> Nota: esta é a **terceira execução** de `/reversa-audit` para esta feature. As duas rodadas anteriores (achados A001–A008 e A001–A005) foram corrigidas — confirmado nesta releitura, incluindo a edição manual do `requirements.md` feita após `/reversa-quality` (nova RNF de idempotência, RNF de billing reescrita, nota em §7). O achado abaixo é novo, encontrado ao ampliar a busca no código real para além dos arquivos já citados pelos artefatos da feature.
 
 ## Resumo
 
 | Severidade | Contagem |
 |---|---|
-| CRITICAL | 1 |
-| HIGH | 2 |
-| MEDIUM | 2 |
-| LOW | 3 |
-| **Total** | **8** |
+| CRITICAL | 0 |
+| HIGH | 1 |
+| MEDIUM | 0 |
+| LOW | 0 |
+| **Total** | **1** |
 
 ## Findings
 
 | ID | Severidade | Eixo | Descrição | Onde está |
 |----|-----------|------|-----------|-----------|
-| A001 | CRITICAL | Coerência com o legado / Cobertura | `DELETE /api/billing/cancel` fica inoperante para toda org contratada sob a Opção A (D-04) | `requirements.md` RF-12; `roadmap.md` D-04; `interfaces/webhook-asaas.md`; `actions.md` (sem ação) |
-| A002 | HIGH | Cobertura | `GET /api/billing/subscription` perde dados de faturamento (valor/ciclo/status) para orgs sob a Opção A | `investigation.md` (levantamento incompleto); `actions.md` (sem ação) |
-| A003 | HIGH | Cobertura | RF-07 (fonte única de preço) não tem ação que elimine a duplicação do valor `1164` | `requirements.md` RF-07; `actions.md` T002, T015 |
-| A004 | MEDIUM | Consistência | `actions.md` T009/T010 citam decisão `D-02`, que não cobre o escopo dessas ações | `roadmap.md` D-02 vs §5; `actions.md` T009, T010 |
-| A005 | MEDIUM | Sanidade do actions | T003 e T019 compartilham arquivo alvo e ambas estão marcadas `[//]` | `actions.md` T003, T019 |
-| A006 | LOW | Cosmético | Nomes de fase fogem do padrão canônico do template (duas fases "Integração", nenhuma "Testes" dedicada) | `actions.md` (cabeçalhos de fase) |
-| A007 | LOW | Consistência | T017 remove `determinarPlano` (D-03) mas só cita `(D-04)` | `actions.md` T017 vs `roadmap.md` D-03 |
-| A008 | LOW | Consistência | T013 não cita nenhum ID de decisão na descrição | `actions.md` T013 |
+| A001 | HIGH | Cobertura | Três gates de UI por `plano === "entrada"` (exportar CSV, página de relatórios inteira, assistente de IA no caso) não estão em nenhum artefato da feature nem na varredura do `T024` | `src/app/(dashboard)/app/(protected)/casos/page.tsx:205`; `.../relatorios/page.tsx:59,94`; `.../casos/[caseId]/page.tsx:658`; `investigation.md` (ausente); `actions.md` (sem ação; `T024` não busca por "entrada"/"gestao") |
 
-## Detalhamento — CRITICAL e HIGH
+## Detalhamento — HIGH
 
-### A001 (CRITICAL) — Cancelamento de assinatura quebra sob a nova arquitetura de cobrança
+### A001 (HIGH) — Três gates de UI por tier de plano ficam esquecidos no código, fora do alcance até da varredura final
 
-`requirements.md` RF-12 (Must) afirma que `billing/cancel` "não tem comportamento alterado" por esta feature, e `interfaces/webhook-asaas.md` reforça essa suposição dizendo que a rota "já existente" só precisaria marcar `plano_ativo = "cancelado"`. Isso não é o que o código real faz.
+`investigation.md` §"Levantamento de todos os pontos de diferenciação por plano" (19 pontos, após as duas rodadas anteriores de audit) mapeia os 4 gates de feature por Route Handler (`assistant`, `dashboard/insights`, `triagem`, `reports/generate`) cobertos por D-02/T006-T009, e as duas Cloud Functions agendadas (D-13/T026). Uma busca ampla por `plano ===`/`plano !==` em todo `src/` encontrou 3 pontos adicionais de gate por `"entrada"`, nenhum deles em `investigation.md` nem em `actions.md`:
 
-Lendo `src/app/api/billing/cancel/route.ts`: o endpoint chama `getSubscription(customerId)`, exige `sub?.subscription_id` (senão retorna 404 "Assinatura ativa não encontrada") e, se encontrado, chama `cancelSubscription(subscription_id)` (`src/lib/asaas/cancelSubscription.ts`), que executa `DELETE /v3/subscriptions/{id}` na Asaas — uma operação exclusiva de objetos `subscription`.
+1. **`src/app/(dashboard)/app/(protected)/casos/page.tsx:205`** — `const canExportCSV = user?.plano !== "entrada";` controla se o botão de exportar CSV da lista de casos aparece habilitado. Nenhuma RN/RF do `requirements.md` menciona exportação de CSV — este ponto nunca foi um requisito explícito desta feature, é um gate de tier pré-existente que a extração original (`_reversa_sdd/domain.md` linha 34) também não documentou.
+2. **`src/app/(dashboard)/app/(protected)/relatorios/page.tsx:59,94`** — a página inteira de relatórios verifica `user.plano === "entrada"` duas vezes: uma no `key` do SWR que busca os relatórios, outra bloqueando a página inteira com um componente local `PlanGate` (mensagem de upgrade). Isso é **diferente e mais amplo** do que o gate já coberto por `T009` (que só remove a checagem de subtipo "personalizado" dentro da API `POST /api/reports/generate`) — aqui é a página de listagem inteira que fica bloqueada, não só a geração de um subtipo.
+3. **`src/app/(dashboard)/app/(protected)/casos/[caseId]/page.tsx:658`** — dentro do detalhe de um caso, um bloco de UI mostra "Assistente de IA disponível nos planos Gestão e Enterprise" com cadeado, no lugar do botão real do assistente, quando `user?.plano === "entrada"`. É um gate de **UI** paralelo ao gate de **API** já coberto por `T006` (`POST /api/assistant`) — remover só o gate da API deixa esse bloco de UI datado, mas como o dado nunca mais será `"entrada"`, o branch simplesmente vira código morto em vez de causar erro.
 
-Sob a Opção A (D-04, confirmada), nenhuma org nova é provisionada com um objeto `subscription` na Asaas — só cobranças avulsas parceladas (`chargeType: INSTALLMENT`). Logo, `getSubscription()` nunca vai retornar `subscription_id` para essas orgs, e `DELETE /api/billing/cancel` vai **sempre** responder 404, tornando impossível cancelar a assinatura pela UI — uma regressão direta contra RF-12 (Must) e contra a própria RN-10 (🟢 confirmada, preservada do legado em `_reversa_sdd/state-machines.md#3`).
+**Por que isso passou despercebido até agora:** `T024` (a varredura final de "confirmar/limpar qualquer ocorrência residual") busca literalmente por `"enterprise"`, `"subscription_id"`, `getSubscription`, `cancelSubscription` — nenhum desses termos aparece nos 3 pontos acima, que usam `"entrada"` e `"gestao"`, não `"enterprise"`. A rede de segurança do fim do pipeline não cobre esses termos.
 
-**Nenhuma ação em `actions.md` toca `cancelSubscription.ts` nem `billing/cancel/route.ts`.** T012 só remove `VALUE_TO_PLANO` de `getSubscription.ts`, sem tratar a consulta de `subscription_id` em si.
+**Impacto real, com uma ressalva importante:** como o campo `orgs.plano_ativo` nunca mais assumirá o valor `"entrada"` depois desta feature (RN-02, D-01), as 3 comparações acima degradam **com segurança** — `canExportCSV` sempre vira `true` (CSV liberado pra todo mundo, que é o comportamento correto sob RN-01), a página de relatórios nunca mais mostra o `PlanGate`, e o cadeado do assistente nunca mais aparece no detalhe do caso. Não há regressão funcional como a do achado A001 da 2ª rodada (aquele quebrava um Must ao ficar permanentemente vazio). O problema aqui é puramente de dívida técnica: 3 blocos de código passam a comparar contra um valor de plano que nunca mais existirá, contrariando o próprio princípio que `D-02` já declarou ("Ramificação morta é dívida técnica automática — remover custa o mesmo que manter, evita confusão futura") — só que `D-02` e as ações que ele gerou (T006-T009) nunca chegaram a esses 3 pontos.
 
-**Impacto:** se codado como está, a feature entrega um Must quebrado silenciosamente — só seria descoberto ao tentar cancelar uma assinatura de teste manualmente (que o `onboarding.md` atual nem cobre, já que seu passo de validação de suspensão/cancelamento não testa o fluxo de cancelamento voluntário via dashboard).
+**Nota à parte sobre o CSV:** diferente dos outros dois pontos (que são a mesma regra de negócio de RN-01 em outra camada — UI espelhando API), a exportação de CSV nunca foi mencionada em nenhuma RN/RF desta feature. Vale uma decisão consciente do humano: unificar esse ponto também (estender D-02) ou registrar explicitamente que fica fora do escopo desta feature, para não ficar sem menção em lugar nenhum.
 
-**Direção sugerida:** este cross-check não corrige. Revisitar `roadmap.md`/`actions.md` (via reexecução de `/reversa-plan`, ou edição manual) para decidir como `billing/cancel` deve funcionar sob a Opção A — por exemplo, cancelar significa apenas marcar `plano_ativo = "cancelado"` e impedir a próxima cobrança agendada de disparar (sem chamar nenhum endpoint de assinatura da Asaas, já que não existe mais) — e adicionar a ação correspondente antes de `/reversa-coding`.
-
-### A002 (HIGH) — Tela de faturamento perde dados sob a nova arquitetura
-
-`GET /api/billing/subscription` (`src/app/api/billing/subscription/route.ts`) consulta `getSubscription(customerId)`, que busca `/v3/subscriptions?customer=...` na Asaas. Sob a Opção A, essa busca nunca encontra nada para orgs novas (não há mais objeto `subscription`), então a rota sempre cai no `firestoreFallback()`, que devolve `valor: null`, `ciclo: null`, `status: null`, `subscription_id: null` — só `plano_ativo` e `proximo_vencimento` (via `data_renovacao`) continuam corretos.
-
-Isso não quebra a rota (ainda responde 200), mas degrada silenciosamente a tela de "Faturamento" do dashboard para todo cliente contratado sob o novo modelo — nenhum artefato do plano documenta essa consequência. `investigation.md` §"Levantamento de todos os pontos" (13 pontos) não inclui `billing/subscription/route.ts` nem `getSubscription.ts` além da remoção pontual de `VALUE_TO_PLANO`.
-
-**Impacto:** médio-alto no produto (usuário perde visibilidade de valor/status da cobrança), mas não bloqueia nenhum fluxo crítico — por isso HIGH, não CRITICAL.
-
-**Direção sugerida:** ao resolver A001, considerar se a mesma correção de `getSubscription.ts` (ou uma nova função equivalente) também deveria derivar `valor`/`ciclo`/`status` a partir de `orgs.proxima_cobranca_parcelas`/`data_renovacao`/histórico de cobranças avulsas, em vez de consultar um endpoint de assinatura que não se aplica mais. Mesma via de correção: reexecução de `/reversa-plan` ou edição manual do roadmap/actions antes de codar.
-
-### A003 (HIGH) — RF-07 (fonte única de preço) não é resolvido por nenhuma ação
-
-`requirements.md` RF-07 (Should) pede uma única fonte de verdade de preço/nome do plano, "eliminando a divergência entre `PLANOS_CONFIG` e `src/lib/planos.ts`" — esse é o mesmo débito técnico já registrado em `_reversa_sdd/checkout/design.md` antes desta feature existir.
-
-Em `actions.md`, T002 grava `precoAnual: 1164` em `src/lib/planos.ts`; T015 grava `totalValue: 1164` de forma independente em `src/lib/asaas/createPaymentLink.ts`. Nenhuma ação cria uma constante ou módulo compartilhado entre os dois — o valor `1164` fica hardcoded duas vezes, reproduzindo exatamente o padrão que RF-07 pede para eliminar. `roadmap.md` também não tem uma "Decisão técnica" (§3) dedicada a isso, apenas a linha "Config de planos (UI)" no delta arquitetural (§5), sem indicar consolidação real.
-
-**Impacto:** não bloqueia a feature (RF-07 é "Should"), mas perpetua o débito técnico que a unificação deveria resolver — se o preço mudar de novo no futuro, alguém vai precisar lembrar de editar dois arquivos.
-
-**Direção sugerida:** adicionar uma decisão técnica e uma ação (ex.: um módulo `src/lib/planos-config.ts` único, importado tanto por `planos.ts` quanto por `createPaymentLink.ts`) via reexecução de `/reversa-plan`/`/reversa-to-do`, ou aceitar conscientemente o débito residual e registrar essa aceitação em `roadmap.md`.
+**Direção sugerida:** este cross-check não corrige. Estender `D-02` no `roadmap.md` para cobrir os 3 pontos de UI (ou registrar explicitamente a exclusão do ponto do CSV, se for decisão consciente), adicionar as ações correspondentes em `actions.md`, e considerar ampliar os termos de busca de `T024` para incluir `"entrada"`/`"gestao"` também, não só `"enterprise"`/`subscription`.
 
 ## Itens verificados que passaram
 
 ### Cobertura
-- Todas as 11 Regras de Negócio (RN-01 a RN-11) do `requirements.md` têm pelo menos uma Decisão técnica correspondente em `roadmap.md` §3
-- Os 7 cenários Gherkin do `requirements.md` §7 têm cobertura em ações de `actions.md` ou em passos de validação de `onboarding.md`
-- RF-08/RF-09 (remoção completa do Enterprise) têm cobertura consistente em D-08 e nas ações T002, T020, T021, T022
+- Todas as 11 Regras de Negócio (RN-01 a RN-11) têm pelo menos uma Decisão técnica em `roadmap.md` §3; a nova RNF "Idempotência e falha de cobrança" (adicionada após `/reversa-quality`) está corretamente coberta por D-09/D-15 e pelas ações T001/T018
+- Os 7 cenários Gherkin do `requirements.md` §7 têm cobertura em ações ou em `onboarding.md`; a nota adicionada em §7 sobre RF-07/RF-09/RF-11 (sem Gherkin por serem estruturais/documentais) é coerente com os critérios de aceite dessas 3 RFs em §5
+- Os 5 achados HIGH/CRITICAL da 2ª rodada (functions agendadas, badges de UI, idempotência, métrica de cadeia de dependência, título de SECURITY.md) estão de fato resolvidos por D-13/D-14/D-15/D-16 e pelas ações T001, T018, T023, T026, T027, T028, T029
 
 ### Consistência
-- Nenhum identificador fantasma: todos os IDs de RN/RF/D/T citados cruzadamente existem nos documentos que deveriam defini-los
-- Todos os arquivos do `_reversa_sdd/` citados em `roadmap.md` (checkout/design.md, checkout/contracts.md, adrs/003, assistant/requirements.md, dashboard/design.md, chat/design.md, reports/design.md, upload-attachment/design.md, data-dictionary.md, traceability/spec-impact-matrix.md) existem de fato no disco
-- Os dois contratos documentados em `interfaces/` (`checkout-create.md`, `webhook-asaas.md`) aparecem corretamente listados na tabela §7 do `roadmap.md`
-- Terminologia (`"unico"`, `parcelas`, `plano_ativo`, `categoria_legal`) é usada de forma consistente entre `requirements.md`, `roadmap.md` e `actions.md`
+- Nenhum identificador fantasma: todos os IDs de RN/RF/D/T citados cruzadamente (incluindo D-13 a D-16 e T026-T029) existem nos documentos que deveriam defini-los
+- A RNF de billing reescrita (pós-`/reversa-quality`) não deixou nenhuma referência solta a `functions/src/webhookAsaas.ts` fora de `investigation.md`, onde ela já é detalhada corretamente
+- Terminologia (`"unico"`, `parcelas`, `plano_ativo`, `ultima_cobranca_ciclo`) consistente entre `requirements.md`, `roadmap.md`, `data-delta.md` e `actions.md`
 
 ### Coerência com o legado
-- A mudança à regra 🟢 "Planos são gates de feature aplicados no servidor" (`domain.md`) é intencional, corretamente identificada como alteração (não como omissão) e rastreada à origem em `requirements.md` RN-01
-- `src/app/api/billing/cancel/route.ts`, `src/app/api/billing/invoices/route.ts` e `src/app/api/billing/subscription/route.ts` foram lidos e comparados contra as decisões do roadmap — `billing/invoices` (via `getInvoices.ts`, que consulta `/v3/payments` por cliente, não por assinatura) **não é afetado** pela mudança de arquitetura de cobrança, ao contrário de `billing/cancel` e `billing/subscription` (ver A001, A002)
+- A regra 🟢 de `domain.md` linha 34 ("Plano entrada: sem assistente IA... Todos os gates são checados no Route Handler") já estava incompleta na extração original — ela mesma não documentava os 3 gates de UI do achado A001 acima, então não há contradição nova introduzida por esta feature, só uma lacuna pré-existente que a feature herda e agora tem a chance de fechar
 - Nenhuma outra regra 🟢 do `domain.md` é contradita pelas decisões do roadmap
 
 ### Sanidade do actions
-- Nenhum ciclo de dependência: todas as dependências de `actions.md` apontam para IDs de menor numeração, tornando um ciclo estruturalmente impossível
-- Todas as 47 referências de dependência entre T001–T023 apontam para IDs que existem no documento
-- Apenas 1 par de tarefas marcadas `[//]` compartilha arquivo alvo (A005); os demais 15 pares/itens `[//]` são mutuamente independentes e tocam arquivos distintos
+- Nenhum ciclo de dependência: todas as dependências apontam para IDs de menor numeração
+- Métrica "Maior cadeia de dependência: 5" confirmada correta nesta rodada (recalculada manualmente a partir da tabela real de dependências, incluindo T026-T029)
+- Contagem de paralelizáveis (22) e total de ações (29) conferem com a contagem real de marcadores `[//]` e linhas de ação
+- Nenhum par de tarefas `[//]` compartilha arquivo alvo, incluindo as 4 ações novas (T026-T029)
 
 ## Histórico de alterações
 
 | Data | Alteração | Autor |
 |------|-----------|-------|
 | 2026-07-21 | Versão inicial gerada por `/reversa-audit` | reversa |
+| 2026-07-21 | Segunda execução, pós-correção de A001–A008 da 1ª rodada (confirmados resolvidos). Novos achados: A001 (CRITICAL, functions agendadas), A002 (HIGH, badges de UI), A003 (HIGH, idempotência), A004 (MEDIUM, métrica de cadeia), A005 (MEDIUM, título de SECURITY.md) | reversa |
+| 2026-07-21 | Terceira execução, pós-correção de A001–A005 da 2ª rodada (confirmados resolvidos) e pós-edição manual do `requirements.md` via `/reversa-quality`. Novo achado a partir de busca ampla no código real: A001 (HIGH, 3 gates de UI por `plano === "entrada"` em `casos/page.tsx`, `relatorios/page.tsx` e `casos/[caseId]/page.tsx`, fora do alcance da varredura `T024`) | reversa |

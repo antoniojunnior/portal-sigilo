@@ -6,10 +6,10 @@ export type BillingCycle = "mensal" | "anual";
 
 // ─── Org (tenant) ────────────────────────────────────────────────────────────
 
-export type Plano = "entrada" | "gestao" | "enterprise";
+export type Plano = "unico" | "suspenso" | "cancelado";
 
 export interface PlanoConfig {
-  id: "entrada" | "gestao" | "enterprise";
+  id: "unico" | "suspenso" | "cancelado";
   nome: string;
   precoMensal: number | null;
   precoAnual: number | null;
@@ -33,6 +33,10 @@ export interface Org {
   nome: string;
   slug: string;
   plano_ativo: Plano;
+  asaas_credit_card_token: string | null;
+  proxima_cobranca_parcelas: number;
+  renovacao_cancelada: boolean;
+  ultima_cobranca_ciclo: number;
   url_canal?: string;
   logo?: string;
   dominios_white_label: string[];

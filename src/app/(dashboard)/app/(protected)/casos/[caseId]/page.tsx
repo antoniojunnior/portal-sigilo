@@ -654,29 +654,17 @@ export default function CaseDetailPage({ params }: Props) {
               />
             </div>
 
-            {/* AI assistant — gated by plan */}
-            {user?.plano === "entrada" ? (
-              <div className="rounded-2xl border-2 border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-5 text-center">
-                <Lock size={20} className="mx-auto mb-2 text-[var(--color-text-tertiary)]" />
-                <p className="text-xs text-[var(--color-text-secondary)] mb-3">
-                  Assistente de IA disponível nos planos Gestão e Enterprise.
-                </p>
-                <Link href="/app/configuracoes" className="text-xs font-bold text-[var(--color-primary)] hover:underline">
-                  Conhecer planos →
-                </Link>
-              </div>
-            ) : (
-              <Button
-                variant="secondary"
-                fullWidth
-                size="lg"
-                onClick={() => setAiOpen(true)}
-                className="py-6 rounded-2xl border-2 border-[var(--color-primary)]/10 hover:border-[var(--color-primary)]/30 hover:bg-[var(--color-primary)]/5 text-[var(--color-primary)] font-bold shadow-sm"
-                iconLeft={<Sparkles size={18} strokeWidth={2} />}
-              >
-                Assistente de IA
-              </Button>
-            )}
+            {/* AI assistant */}
+            <Button
+              variant="secondary"
+              fullWidth
+              size="lg"
+              onClick={() => setAiOpen(true)}
+              className="py-6 rounded-2xl border-2 border-[var(--color-primary)]/10 hover:border-[var(--color-primary)]/30 hover:bg-[var(--color-primary)]/5 text-[var(--color-primary)] font-bold shadow-sm"
+              iconLeft={<Sparkles size={18} strokeWidth={2} />}
+            >
+              Assistente de IA
+            </Button>
 
             {/* Responsible */}
             <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-6 shadow-sm">
