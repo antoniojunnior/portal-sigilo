@@ -3,8 +3,8 @@ schema_version: 1
 id: BUG-20260722-T6R2
 display_number: 9
 title: getInvoices/getSubscription mapeiam status de pagamento Asaas de forma incompleta — CONFIRMED e status de problema caem no mesmo default
-status: active
-phase: observing
+status: resolved
+phase: resolved
 severity: high
 priority: P1
 created: 2026-07-22
@@ -104,8 +104,9 @@ closure:
     pushed_to: "origin/main"
   post_fix_observation:
     started_at: "2026-07-22"
-    window: "a definir (recomendado: até o próximo ciclo de renovação/cobrança real observado sem recorrência, ou min. 1 fatura real processada com status CONFIRMED sem quebra reportada)"
-    status: "observing"
+    closed_at: "2026-07-22"
+    window: "waived — usuário aceitou a prova contra sandbox Asaas real (6/6 pagamentos CONFIRMED, customer real cus_000008453055) como evidência suficiente de não-recorrência, dispensando espera por tráfego de produção real. Decisão registrada em 2026-07-22 via /reversa-debugger-fix."
+    status: "closed"
 resolution_kind: fixed
 ---
 
@@ -189,7 +190,7 @@ has no exported member 'mapInvoiceStatusToSubscriptionStatus'.
 
 `npx tsc --noEmit` (projeto inteiro): `EXIT:0`, sem erros novos.
 
-**Fechamento:** `status: active`, `phase: observing` — entregue via commit `5a16080` (código) / `16cb31c` (rastreabilidade), push `70dbd47..16cb31c` para `origin/main` em 2026-07-22. `closure.satisfied: false` até a janela de `post_fix_observation` confirmar não recorrência (política `production-service`). Sem `DONE.md` ainda — ver próxima chamada de `/reversa-debugger-fix` para encerrar a observação.
+**Fechamento:** `status: resolved`, `phase: resolved`, `closure.satisfied: true` — entregue via commit `5a16080` (código) / `16cb31c`, `a007aef` (rastreabilidade), push para `origin/main` em 2026-07-22. Janela de `post_fix_observation` **waived**: usuário decidiu (via `/reversa-debugger-fix`, 2026-07-22) aceitar a prova contra sandbox Asaas real (6/6 pagamentos `CONFIRMED` do customer real `cus_000008453055`) como evidência suficiente de não-recorrência, em vez de esperar tráfego de produção real. Trava `DONE.md` gravada.
 
 ## Agent Notes
 

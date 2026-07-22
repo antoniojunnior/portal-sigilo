@@ -39,29 +39,19 @@
 <body>
 
 <h1>Grafo de Bugs · unificacao-plano-assinatura</h1>
-<div class="meta">Gerado por /reversa-debugger-graph em 2026-07-22 · 9 bugs (8 resolved, 1 active/delivering) · 0 inconsistências</div>
-<div class="legend">2ª varredura pós-fechamento: 8 bugs seguem corrigidos e travados com <code>DONE.md</code>. <strong>BUG-20260722-T6R2</strong> corrigido nesta sessão (fix aplicado, testes verdes) — falta <code>delivery</code> (commit/deploy) + janela de observação pra fechar via <code>production-service</code>. <code>closure_policy: production-service</code> — os 8 resolved também faltam <code>delivery</code> + observação.</div>
+<div class="meta">Gerado por /reversa-debugger-graph em 2026-07-22 · 9 bugs (9 resolved) · 0 inconsistências</div>
+<div class="legend">Todos os 9 bugs corrigidos e travados com <code>DONE.md</code>. <strong>BUG-20260722-T6R2</strong> (última varredura) fechou com observação <em>waived</em> por decisão do usuário — evidência de sandbox Asaas real aceita no lugar de tráfego de produção real. <code>closure_policy: production-service</code> — os outros 8 seguem com <code>delivery</code> pendente de registro formal (fechados antes desta convenção mais rígida).</div>
 
 <div class="cards">
   <div class="card"><div class="n">9</div><div class="l">Total de bugs</div></div>
-  <div class="card"><div class="n">8</div><div class="l">Resolved · fixed</div></div>
-  <div class="card"><div class="n">1</div><div class="l">Active · observing</div></div>
+  <div class="card"><div class="n">9</div><div class="l">Resolved · fixed</div></div>
+  <div class="card"><div class="n">0</div><div class="l">Active</div></div>
   <div class="card"><div class="n">1</div><div class="l">Adendos de spec gerados</div></div>
 </div>
 
 <div class="prose">
   Sessão de correção YOLO original: 8 bugs com fix verificado em código real e fechados com <code>DONE.md</code>. Os 3 <strong>critical</strong>/P0 (K9M2, V3F7, R4T8) e os 4 restantes (P2W5 high, N7Q1/H3X6 medium, D8L4 low) tinham fix já aplicado no código; Q5J9 teve todas as 26 ocorrências de "Enterprise" removidas do PRD por decisão do usuário. Na 2ª varredura (pós-fechamento), <strong>BUG-20260722-T6R2</strong> foi registrado e corrigido: <code>getInvoices.ts</code>/<code>getSubscription.ts</code> não mapeavam o status real <code>CONFIRMED</code> da Asaas (confirmado via sandbox: 6/6 pagamentos reais), caindo no mesmo <code>default: "ACTIVE"</code> que também mascararia <code>REFUNDED</code>/<code>CHARGEBACK_*</code>. Diagnóstico ampliado durante o fix: o mesmo defeito já quebrava em runtime a tabela de faturas em <code>/configuracoes/faturamento</code> (severidade elevada medium→high). Novo valor <code>"DISPUTED"</code> adicionado por decisão de produto; adendo <code>spec-gap</code> gerado.
 </div>
-
-<section>
-<h2>Bugs abertos / ativos</h2>
-<table>
-<thead><tr><th>#</th><th>ID</th><th>Severidade</th><th>Prioridade</th><th>Título</th><th>Status</th></tr></thead>
-<tbody>
-<tr><td>9</td><td><a href="../bugs/BUG-20260722-T6R2-status-pagamento-mapeamento-incompleto/bug.md">BUG-20260722-T6R2</a></td><td class="sev-high">high</td><td>P1</td><td>getInvoices/getSubscription mapeiam status de pagamento de forma incompleta</td><td class="status-partial">🟡 active · observing (entregue: commit 5a16080, push 16cb31c)</td></tr>
-</tbody>
-</table>
-</section>
 
 <section>
 <h2>Bugs resolved</h2>
@@ -76,13 +66,14 @@
 <tr><td>5</td><td><a href="../bugs/BUG-20260721-H3X6-subscription-contrato-divergente/bug.md">BUG-20260721-H3X6</a></td><td class="sev-medium">medium</td><td>P2</td><td>billing/subscription diverge do contrato</td><td class="status-ok">✅ resolved · fixed</td></tr>
 <tr><td>6</td><td><a href="../bugs/BUG-20260721-D8L4-prd-enterprise-residual/bug.md">BUG-20260721-D8L4</a></td><td class="sev-low">low</td><td>P3</td><td>PRD §2.2 ainda usa "Enterprise" como rótulo</td><td class="status-ok">✅ resolved · fixed</td></tr>
 <tr><td>8</td><td><a href="../bugs/BUG-20260722-Q5J9-prd-gating-generalizado-residual/bug.md">BUG-20260722-Q5J9</a></td><td class="sev-low">low</td><td>P3</td><td>PRD documenta gating por tier em 6+ seções</td><td class="status-ok">✅ resolved · fixed</td></tr>
+<tr><td>9</td><td><a href="../bugs/BUG-20260722-T6R2-status-pagamento-mapeamento-incompleto/bug.md">BUG-20260722-T6R2</a></td><td class="sev-high">high</td><td>P1</td><td>getInvoices/getSubscription mapeiam status de pagamento de forma incompleta</td><td class="status-ok">✅ resolved · fixed (observação waived)</td></tr>
 </tbody>
 </table>
 </section>
 
 <section>
 <h2>Concluídos (travados)</h2>
-<p>8 dos 9 bugs estão concluídos e travados com <code>DONE.md</code>. <code>BUG-20260722-T6R2</code> já entregue (commit <code>5a16080</code>, push <code>16cb31c</code>), em janela de observação antes de virar <code>DONE</code>.</p>
+<p>Todos os 9 bugs estão concluídos e travados com <code>DONE.md</code>.</p>
 </section>
 
 </body>

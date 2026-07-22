@@ -1,4 +1,4 @@
-<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-07-22 a partir de 9 bugs (8 resolved, 1 active) -->
+<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-07-22 a partir de 9 bugs (9 resolved) -->
 
 # Índice de Bugs — unificacao-plano-assinatura
 
@@ -7,21 +7,18 @@
 | Status | Contagem |
 |---|---|
 | open | 0 |
-| active | 1 |
-| resolved | 8 |
+| active | 0 |
+| resolved | 9 |
 
 ## Resumo por phase
 
 | Phase | Contagem |
 |---|---|
-| resolved | 8 |
-| observing | 1 |
+| resolved | 9 |
 
 ## Bugs abertos / ativos
 
-| # | ID | Prioridade | Severidade | Título | Caminho |
-|---|----|-----------|-----------|--------|---------|
-| 9 | BUG-20260722-T6R2 | P1 | high | getInvoices/getSubscription mapeiam status de pagamento Asaas de forma incompleta — entregue (commit 5a16080), em janela de observação | `bugs/BUG-20260722-T6R2-status-pagamento-mapeamento-incompleto/` |
+Nenhum. Todos os 9 bugs estão `resolved` e travados com `DONE.md`.
 
 ## Resolvidos
 
@@ -35,6 +32,7 @@
 | 5 | BUG-20260721-H3X6 | P2 | medium | billing/subscription diverge do contrato | ✅ testado (sandbox real) |
 | 6 | BUG-20260721-D8L4 | P3 | low | PRD §2.2 ainda usa "Enterprise" como rótulo | ✅ aplicado (documentação) |
 | 8 | BUG-20260722-Q5J9 | P3 | low | PRD documenta gating por tier em 6+ seções | ✅ 26 ocorrências removidas |
+| 9 | BUG-20260722-T6R2 | P1 | high | getInvoices/getSubscription mapeiam status de pagamento de forma incompleta | ✅ testado (sandbox real, observação waived) |
 
 ## Bugs restritos
 
