@@ -4,7 +4,7 @@ id: BUG-20260722-T6R2
 display_number: 9
 title: getInvoices/getSubscription mapeiam status de pagamento Asaas de forma incompleta — CONFIRMED e status de problema caem no mesmo default
 status: active
-phase: delivering
+phase: observing
 severity: high
 priority: P1
 created: 2026-07-22
@@ -96,8 +96,16 @@ change_set:
 closure:
   policy: production-service
   satisfied: false
-  delivery: null
-  post_fix_observation: null
+  delivery:
+    kind: commit
+    ref: "16cb31c"
+    code_commit: "5a16080"
+    delivered_at: "2026-07-22"
+    pushed_to: "origin/main"
+  post_fix_observation:
+    started_at: "2026-07-22"
+    window: "a definir (recomendado: até o próximo ciclo de renovação/cobrança real observado sem recorrência, ou min. 1 fatura real processada com status CONFIRMED sem quebra reportada)"
+    status: "observing"
 resolution_kind: fixed
 ---
 
@@ -181,7 +189,7 @@ has no exported member 'mapInvoiceStatusToSubscriptionStatus'.
 
 `npx tsc --noEmit` (projeto inteiro): `EXIT:0`, sem erros novos.
 
-**Fechamento:** `status: active`, `phase: delivering` — `closure.satisfied: false` até `delivery` (commit/deploy) + janela de `post_fix_observation` sem recorrência (política `production-service`). Sem `DONE.md` ainda.
+**Fechamento:** `status: active`, `phase: observing` — entregue via commit `5a16080` (código) / `16cb31c` (rastreabilidade), push `70dbd47..16cb31c` para `origin/main` em 2026-07-22. `closure.satisfied: false` até a janela de `post_fix_observation` confirmar não recorrência (política `production-service`). Sem `DONE.md` ainda — ver próxima chamada de `/reversa-debugger-fix` para encerrar a observação.
 
 ## Agent Notes
 

@@ -15,13 +15,13 @@
 | Phase | Contagem |
 |---|---|
 | resolved | 8 |
-| delivering | 1 |
+| observing | 1 |
 
 ## Bugs abertos / ativos
 
 | # | ID | Prioridade | Severidade | Título | Caminho |
 |---|----|-----------|-----------|--------|---------|
-| 9 | BUG-20260722-T6R2 | P1 | high | getInvoices/getSubscription mapeiam status de pagamento Asaas de forma incompleta — fix aplicado, aguardando delivery + observação | `bugs/BUG-20260722-T6R2-status-pagamento-mapeamento-incompleto/` |
+| 9 | BUG-20260722-T6R2 | P1 | high | getInvoices/getSubscription mapeiam status de pagamento Asaas de forma incompleta — entregue (commit 5a16080), em janela de observação | `bugs/BUG-20260722-T6R2-status-pagamento-mapeamento-incompleto/` |
 
 ## Resolvidos
 
