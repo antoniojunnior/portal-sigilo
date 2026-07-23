@@ -1,0 +1,79 @@
+--- a/src/app/api/dashboard/insights/regenerate/route.ts
++++ b/src/app/api/dashboard/insights/regenerate/route.ts
+@@
+-import { isRegenerationAllowed } from "@/lib/insights/rateLimit";
++import { reserveRegenerationSlot } from "@/lib/insights/rateLimit";
+ import { FieldValue } from "firebase-admin/firestore";
+@@
+-    // FIX BUG-11: Transação atômica para check de rate limit + reserva do slot.
+-    // A leitura de gerado_em e a escrita do novo timestamp ocorrem atomicamente,
+-    // fechando a janela TOCTOU entre duas requisições concorrentes.
+-    try {
+-      await adminDb.runTransaction(async (tx) => {
+-        const orgSnap = await tx.get(adminDb.collection("orgs").doc(orgId));
+-        const aiInsights = orgSnap.data()?.ai_insights as { items?: string[]; gerado_em?: { toDate: () => Date }; source?: string } | undefined;
+-        const lastGeneratedAt = aiInsights?.gerado_em?.toDate?.() ?? null;
+-        const now = new Date();
+-
+-        if (!isRegenerationAllowed(lastGeneratedAt, now)) {
+-          const nextAllowed = lastGeneratedAt ? new Date(lastGeneratedAt.getTime() + 24 * 60 * 60 * 1000) : new Date();
+-          const hours = Math.ceil((nextAllowed.getTime() - now.getTime()) / (1000 * 60 * 60));
+-          const timeStr = nextAllowed.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+-          throw new RateLimitError(
+-            `Regeneração disponível novamente às ${timeStr} (em ${hours}h).`,
+-            nextAllowed.toISOString()
+-          );
+-        }
+-
+-        // Reserva o slot escrevendo gerado_em atomicamente com a leitura.
+-        // Se a chamada ao Claude falhar depois, o slot já está ocupado e
+-        // a próxima tentativa só poderá ocorrer após 24h (custo aceitável:
+-        // uma falha de regeneração já é rara, perder o slot por falha também).
+-        tx.update(adminDb.collection("orgs").doc(orgId), {
+-          "ai_insights.gerado_em": FieldValue.serverTimestamp(),
+-          "ai_insights.pending": true,
+-        });
+-      });
+-    } catch (err) {
+-      if (err instanceof RateLimitError) {
+-        return Response.json(
+-          {
+-            error: "rate_limited",
+-            message: err.message,
+-            nextAllowedAt: err.nextAllowedAt,
+-          },
+-          { status: 429 }
+-        );
+-      }
+-      throw err;
+-    }
++    // FIX BUG-11: reserveRegenerationSlot faz leitura+escrita de gerado_em
++    // atomicamente (Firestore transaction), fechando a janela TOCTOU entre
++    // duas requisições concorrentes. Extraída para src/lib/insights/rateLimit.ts
++    // pra ser testável contra Firestore real sem precisar do Route Handler HTTP.
++    const reservation = await reserveRegenerationSlot(orgId);
++    if (!reservation.allowed) {
++      const nextAllowed = new Date(reservation.nextAllowedAt);
++      const hours = Math.ceil((nextAllowed.getTime() - Date.now()) / (1000 * 60 * 60));
++      const timeStr = nextAllowed.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
++      return Response.json(
++        {
++          error: "rate_limited",
++          message: `Regeneração disponível novamente às ${timeStr} (em ${hours}h).`,
++          nextAllowedAt: reservation.nextAllowedAt,
++        },
++        { status: 429 }
++      );
++    }
+@@
+-}
+-
+-class RateLimitError extends Error {
+-  nextAllowedAt: string;
+-  constructor(message: string, nextAllowedAt: string) {
+-    super(message);
+-    this.name = "RateLimitError";
+-    this.nextAllowedAt = nextAllowedAt;
+-  }
+-}
++}

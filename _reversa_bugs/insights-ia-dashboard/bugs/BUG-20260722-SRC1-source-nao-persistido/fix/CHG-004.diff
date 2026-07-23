@@ -1,0 +1,19 @@
+--- a/src/lib/insights/mapItems.ts
++++ b/src/lib/insights/mapItems.ts
+@@
++// BUG-20260722-SRC1: fonte não persistida cai aqui — "ai_generated" só é correto
++// quando o dado é legado (persistido antes desta feature ter o campo `source`).
++export function resolveInsightSource(source: string | undefined): string {
++  return source ?? "ai_generated";
++}
++
+ export function mapInsightItemsToInsightResponse(items: string[]): {
+
+--- a/src/app/api/dashboard/insights/route.ts
++++ b/src/app/api/dashboard/insights/route.ts
+@@
+-import { mapInsightItemsToInsightResponse } from "@/lib/insights/mapItems";
++import { mapInsightItemsToInsightResponse, resolveInsightSource } from "@/lib/insights/mapItems";
+@@
+-        source: aiInsights.source ?? "ai_generated",
++        source: resolveInsightSource(aiInsights.source),

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plano de Correção · BUG-20260722-TCT1</title>
+<style>
+  :root {
+    --bg: #0f1117; --panel: #161a23; --border: #2a2f3d; --text: #e4e6eb; --text-dim: #9aa0ac;
+    --red: #f04747; --amber: #f0a020; --green: #3ba55d; --blue: #5865f2;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  h1 { font-size: 1.4rem; margin: 0 0 4px; }
+  h2 { font-size: 1.05rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; margin-top: 32px; }
+  .meta { color: var(--text-dim); font-size: 0.85rem; margin-bottom: 20px; }
+  .cards { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; min-width: 110px; }
+  .card .n { font-size: 1.3rem; font-weight: 700; }
+  .card .l { font-size: 0.75rem; color: var(--text-dim); }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.85rem; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--text-dim); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; }
+  tr:hover { background: #1a1e29; }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .sev-low { color: var(--text-dim); }
+  .prose { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; margin-bottom: 20px; font-size: 0.9rem; line-height: 1.55; }
+  .prose strong { color: var(--text); }
+  code { background: #1c2130; padding: 1px 5px; border-radius: 4px; font-size: 0.85em; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; }
+  .badge-confirmed { background: rgba(59,165,93,0.15); color: var(--green); }
+  ul { line-height: 1.6; }
+  .warn { border-left: 3px solid var(--amber); padding-left: 12px; }
+</style>
+</head>
+<body>
+
+<h1>Plano de Correção · #11 BUG-20260722-TCT1</h1>
+<div class="meta">Contexto: insights-ia-dashboard · Data: 2026-07-22 · <span class="sev-low">Severidade: low</span> · Prioridade: P3</div>
+
+<div class="cards">
+  <div class="card"><div class="n">2</div><div class="l">Arquivos tocados</div></div>
+  <div class="card"><div class="n">baixa-média</div><div class="l">Risco da mudança</div></div>
+  <div class="card"><div class="n">1</div><div class="l">Teste de concorrência real</div></div>
+</div>
+
+<h2>Situação: mitigação já aplicada no código, falta formalizar e testar de verdade</h2>
+<div class="prose">
+  A transação Firestore (<code>runTransaction</code>) já está no código (marcador <code>FIX BUG-11</code>), mas está <strong>inline</strong> dentro do Route Handler — não há como escrever um teste automatizado real de concorrência sem invocar o handler HTTP inteiro (sessão/cookie). Esta correção extrai a lógica de reserva de slot para uma função testável e escreve um teste que dispara 2 chamadas verdadeiramente concorrentes contra o Firestore real, provando que só uma passa.
+</div>
+
+<h2>Resumo do defeito e causa raiz</h2>
+<div class="prose">
+  <span class="badge badge-confirmed">confirmed</span> Antes do fix: o endpoint lia <code>gerado_em</code>, chamava a Anthropic API (pode levar segundos), e só DEPOIS gravava o novo <code>gerado_em</code>. Duas requisições concorrentes liam o mesmo valor antigo antes de qualquer uma escrever — ambas passavam pelo rate limit de 24h.
+</div>
+
+<h2>Estratégia escolhida</h2>
+<div class="prose">
+  <strong>Correção direta</strong> (mitigação já presente no código via <code>runTransaction</code>). Formalização: extraio a transação pra <code>reserveRegenerationSlot(orgId)</code> em <code>src/lib/insights/rateLimit.ts</code> — mesmo padrão de extração-para-testabilidade já usado em <code>mapItems.ts</code>/BUG-T6R2 nesta sessão — e escrevo um teste real de concorrência (<code>Promise.all</code> com 2 chamadas simultâneas contra Firestore real).
+</div>
+
+<h2>Correction Change Set</h2>
+<table>
+<thead><tr><th>CHG</th><th>Tipo</th><th>Artefato</th><th>Propósito</th></tr></thead>
+<tbody>
+<tr><td>CHG-001</td><td>code</td><td><code>src/app/api/dashboard/insights/regenerate/route.ts</code></td><td>Já aplicado: <code>runTransaction</code> envolvendo leitura+escrita de <code>gerado_em</code> (mitigação real do TOCTOU)</td></tr>
+<tr><td>CHG-002</td><td>code (refactor p/ testabilidade)</td><td><code>src/lib/insights/rateLimit.ts</code></td><td>NOVO — extrai <code>reserveRegenerationSlot(orgId)</code> a partir da transação inline do route handler</td></tr>
+<tr><td>CHG-003</td><td>code</td><td><code>src/app/api/dashboard/insights/regenerate/route.ts</code></td><td>NOVO — route passa a chamar <code>reserveRegenerationSlot</code> em vez da transação inline</td></tr>
+<tr><td>CHG-004</td><td>test</td><td><code>scripts/test-insights-bugs.ts</code></td><td>NOVO — teste de concorrência real: 2 chamadas simultâneas, só 1 deve retornar <code>allowed: true</code></td></tr>
+</tbody>
+</table>
+
+<h2>Testes planejados</h2>
+<table>
+<thead><tr><th>Tipo</th><th>O que prova</th></tr></thead>
+<tbody>
+<tr><td>Regressão (concorrência real)</td><td>Org de teste sem <code>gerado_em</code> prévio; 2 chamadas a <code>reserveRegenerationSlot</code> disparadas via <code>Promise.all</code> — exatamente 1 retorna <code>allowed: true</code>, a outra <code>allowed: false</code>. Prova que a transação serializa corretamente, sem mockar o Firestore.</td></tr>
+</tbody>
+</table>
+
+<h2>Riscos</h2>
+<div class="prose">
+  <strong>Risco: baixa-média.</strong> Extrair a transação pra função separada é refactor pequeno e cirúrgico — mesma lógica, só movida de lugar. Risco real é de teste "flaky": concorrência real em CI pode ter timing variável; mitigado testando contra Firestore real (não emulador, que pode ter latência de rede diferente) e checando a invariante (exatamente 1 allowed=true), não o timing exato.
+  <div class="warn">
+    <strong>Fora do escopo (já registrado no bug):</strong> se a chamada à Anthropic API falhar DEPOIS da transação reservar o slot, a regeneração é perdida (usuário só pode tentar de novo em 24h). Trade-off aceito e documentado — não é um bug novo, é a consequência conhecida da escolha "reservar antes de chamar a API".
+  </div>
+</div>
+
+<h2>Mini-grafo do bug</h2>
+<p style="font-size:0.85rem; color:var(--text-dim)">Sem relações registradas (<code>relationships: []</code>) — bug isolado neste contexto.</p>
+<p style="font-size:0.8rem"><a href="../bug.md">bug.md (TCT1)</a></p>
+
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plano de Correção · BUG-20260722-SRC1</title>
+<style>
+  :root {
+    --bg: #0f1117; --panel: #161a23; --border: #2a2f3d; --text: #e4e6eb; --text-dim: #9aa0ac;
+    --red: #f04747; --amber: #f0a020; --green: #3ba55d; --blue: #5865f2;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  h1 { font-size: 1.4rem; margin: 0 0 4px; }
+  h2 { font-size: 1.05rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; margin-top: 32px; }
+  .meta { color: var(--text-dim); font-size: 0.85rem; margin-bottom: 20px; }
+  .cards { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; min-width: 110px; }
+  .card .n { font-size: 1.3rem; font-weight: 700; }
+  .card .l { font-size: 0.75rem; color: var(--text-dim); }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.85rem; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--text-dim); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; }
+  tr:hover { background: #1a1e29; }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .sev-low { color: var(--text-dim); }
+  .prose { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; margin-bottom: 20px; font-size: 0.9rem; line-height: 1.55; }
+  .prose strong { color: var(--text); }
+  code { background: #1c2130; padding: 1px 5px; border-radius: 4px; font-size: 0.85em; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; }
+  .badge-confirmed { background: rgba(59,165,93,0.15); color: var(--green); }
+  ul { line-height: 1.6; }
+  svg text { fill: var(--text); font-family: inherit; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<h1>Plano de Correção · #10 BUG-20260722-SRC1</h1>
+<div class="meta">Contexto: insights-ia-dashboard · Data: 2026-07-22 · <span class="sev-low">Severidade: low</span> · Prioridade: P3</div>
+
+<div class="cards">
+  <div class="card"><div class="n">2</div><div class="l">Arquivos já alterados</div></div>
+  <div class="card"><div class="n">baixa</div><div class="l">Risco da mudança</div></div>
+  <div class="card"><div class="n">2</div><div class="l">Testes planejados</div></div>
+</div>
+
+<h2>Situação: fix já aplicado no código, faltam os gates formais</h2>
+<div class="prose">
+  Esta correção já está presente no código (marcador <code>FIX BUG-10</code> em <code>regenerate/route.ts</code>), aplicada em uma execução anterior de <code>/reversa-coding</code>/inspeção que não passou pelos gates deste skill (sem <code>plan.html</code>, sem diffs em <code>fix/</code>, sem teste vermelho→verde demonstrado). Esta sessão de <code>/reversa-debugger-fix</code> formaliza retroativamente: escreve os testes que provam o defeito e a correção, e conduz o veredito de spec + fechamento pela closure policy.
+</div>
+
+<h2>Resumo do defeito e causa raiz</h2>
+<div class="prose">
+  <span class="badge badge-confirmed">confirmed</span> <code>POST /api/dashboard/insights/regenerate</code> calculava <code>source</code> (<code>"fallback"</code> quando zero casos, <code>"ai_generated"</code> quando IA real gerou) mas usava esse valor só no <code>console.log</code> e na resposta HTTP — nunca gravava em <code>orgs.ai_insights</code>. O <code>GET /api/dashboard/insights</code> lia de volta e, sem o campo <code>source</code> no Firestore, sempre inferia <code>"ai_generated"</code> — o badge de fallback (RF-04) nunca apareceria mesmo quando o conteúdo era genérico/fallback.
+</div>
+
+<h2>Estratégia escolhida</h2>
+<div class="prose">
+  <strong>Correção direta</strong> (já presente no código). Sem hipóteses concorrentes, sem contrato externo quebrado, mudança aditiva (persiste um campo já computado). Formalização: adiciono os testes que a correção precisa pra virar <code>resolution_kind: fixed</code> de fato, e conduzo o veredito de spec.
+</div>
+
+<h2>Correction Change Set</h2>
+<table>
+<thead><tr><th>CHG</th><th>Tipo</th><th>Artefato</th><th>Propósito</th></tr></thead>
+<tbody>
+<tr><td>CHG-001</td><td>code</td><td><code>src/app/api/dashboard/insights/regenerate/route.ts</code></td><td>Já aplicado: persiste <code>source</code> junto com <code>items</code>/<code>gerado_em</code> (linha 145)</td></tr>
+<tr><td>CHG-002</td><td>code</td><td><code>src/app/api/dashboard/insights/route.ts</code></td><td>Já aplicado: lê <code>aiInsights.source ?? "ai_generated"</code> (linha 29, fallback pra dados antigos sem o campo)</td></tr>
+<tr><td>CHG-003</td><td>test</td><td><code>scripts/test-insights-bugs.ts</code></td><td>NOVO — teste de reprodução + regressão pra fechar o gate deste skill</td></tr>
+</tbody>
+</table>
+
+<h2>Testes planejados</h2>
+<table>
+<thead><tr><th>Tipo</th><th>O que prova</th></tr></thead>
+<tbody>
+<tr><td>Reprodução</td><td>Documento Firestore com <code>ai_insights</code> SEM campo <code>source</code> (formato pré-fix) — confirma que o fallback de leitura (<code>?? "ai_generated"</code>) é o comportamento ativo pra dados legados, evidenciando por que o defeito existia (todo dado pré-fix cai nesse caminho)</td></tr>
+<tr><td>Regressão</td><td>Documento Firestore com <code>ai_insights.source: "fallback"</code> explícito (formato pós-fix, como o <code>regenerate</code> grava hoje) — confirma que a leitura retorna exatamente <code>"fallback"</code>, não <code>"ai_generated"</code></td></tr>
+</tbody>
+</table>
+
+<h2>Riscos</h2>
+<div class="prose">
+  <strong>Risco: baixo.</strong> Mudança aditiva já aplicada, sem migração de dados (orgs antigas sem <code>source</code> continuam funcionando via fallback <code>?? "ai_generated"</code> — decisão consciente registrada no <code>bug.md</code>, não um caso não tratado).
+  <br><br>
+  <strong>Fora do escopo (Agent Notes já registradas no bug):</strong> <code>functions/src/aiInsights.ts</code> (scheduled function) tem o MESMO problema — não persiste <code>source</code> — mas não foi tocada nesta correção por ser anterior à feature 003 e fora do <code>actions.md</code>. Fica como observação para iteração futura.
+</div>
+
+<h2>Mini-grafo do bug</h2>
+<p style="font-size:0.85rem; color:var(--text-dim)">Sem relações registradas (<code>relationships: []</code>) — bug isolado neste contexto.</p>
+<p style="font-size:0.8rem"><a href="../bug.md">bug.md (SRC1)</a></p>
+
+</body>
+</html>

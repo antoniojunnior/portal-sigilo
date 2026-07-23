@@ -1,9 +1,9 @@
 {
   "schema-version": 1,
-  "feature-dir": "_reversa_forward/002-unificar-plano-assinatura",
-  "feature-id": "002",
-  "short-name": "unificar-plano-assinatura",
-  "started-at": "2026-07-21T17:13:58Z",
+  "feature-dir": "_reversa_forward/003-insights-ia-dashboard-admin",
+  "feature-id": "003",
+  "short-name": "insights-ia-dashboard-admin",
+  "started-at": "2026-07-22T00:00:00Z",
   "current-stage": "requirements",
   "stages-completed": [],
   "paused-features": [
