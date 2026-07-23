@@ -288,37 +288,41 @@ Não inclua conteúdo individual de relatos. Não invente dados.`;
 
 // Lista relatórios da org
 export async function GET(request: NextRequest) {
-  const sessionCookie = request.cookies.get("__session")?.value;
-  if (!sessionCookie) return Response.json({ error: "Não autenticado" }, { status: 401 });
+  try {
+    const sessionCookie = request.cookies.get("__session")?.value;
+    if (!sessionCookie) return Response.json({ error: "Não autenticado" }, { status: 401 });
 
-  const session = await verifySession(sessionCookie);
-  if (!session) return Response.json({ error: "Sessão inválida" }, { status: 401 });
+    const session = await verifySession(sessionCookie);
+    if (!session) return Response.json({ error: "Sessão inválida" }, { status: 401 });
 
-  const snap = await adminDb
-    .collection("reports")
-    .where("org_id", "==", session.orgId)
-    .orderBy("gerado_em", "desc")
-    .limit(50)
-    .get();
+    const snap = await adminDb
+      .collection("reports")
+      .where("org_id", "==", session.orgId)
+      .orderBy("gerado_em", "desc")
+      .limit(50)
+      .get();
 
-  const reports = snap.docs.map((doc) => {
-    const d = doc.data();
-    const filtros = d.filtros as Record<string, unknown> | undefined;
-    return {
-      id: doc.id,
-      tipo: d.tipo,
-      status: d.status,
-      gerado_em: (d.gerado_em as { toDate?: () => Date } | undefined)?.toDate?.()?.toISOString() ?? null,
-      aprovado_em: (d.aprovado_em as { toDate?: () => Date } | undefined)?.toDate?.()?.toISOString() ?? null,
-      periodo: {
-        inicio: (d.periodo?.inicio as { toDate?: () => Date } | undefined)?.toDate?.()?.toISOString() ?? null,
-        fim: (d.periodo?.fim as { toDate?: () => Date } | undefined)?.toDate?.()?.toISOString() ?? null,
-      },
-      // BUG-20260723-SCP1: expõe o escopo do filtro para o client saber se é "o relatório default"
-      departamentos: (filtros?.departamentos as string[] | undefined) ?? [],
-      categorias: (filtros?.categorias as string[] | undefined) ?? [],
-    };
-  });
+    const reports = snap.docs.map((doc) => {
+      const d = doc.data();
+      const filtros = d.filtros as Record<string, unknown> | undefined;
+      return {
+        id: doc.id,
+        tipo: d.tipo,
+        status: d.status,
+        gerado_em: (d.gerado_em as { toDate?: () => Date } | undefined)?.toDate?.()?.toISOString() ?? null,
+        aprovado_em: (d.aprovado_em as { toDate?: () => Date } | undefined)?.toDate?.()?.toISOString() ?? null,
+        periodo: {
+          inicio: (d.periodo?.inicio as { toDate?: () => Date } | undefined)?.toDate?.()?.toISOString() ?? null,
+          fim: (d.periodo?.fim as { toDate?: () => Date } | undefined)?.toDate?.()?.toISOString() ?? null,
+        },
+        departamentos: (filtros?.departamentos as string[] | undefined) ?? [],
+        categorias: (filtros?.categorias as string[] | undefined) ?? [],
+      };
+    });
 
-  return Response.json({ reports });
+    return Response.json({ reports });
+  } catch (err) {
+    console.error("[GET /api/reports/generate]", err);
+    return Response.json({ error: "Erro ao listar relatórios." }, { status: 500 });
+  }
 }

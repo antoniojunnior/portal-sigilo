@@ -1,4 +1,4 @@
-<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-07-23 a partir de 14 bugs (9 resolved em unificacao-plano-assinatura, 2 active/observing em insights-ia-dashboard, 3 active/delivering fixed em relatorios) -->
+<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-07-23 a partir de 15 bugs (9 resolved em unificacao-plano-assinatura, 2 active/observing em insights-ia-dashboard, 3 active/delivering fixed + 1 open/triaging critical em relatorios) -->
 
 # Rastreabilidade Spec ↔ Bug
 
@@ -80,6 +80,7 @@ Espelho do lado da spec. Source of truth: cada `_reversa_bugs/<contexto>/bugs/<I
 ## `_reversa_forward/005-relatorios-auto-geracao/requirements.md#RF-01`
 
 - BUG-20260723-SCP1 (active/delivering, P1, fixed): ver acima
+- BUG-20260723-IDX1 (open/triaging, P0, critical): GET /api/reports/generate retorna 500 em produção — `_reversa_bugs/relatorios/bugs/BUG-20260723-IDX1-get-reports-500-indice-ausente/`
 
 ## `_reversa_forward/005-relatorios-auto-geracao/requirements.md#RF-06`, `#RF-07`
 

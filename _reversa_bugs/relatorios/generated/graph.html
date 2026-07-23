@@ -26,8 +26,12 @@
   a:hover { text-decoration: underline; }
   .sev-high { color: var(--red); font-weight: 600; }
   .sev-medium { color: var(--amber); font-weight: 600; }
+  .sev-critical { color: var(--red); font-weight: 800; }
   .status-open { color: var(--text-dim); font-weight: 600; }
   .status-partial { color: var(--amber); font-weight: 600; }
+  .status-critical { color: var(--red); font-weight: 700; }
+  .incident { background: #2a1215; border: 1px solid var(--red); border-radius: 10px; padding: 16px 18px; margin-bottom: 20px; font-size: 0.9rem; line-height: 1.5; }
+  .incident strong { color: var(--red); }
   .prose { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; margin-bottom: 28px; font-size: 0.9rem; line-height: 1.5; }
   .prose strong { color: var(--text); }
   section h2 { font-size: 1.05rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
@@ -37,13 +41,18 @@
 <body>
 
 <h1>Grafo de Bugs · relatorios</h1>
-<div class="meta">Gerado por /reversa-debugger-graph em 2026-07-23 · 3 bugs · 0 inconsistências</div>
+<div class="meta">Gerado por /reversa-debugger-graph em 2026-07-23 · 4 bugs · 0 inconsistências</div>
+
+<div class="incident">
+  <strong>🔴 INCIDENTE ATIVO EM PRODUÇÃO — BUG-20260723-IDX1 (critical, P0)</strong><br>
+  <code>GET /api/reports/generate</code> retornando 500 desde o último deploy. Hipótese: o <code>firebase deploy --only firestore:indexes</code> da sessão anterior pode ter removido um índice que o <code>GET</code> precisava (o CLI trata <code>firestore.indexes.json</code> como fonte única de verdade e apaga do projeto qualquer índice ausente dele). Sem workaround — o botão manual foi removido pela própria feature 005. Aguardando <code>/reversa-debugger-fix BUG-20260723-IDX1</code> com urgência.
+</div>
 <div class="legend">Os 3 bugs vieram da inspeção proativa (<code>/reversa-depth-inspection</code>) rodada logo após o <code>/reversa-coding</code> da feature <code>005-relatorios-auto-geracao</code>, e foram corrigidos na mesma sessão (<code>/reversa-debugger-fix</code>, YOLO mode) — código + testes vermelho→verde para os 3. <code>status: active · delivering</code>, <code>resolution_kind: fixed</code>. Falta <code>delivery</code> (commit/push/deploy — inclusive o índice Firestore novo do DUP1) e a janela de <code>post_fix_observation</code> antes de <code>DONE.md</code>. <code>closure_policy: production-service</code>.</div>
 
 <div class="cards">
-  <div class="card"><div class="n">3</div><div class="l">Total de bugs</div></div>
+  <div class="card"><div class="n">4</div><div class="l">Total de bugs</div></div>
+  <div class="card"><div class="n">1</div><div class="l">Critical · triaging</div></div>
   <div class="card"><div class="n">3</div><div class="l">Fixed · delivering</div></div>
-  <div class="card"><div class="n">1</div><div class="l">Severidade high</div></div>
   <div class="card"><div class="n">0</div><div class="l">Inconsistências</div></div>
 </div>
 
@@ -54,6 +63,16 @@
   <br><br>
   <strong>BUG-20260723-DUP1</strong> (medium): novo módulo <code>dedup.ts</code> com pré-check + transação Firestore (<code>reserveReportSlot</code>) fecha a corrida — confirmado ao vivo contra o emulador: 2 chamadas concorrentes com o padrão antigo criavam 2 documentos; com o fix, exatamente 1. Requer deploy de índice composto novo antes de produção.
 </div>
+
+<section>
+<h2>Incidente crítico (triaging)</h2>
+<table>
+<thead><tr><th>#</th><th>ID</th><th>Severidade</th><th>Prioridade</th><th>Título</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td>12</td><td><a href="../bugs/BUG-20260723-IDX1-get-reports-500-indice-ausente/bug.md">BUG-20260723-IDX1</a></td><td class="sev-critical">critical</td><td>P0</td><td>GET /api/reports/generate 500 em produção</td><td class="status-critical">🔴 open · triaging</td></tr>
+</tbody>
+</table>
+</section>
 
 <section>
 <h2>Bugs corrigidos (aguardando delivery)</h2>
