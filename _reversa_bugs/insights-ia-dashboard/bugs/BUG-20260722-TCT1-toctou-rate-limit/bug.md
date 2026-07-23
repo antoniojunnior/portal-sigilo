@@ -4,7 +4,7 @@ id: BUG-20260722-TCT1
 display_number: 11
 title: TOCTOU no rate limit de regeneração — duas requisições concorrentes podem passar
 status: active
-phase: delivering
+phase: observing
 severity: low
 priority: P3
 created: 2026-07-22
@@ -85,8 +85,16 @@ change_set:
 closure:
   policy: production-service
   satisfied: false
-  delivery: null
-  post_fix_observation: null
+  delivery:
+    kind: commit
+    ref: "b906ca5"
+    code_commit: "22edd28"
+    delivered_at: "2026-07-22"
+    pushed_to: "origin/main"
+  post_fix_observation:
+    started_at: "2026-07-22"
+    window: "a definir — recomendado: nenhuma dupla-chamada real observada em produção por um período razoável (o teste automatizado já prova a invariante; observação real é sobre uso concorrente de verdade, não sobre a lógica)"
+    status: "observing"
 resolution_kind: fixed
 
 agent_notes: |
@@ -133,7 +141,7 @@ has no exported member 'reserveRegenerationSlot'.
 
 `npx tsc --noEmit`: `TSC:0`, sem erros novos.
 
-**Fechamento:** `status: active`, `phase: delivering` — `closure.satisfied: false` até `delivery` (commit/push) + janela de `post_fix_observation` (política `production-service`). Sem `DONE.md` ainda.
+**Fechamento:** `status: active`, `phase: observing` — entregue via commit `22edd28` (código) / `b906ca5` (docs), push `f8fd9c8..b906ca5` para `origin/main` em 2026-07-22. `closure.satisfied: false` até a janela de `post_fix_observation` confirmar não recorrência. Sem `DONE.md` ainda.
 
 ## Expected Behavior
 

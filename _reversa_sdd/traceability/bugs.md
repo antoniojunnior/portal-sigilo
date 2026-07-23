@@ -1,4 +1,4 @@
-<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-07-22 a partir de 11 bugs (9 resolved em unificacao-plano-assinatura, 2 active/delivering em insights-ia-dashboard) -->
+<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-07-22 a partir de 11 bugs (9 resolved em unificacao-plano-assinatura, 2 active/observing em insights-ia-dashboard) -->
 
 # Rastreabilidade Spec ↔ Bug
 
@@ -66,8 +66,8 @@ Espelho do lado da spec. Source of truth: cada `_reversa_bugs/<contexto>/bugs/<I
 
 ## `_reversa_forward/003-insights-ia-dashboard-admin/requirements.md#RF-04`
 
-- BUG-20260722-SRC1 (active/delivering, P3, fixed): "source" do insight não é persistido no Firestore — `_reversa_bugs/insights-ia-dashboard/bugs/BUG-20260722-SRC1-source-nao-persistido/`
+- BUG-20260722-SRC1 (active/observing, P3, fixed): "source" do insight não é persistido no Firestore — `_reversa_bugs/insights-ia-dashboard/bugs/BUG-20260722-SRC1-source-nao-persistido/`
 
 ## `_reversa_forward/003-insights-ia-dashboard-admin/requirements.md#RF-03`, `roadmap.md#D-02`
 
-- BUG-20260722-TCT1 (active/delivering, P3, fixed): TOCTOU no rate limit de regeneração — `_reversa_bugs/insights-ia-dashboard/bugs/BUG-20260722-TCT1-toctou-rate-limit/`
+- BUG-20260722-TCT1 (active/observing, P3, fixed): TOCTOU no rate limit de regeneração — `_reversa_bugs/insights-ia-dashboard/bugs/BUG-20260722-TCT1-toctou-rate-limit/`
