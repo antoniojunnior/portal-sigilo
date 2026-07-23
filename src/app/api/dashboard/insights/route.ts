@@ -11,6 +11,12 @@ export async function GET(request: NextRequest) {
     const session = await verifySession(sessionCookie);
     if (!session) return Response.json({ error: "Sessão inválida" }, { status: 401 });
 
+    // BUG-20260723-ADM1: insights é recurso do admin (alinhado com a spec original
+    // da feature 003, que já restringe a regeneração manual a role === admin).
+    if (session.role !== "admin") {
+      return Response.json({ error: "Acesso restrito a administradores" }, { status: 403 });
+    }
+
     const { orgId, uid } = session;
 
     // Tentar ler insights gerados pela scheduled function ou regeneração manual

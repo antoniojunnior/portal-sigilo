@@ -1,7 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import useSWR from "swr";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -16,20 +19,45 @@ interface InsightData {
   source?: string;
 }
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
+// BUG-20260723-ADM1: lança em resposta não-ok (ex.: 403 de não-admin) em vez de
+// tratar o corpo de erro como se fosse InsightData válido.
+const fetcher = (url: string) => fetch(url).then((r) => {
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+});
 
 export default function InsightsPage() {
+  const { user } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!user) return;
+    if (user.role !== "admin") {
+      router.replace("/app");
+    }
+  }, [user, router]);
+
   const { data, isLoading, error, mutate } = useSWR<InsightData>(
-    "/api/dashboard/insights",
+    user?.role === "admin" ? "/api/dashboard/insights" : null,
     fetcher,
     { refreshInterval: 0 }
   );
 
   const isFallback = data?.source === "fallback" || data?.source === "fallback_heuristic";
   const isAiGenerated = data?.source === "ai_generated";
-  const timeAgo = data?.generatedAt
+
+  // BUG-20260723-DTN1: Date.now() é impuro e não pode ser chamado direto no corpo
+  // do componente (regra react-hooks/purity) — "agora" vira estado, atualizado em
+  // efeito toda vez que generatedAt muda.
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- captura o "agora" (impuro) fora do render, único jeito de sincronizar
+    setNow(Date.now());
+  }, [data?.generatedAt]);
+
+  const timeAgo = data?.generatedAt && now !== null
     ? new Intl.RelativeTimeFormat("pt-BR", { numeric: "auto" }).format(
-        Math.round((new Date(data.generatedAt).getTime() - Date.now()) / (1000 * 60)),
+        Math.round((new Date(data.generatedAt).getTime() - now) / (1000 * 60)),
         "minute"
       )
     : "";

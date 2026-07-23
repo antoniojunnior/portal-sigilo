@@ -29,7 +29,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { href: "/app",                label: "Visão geral",   icon: Home     },
   { href: "/app/casos",          label: "Casos",         icon: FileText },
-  { href: "/app/insights",       label: "Insights",       icon: Lightbulb },
+  { href: "/app/insights",       label: "Insights",       icon: Lightbulb, adminOnly: true }, // BUG-20260723-ADM1
   { href: "/app/relatorios",     label: "Relatórios",    icon: BarChart3 },
   {
     href: "/app/configuracoes",

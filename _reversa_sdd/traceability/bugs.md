@@ -1,4 +1,4 @@
-<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-07-23 a partir de 23 bugs (9 resolved em unificacao-plano-assinatura, 2 active/observing em insights-ia-dashboard, 6 em relatorios (4 fixed + 1 critical/inconsistente + 1 restricted fixed), 6 active/delivering fixed em configuracoes) -->
+<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-07-23 a partir de 27 bugs (9 resolved em unificacao-plano-assinatura, 2 active/observing em insights-ia-dashboard, 6 em relatorios (4 fixed + 1 critical/inconsistente + 1 restricted fixed), 6 active/delivering fixed em configuracoes, 4 active/delivering fixed em limpeza-frontend) -->
 
 # Rastreabilidade Spec ↔ Bug
 
@@ -114,3 +114,19 @@ Espelho do lado da spec. Source of truth: cada `_reversa_bugs/<contexto>/bugs/<I
 ## `_reversa_forward/006-split-configuracoes/roadmap.md` (risco paymentDate)
 
 - BUG-20260723-DAT1 (active/delivering, P3, fixed): Possível offset de 1 dia nas datas — `_reversa_bugs/configuracoes/bugs/BUG-20260723-DAT1-possivel-offset-dia-datas/`
+
+## `_reversa_forward/007-limpeza-frontend/requirements.md#RF-05`
+
+- BUG-20260723-EBD1 (active/delivering, P1, fixed): ErrorBoundary não cobre Sidebar/SuspensoBanner/BottomNav — `_reversa_bugs/limpeza-frontend/bugs/BUG-20260723-EBD1-errorboundary-nao-cobre-chrome/`
+
+## `_reversa_forward/007-limpeza-frontend/requirements.md#RF-06`, `_reversa_forward/003-insights-ia-dashboard-admin/requirements.md#RF-02`
+
+- BUG-20260723-ADM1 (active/delivering, P2, fixed): Insights sem adminOnly no sidebar — `_reversa_bugs/limpeza-frontend/bugs/BUG-20260723-ADM1-insights-sem-adminonly/`
+
+## `_reversa_forward/007-limpeza-frontend/actions.md#T001`
+
+- BUG-20260723-DOC1 (active/delivering, P2, fixed): actions.md diverge do código real (ChatInput/ChatAttachment) — `_reversa_bugs/limpeza-frontend/bugs/BUG-20260723-DOC1-actions-diverge-codigo-chatinput/`
+
+## `limpeza-frontend` (sem spec formal — defeito de qualidade de código)
+
+- BUG-20260723-DTN1 (active/delivering, P3, fixed): Date.now() durante render em insights/page.tsx — `_reversa_bugs/limpeza-frontend/bugs/BUG-20260723-DTN1-datenow-durante-render-insights/`

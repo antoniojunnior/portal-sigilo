@@ -33,7 +33,10 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public render() {
     if (this.state.hasError) {
-      if (this.props.fallback) {
+      // BUG-20260723-EBD1: usa !== undefined em vez de checagem de truthiness,
+      // pra permitir fallback={null} (esconder silenciosamente) como valor válido,
+      // distinto de "nenhum fallback informado" (que usa o card padrão abaixo).
+      if (this.props.fallback !== undefined) {
         return this.props.fallback;
       }
 
