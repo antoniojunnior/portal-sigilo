@@ -1,8 +1,8 @@
 {
   "schema-version": 1,
-  "feature-dir": "_reversa_forward/005-relatorios-auto-geracao",
-  "feature-id": "005",
-  "short-name": "relatorios-auto-geracao",
+  "feature-dir": "_reversa_forward/006-split-configuracoes",
+  "feature-id": "006",
+  "short-name": "split-configuracoes",
   "started-at": "2026-07-23T00:00:00Z",
   "current-stage": "requirements",
   "stages-completed": [],

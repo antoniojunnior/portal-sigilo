@@ -15,8 +15,6 @@ import {
   AlertTriangle,
   X,
   Users,
-  Settings,
-  CreditCard,
   ShieldAlert,
   Plus,
   CheckCircle2,
@@ -54,10 +52,6 @@ const ROLE_OPTIONS: { value: Role; label: string }[] = [
   { value: "auditor", label: "Auditor" },
 ];
 
-const PLANO_LABELS: Record<string, string> = {
-  unico: "Plano Único",
-};
-
 export default function ConfiguracoesPage() {
   const { user } = useAuth();
 
@@ -83,9 +77,6 @@ export default function ConfiguracoesPage() {
   const [creatingUser, setCreatingUser] = useState(false);
   const [createUserError, setCreateUserError] = useState<string | null>(null);
 
-  const [billingInfo, setBillingInfo] = useState<{ has_asaas_customer: boolean } | null>(null);
-  const [billingLoading, setBillingLoading] = useState(false);
-
   // Danger zone
   const [dangerStep, setDangerStep] = useState<0 | 1 | 2>(0);
   const [dangerConfirmText, setDangerConfirmText] = useState("");
@@ -109,23 +100,6 @@ export default function ConfiguracoesPage() {
     }
   }, []);
 
-  const fetchBillingInfo = useCallback(async () => {
-    setBillingLoading(true);
-    try {
-      const res = await fetch("/api/billing/info");
-      if (!res.ok) {
-        setBillingInfo({ has_asaas_customer: false });
-        return;
-      }
-      const data = await res.json() as { has_asaas_customer: boolean };
-      setBillingInfo(data);
-    } catch {
-      setBillingInfo({ has_asaas_customer: false });
-    } finally {
-      setBillingLoading(false);
-    }
-  }, []);
-
   const fetchUsers = useCallback(async () => {
     setLoadingUsers(true);
     try {
@@ -142,11 +116,11 @@ export default function ConfiguracoesPage() {
 
   useEffect(() => {
     if (user?.role === "admin") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchOrg();
       fetchUsers();
-      fetchBillingInfo();
     }
-  }, [user, fetchOrg, fetchUsers, fetchBillingInfo]);
+  }, [user, fetchOrg, fetchUsers]);
 
   async function handleSaveOrg() {
     setSavingOrg(true);
@@ -292,34 +266,7 @@ export default function ConfiguracoesPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-            
-            {/* Sidebar Navigation */}
-            <aside className="hidden lg:block space-y-1">
-              {[
-                { icon: Building2, label: "Organização", href: "/app/configuracoes", active: true },
-                { icon: Users, label: "Usuários", href: "/app/configuracoes", active: false },
-                { icon: CreditCard, label: "Faturamento", href: "/app/configuracoes/faturamento", active: false },
-                { icon: Settings, label: "Preferências", href: "/app/configuracoes", active: false },
-              ].map((item) => (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-[var(--text-sm)] font-medium transition-all ${
-                    item.active
-                      ? "bg-[var(--color-bg-secondary)] text-[var(--color-primary)] border border-[var(--color-border)] shadow-sm"
-                      : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)]"
-                  }`}
-                >
-                  <item.icon size={18} strokeWidth={item.active ? 2.2 : 1.8} />
-                  {item.label}
-                </Link>
-              ))}
-            </aside>
-
-            <div className="lg:col-span-2 space-y-8">
-              
-              {/* ── Organização ── */}
+          {/* ── Organização ── */}
               <section className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-sm overflow-hidden">
                 <div className="p-6 border-b border-[var(--color-border)]">
                   <div className="flex items-center gap-2">
@@ -491,55 +438,6 @@ export default function ConfiguracoesPage() {
                       </div>
                     </>
                   )}
-                </div>
-              </section>
-
-              {/* ── Plano Atual ── */}
-              <section className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-6 border-b border-[var(--color-border)]">
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="text-[var(--color-primary)]" size={20} />
-                    <h2 className="text-[var(--text-lg)] font-bold text-[var(--color-text-primary)]">Plano e Faturamento</h2>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-6 p-4 rounded-2xl border border-[var(--color-primary)]/10 bg-[var(--color-primary)]/[0.02]">
-                    <div className="w-12 h-12 rounded-xl bg-[var(--color-primary)] flex items-center justify-center text-white shadow-lg shadow-[var(--color-primary)]/20">
-                      <CreditCard size={24} />
-                    </div>
-                    <div className="flex-1 space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-[var(--text-base)] font-bold text-[var(--color-text-primary)]">
-                          Plano {PLANO_LABELS[user.plano] ?? user.plano}
-                        </h3>
-                        <Badge className="bg-[var(--color-primary)] text-white border-none text-[var(--text-2xs)] font-bold">ATIVO</Badge>
-                      </div>
-                      <p className="text-[var(--text-xs)] text-[var(--color-text-tertiary)] leading-relaxed">
-                        Acesso pleno a todas as funcionalidades: IA, múltiplos gestores, relatórios e suporte.
-                      </p>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      {(billingLoading || billingInfo === null) ? (
-                        <div className="w-[80px] h-[32px]">
-                          <Skeleton height="32px" rounded="md" />
-                        </div>
-                      ) : billingInfo.has_asaas_customer ? (
-                        <Link
-                          href="/app/configuracoes/faturamento"
-                          className="inline-flex items-center justify-center gap-2 font-semibold rounded-[var(--radius-md)] border border-transparent transition-all cursor-pointer select-none bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] active:scale-[0.98] [box-shadow:0_2px_8px_rgba(42,96,112,0.30)] hover:[box-shadow:0_4px_14px_rgba(42,96,112,0.40)] px-3 min-h-[32px] text-[var(--text-xs)]"
-                        >
-                          Gerenciar Assinatura
-                        </Link>
-                      ) : (
-                        <Link
-                          href="/app/planos"
-                          className="inline-flex items-center justify-center gap-2 font-semibold rounded-[var(--radius-md)] border border-transparent transition-all cursor-pointer select-none bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] active:scale-[0.98] [box-shadow:0_2px_8px_rgba(42,96,112,0.30)] hover:[box-shadow:0_4px_14px_rgba(42,96,112,0.40)] px-3 min-h-[32px] text-[var(--text-xs)]"
-                        >
-                          Fazer Upgrade
-                        </Link>
-                      )}
-                    </div>
-                  </div>
                 </div>
               </section>
 
@@ -719,8 +617,6 @@ export default function ConfiguracoesPage() {
                   )}
                 </div>
               </section>
-            </div>
-          </div>
         </div>
       </PageContainer>
 

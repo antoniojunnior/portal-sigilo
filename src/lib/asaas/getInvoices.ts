@@ -19,6 +19,7 @@ export interface Invoice {
   status: PaymentStatus;
   descricao: string | null;
   invoice_url: string | null;
+  data_pagamento: string | null;
 }
 
 interface AsaasPayment {
@@ -28,6 +29,7 @@ interface AsaasPayment {
   status: string;
   description?: string;
   invoiceUrl?: string;
+  paymentDate?: string;
 }
 
 interface AsaasListResponse {
@@ -39,7 +41,7 @@ export async function getInvoices(customerId: string): Promise<Invoice[]> {
 
   try {
     const res = await fetch(
-      `${ASAAS_BASE_URL}/v3/payments?customer=${encodeURIComponent(customerId)}&limit=5&sort=dateCreated&order=desc`,
+      `${ASAAS_BASE_URL}/v3/payments?customer=${encodeURIComponent(customerId)}&limit=15&sort=dateCreated&order=desc`,
       { headers: { access_token: ASAAS_API_KEY } }
     );
     if (!res.ok) return [];
@@ -52,6 +54,7 @@ export async function getInvoices(customerId: string): Promise<Invoice[]> {
       status: (p.status as Invoice["status"]) ?? "PENDING",
       descricao: p.description ?? null,
       invoice_url: p.invoiceUrl ?? null,
+      data_pagamento: p.paymentDate ?? null,
     }));
   } catch {
     return [];
