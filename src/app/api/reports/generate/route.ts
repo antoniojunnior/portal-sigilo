@@ -80,6 +80,7 @@ function aggregateRiscoPsicossocial(cases: Record<string, unknown>[]): RiscoPsic
 }
 
 export async function POST(request: NextRequest) {
+  try {
   const sessionCookie = request.cookies.get("__session")?.value;
   if (!sessionCookie) return Response.json({ error: "Não autenticado" }, { status: 401 });
 
@@ -281,8 +282,13 @@ Não inclua conteúdo individual de relatos. Não invente dados.`;
 
   return Response.json({ reportId, status: "rascunho", tipo, ...(deduplicated ? { deduplicated: true } : {}) });
   } catch (err) {
-    console.error("[POST /api/reports/generate]", err);
+    console.error("[POST /api/reports/generate] inner error:", err);
     return Response.json({ error: "Erro ao gerar relatório. Tente novamente." }, { status: 500 });
+  }
+  } catch (err) {
+    console.error("[POST /api/reports/generate] outer error:", err);
+    const msg = err instanceof Error ? err.message : String(err);
+    return Response.json({ error: `Erro interno: ${msg}` }, { status: 500 });
   }
 }
 
