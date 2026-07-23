@@ -5,15 +5,75 @@ import { adminDb } from "@/lib/firebase-admin/admin";
 import { verifySession } from "@/lib/utils/auth";
 import { logAudit } from "@/lib/utils/audit";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
+import { getCategoriaLegal } from "@/lib/triagem";
 import type { NextRequest } from "next/server";
 
 const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
 interface RequestBody {
-  periodoInicio: string; // ISO date string
-  periodoFim: string;    // ISO date string
-  tipo?: "padrao" | "personalizado";
+  periodoInicio: string;
+  periodoFim: string;
+  tipo?: "padrao" | "personalizado" | "analitico";
+  departamentos?: string[];
+  categorias?: string[];
   filtros?: Record<string, unknown>;
+}
+
+interface LinhaTabela {
+  departamento: string;
+  categoria_legal: string;
+  mes: string;
+  total: number;
+}
+
+interface RiscoPsicossocialMetricas {
+  total: number;
+  por_subcategoria: Record<string, number>;
+}
+
+function buildTabelaAnalitica(cases: Record<string, unknown>[]): LinhaTabela[] {
+  const mapa: Record<string, LinhaTabela> = {};
+
+  for (const c of cases) {
+    const departamento = ((c.triagem_ia as Record<string, unknown> | undefined)?.area_risco as string | undefined)
+      ?? (c.departamento as string | undefined)
+      ?? "Não informado";
+    const categoriaLegal = getCategoriaLegal(c);
+    const createdAt = (c.created_at as { toDate?: () => Date } | undefined)?.toDate?.();
+    const mes = createdAt
+      ? `${createdAt.getFullYear()}-${String(createdAt.getMonth() + 1).padStart(2, "0")}`
+      : "desconhecido";
+
+    const key = `${departamento}|${categoriaLegal}|${mes}`;
+    if (!mapa[key]) {
+      mapa[key] = { departamento, categoria_legal: categoriaLegal, mes, total: 0 };
+    }
+    mapa[key].total++;
+  }
+
+  return Object.values(mapa).sort((a, b) =>
+    a.departamento.localeCompare(b.departamento) ||
+    a.categoria_legal.localeCompare(b.categoria_legal) ||
+    a.mes.localeCompare(b.mes)
+  );
+}
+
+function aggregateRiscoPsicossocial(cases: Record<string, unknown>[]): RiscoPsicossocialMetricas {
+  const result: RiscoPsicossocialMetricas = { total: 0, por_subcategoria: {} };
+
+  for (const c of cases) {
+    const triagem = c.triagem_ia as Record<string, unknown> | undefined;
+    const catLegal = getCategoriaLegal(c);
+    const leisAplicaveis = (triagem?.lei_aplicavel as string[] | undefined) ?? [];
+
+    if (catLegal !== "risco_psicossocial" && !leisAplicaveis.includes("nr1")) continue;
+
+    result.total++;
+    const subcategoria = (triagem?.subcategoria as string | undefined) ?? "Não especificado";
+    result.por_subcategoria[subcategoria] = (result.por_subcategoria[subcategoria] ?? 0) + 1;
+  }
+
+  return result;
 }
 
 export async function POST(request: NextRequest) {
@@ -38,7 +98,7 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "Corpo da requisição inválido" }, { status: 400 });
   }
 
-  const { periodoInicio, periodoFim, tipo = "padrao", filtros } = body;
+  const { periodoInicio, periodoFim, tipo = "padrao", departamentos, categorias, filtros } = body;
 
   if (!periodoInicio || !periodoFim) {
     return Response.json({ error: "periodoInicio e periodoFim são obrigatórios" }, { status: 400 });
@@ -48,15 +108,30 @@ export async function POST(request: NextRequest) {
   const fim = new Date(periodoFim);
 
   try {
-  // Agregar dados do período
-  const query = adminDb
+  const snapshot = await adminDb
     .collection("cases")
     .where("org_id", "==", session.orgId)
     .where("created_at", ">=", inicio)
-    .where("created_at", "<=", fim);
+    .where("created_at", "<=", fim)
+    .get();
 
-  const snapshot = await query.get();
-  const cases = snapshot.docs.map((d) => d.data());
+  let cases = snapshot.docs.map((d) => d.data());
+
+  // Filtros em memória (D-02)
+  if (departamentos && departamentos.length > 0) {
+    const deptSet = new Set(departamentos);
+    cases = cases.filter((c) => {
+      const areaRisco = (c.triagem_ia as Record<string, unknown> | undefined)?.area_risco as string | undefined
+        ?? c.departamento as string | undefined
+        ?? "";
+      return deptSet.has(areaRisco);
+    });
+  }
+
+  if (categorias && categorias.length > 0) {
+    const catSet = new Set(categorias);
+    cases = cases.filter((c) => catSet.has(getCategoriaLegal(c)));
+  }
 
   const totalCases = cases.length;
   const categories: Record<string, number> = {};
@@ -66,12 +141,12 @@ export async function POST(request: NextRequest) {
   let casosComPrazo = 0;
 
   cases.forEach((c) => {
-    const cat = (c.triagem_ia?.categoria ?? c.categoria ?? "outro") as string;
+    const cat = getCategoriaLegal(c);
     categories[cat] = (categories[cat] ?? 0) + 1;
 
-    const leisArr: string[] = Array.isArray(c.triagem_ia?.lei_aplicavel)
-      ? c.triagem_ia.lei_aplicavel
-      : c.triagem_ia?.lei_aplicavel ? [c.triagem_ia.lei_aplicavel] : [];
+    const leisArr: string[] = Array.isArray((c.triagem_ia as Record<string, unknown> | undefined)?.lei_aplicavel)
+      ? (c.triagem_ia as Record<string, unknown> | undefined)?.lei_aplicavel as string[]
+      : (c.triagem_ia as Record<string, unknown> | undefined)?.lei_aplicavel ? [(c.triagem_ia as Record<string, unknown> | undefined)?.lei_aplicavel as string] : [];
     leisArr.forEach((l) => { leis[l] = (leis[l] ?? 0) + 1; });
 
     if (["encerrado_sem_infracao", "encerrado_com_acao"].includes(c.status as string)) {
@@ -92,9 +167,17 @@ export async function POST(request: NextRequest) {
   const topCats = Object.entries(categories).sort((a, b) => b[1] - a[1]).slice(0, 5);
   const topLeis = Object.keys(leis).slice(0, 5);
 
-  const mes = inicio.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+  const riscoPsicossocial = aggregateRiscoPsicossocial(cases);
 
-  const prompt = `Dados de ${mes}: ${totalCases} relatos, categorias: ${topCats.map(([c, n]) => `${c} (${n})`).join(", ")}, resolvidos: ${resolvidos}, pendentes: ${pendentes}, tempo medio: ${prazoMedio}d, categorias_legais_acionadas: ${topLeis.join(", ") || "nenhuma"}.
+  let textoClaude = "";
+  let tabela_analitica: LinhaTabela[] | undefined;
+
+  if (tipo === "analitico") {
+    tabela_analitica = buildTabelaAnalitica(cases);
+  } else {
+    const mes = inicio.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+
+    const prompt = `Dados de ${mes}: ${totalCases} relatos, categorias: ${topCats.map(([c, n]) => `${c} (${n})`).join(", ")}, resolvidos: ${resolvidos}, pendentes: ${pendentes}, tempo medio: ${prazoMedio}d, categorias_legais_acionadas: ${topLeis.join(", ") || "nenhuma"}.
 
 Gere relatório executivo em português formal:
 (1) sumário em 3 parágrafos,
@@ -104,18 +187,23 @@ Gere relatório executivo em português formal:
 
 Não inclua conteúdo individual de relatos. Não invente dados.`;
 
-  const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 4000,
-    messages: [{ role: "user", content: prompt }],
-  });
+    try {
+      const response = await anthropic.messages.create({
+        model: "claude-sonnet-4-6",
+        max_tokens: 4000,
+        messages: [{ role: "user", content: prompt }],
+      });
 
-  const textoClaude = response.content[0].type === "text" ? response.content[0].text : "";
+      textoClaude = response.content[0].type === "text" ? response.content[0].text : "";
+    } catch (claudeErr) {
+      console.error("[POST /api/reports/generate] Claude error:", claudeErr);
+    }
+  }
 
   const reportRef = adminDb.collection("reports").doc();
   const reportId = reportRef.id;
 
-  await reportRef.set({
+  const reportData: Record<string, unknown> = {
     id: reportId,
     org_id: session.orgId,
     periodo: {
@@ -126,9 +214,8 @@ Não inclua conteúdo individual de relatos. Não invente dados.`;
     texto_claude: textoClaude,
     aprovado: false,
     exportado: false,
-    tipo,
+    tipo: tipo === "analitico" ? "personalizado" : tipo,
     status: "rascunho",
-    ...(filtros ? { filtros } : {}),
     metricas: {
       total: totalCases,
       resolvidos,
@@ -136,16 +223,38 @@ Não inclua conteúdo individual de relatos. Não invente dados.`;
       prazoMedio,
       topCategorias: topCats.slice(0, 3).map(([c]) => c),
     },
-  });
+    risco_psicossocial: riscoPsicossocial,
+    filtros: {
+      periodoInicio,
+      periodoFim,
+      ...(departamentos && departamentos.length > 0 ? { departamentos } : {}),
+      ...(categorias && categorias.length > 0 ? { categorias } : {}),
+      ...(filtros ?? {}),
+    },
+  };
+
+  if (tabela_analitica) {
+    reportData.tabela_analitica = tabela_analitica;
+  }
+
+  await reportRef.set(reportData);
 
   await logAudit({
     orgId: session.orgId,
     userId: session.uid,
     acao: "report_generated",
-    detalhes: { reportId, tipo, periodoInicio, periodoFim },
+    detalhes: {
+      reportId,
+      tipo,
+      periodoInicio,
+      periodoFim,
+      ...(departamentos ? { departamentos } : {}),
+      ...(categorias ? { categorias } : {}),
+      risco_psicossocial: riscoPsicossocial.total,
+    },
   });
 
-  return Response.json({ reportId, status: "rascunho" });
+  return Response.json({ reportId, status: "rascunho", tipo });
   } catch (err) {
     console.error("[POST /api/reports/generate]", err);
     return Response.json({ error: "Erro ao gerar relatório. Tente novamente." }, { status: 500 });

@@ -6,13 +6,22 @@ import { FieldValue } from "firebase-admin/firestore";
 
 const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
-const CATEGORIAS_LEGAIS = [
+export const CATEGORIAS_LEGAIS = [
   "assedio_moral", "assedio_sexual", "discriminacao_salarial", "discriminacao",
   "fraude", "desvio_etico", "violacao_lgpd", "seguranca_trabalho",
   "risco_psicossocial", "conflito_interesses", "outro",
 ] as const;
 
 const LEIS_APLICAVEIS = ["lei_14457", "nr1", "lei_14611", "lgpd", "clt", "outro"] as const;
+
+// BUG-20260722-CAT1: TriagemResult só tem `categoria_legal`, nunca `categoria`.
+// Centraliza a leitura aqui pra evitar o mesmo erro se o campo mudar de nome de novo.
+export function getCategoriaLegal(caseData: Record<string, unknown>): string {
+  const triagemIa = caseData.triagem_ia as Record<string, unknown> | undefined;
+  return (triagemIa?.categoria_legal as string | undefined)
+    ?? (caseData.categoria as string | undefined)
+    ?? "outro";
+}
 
 interface TriagemResult {
   categoria_legal: string;

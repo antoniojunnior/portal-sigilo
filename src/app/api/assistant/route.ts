@@ -4,6 +4,7 @@ import { ANTHROPIC_API_KEY } from "@/lib/env";
 import { adminDb } from "@/lib/firebase-admin/admin";
 import { verifySession } from "@/lib/utils/auth";
 import { logAudit } from "@/lib/utils/audit";
+import { getCategoriaLegal } from "@/lib/triagem";
 import { FieldValue } from "firebase-admin/firestore";
 import type { NextRequest } from "next/server";
 
@@ -89,7 +90,7 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "Você foi identificado como parte neste caso." }, { status: 403 });
   }
 
-  const categoria: string = caseData.triagem_ia?.categoria ?? caseData.categoria ?? "não classificado";
+  const categoria: string = getCategoriaLegal(caseData as Record<string, unknown>);
   const urgencia: number = caseData.triagem_ia?.urgencia ?? caseData.urgencia ?? 3;
   const leis: string[] = Array.isArray(caseData.triagem_ia?.lei_aplicavel)
     ? caseData.triagem_ia.lei_aplicavel

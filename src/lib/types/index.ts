@@ -83,7 +83,7 @@ export type CaseStatus =
 export type UrgenciaNivel = 1 | 2 | 3 | 4 | 5;
 
 export interface TriagemIA {
-  categoria: string;
+  categoria_legal: string;
   subcategoria?: string;
   urgencia: UrgenciaNivel;
   lei_aplicavel?: string | string[];

@@ -54,7 +54,7 @@ export const generateMonthlyReports = onSchedule(
         let casosComPrazo = 0;
 
         cases.forEach((c) => {
-          const cat = (c.triagem_ia?.categoria ?? c.categoria ?? "outro") as string;
+          const cat = (c.triagem_ia?.categoria_legal ?? c.categoria ?? "outro") as string;
           categories[cat] = (categories[cat] ?? 0) + 1;
 
           const leisArr: string[] = Array.isArray(c.triagem_ia?.lei_aplicavel)

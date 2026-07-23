@@ -464,10 +464,10 @@ export default function CaseDetailPage({ params }: Props) {
                   <h2 className="text-[var(--text-base)] font-bold text-[var(--color-text-primary)]">Triagem por Inteligência Artificial</h2>
                 </div>
                 <dl className="grid grid-cols-2 sm:grid-cols-3 gap-y-6 gap-x-4">
-                  {caseData.triagem_ia.categoria && (
-                    <div className="space-y-1">
-                      <dt className="text-[var(--text-xs)] uppercase tracking-wider font-bold text-[var(--color-text-tertiary)]">Categoria sugerida</dt>
-                      <dd className="text-[var(--text-sm)] font-medium text-[var(--color-text-primary)]">{caseData.triagem_ia.categoria}</dd>
+                  {caseData.triagem_ia.categoria_legal && (
+                    <div className="flex flex-col gap-0.5">
+                      <dt className="text-[var(--text-xs)] text-[var(--color-text-tertiary)]">Categoria</dt>
+                      <dd className="text-[var(--text-sm)] font-medium text-[var(--color-text-primary)]">{caseData.triagem_ia.categoria_legal}</dd>
                     </div>
                   )}
                   {caseData.triagem_ia.subcategoria && (

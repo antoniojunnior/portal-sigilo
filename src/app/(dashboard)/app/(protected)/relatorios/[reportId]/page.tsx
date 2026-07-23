@@ -22,6 +22,8 @@ interface ReportDetail {
   aprovado_em: string | null;
   periodo: { inicio: string | null; fim: string | null };
   metricas?: { total: number; resolvidos: number; pendentes: number; prazoMedio: number; topCategorias: string[] };
+  tabela_analitica?: { departamento: string; categoria_legal: string; mes: string; total: number }[];
+  risco_psicossocial?: { total: number; por_subcategoria: Record<string, number> };
 }
 
 const fetcher = (url: string) => fetch(url).then((r) => {
@@ -214,6 +216,59 @@ export default function ReportDetailPage({ params }: Props) {
                         <p className="text-2xl font-bold text-[var(--color-text-primary)]">{value}</p>
                       </div>
                     ))}
+                  </div>
+                )}
+
+                {/* Tabela Analítica */}
+                {report.tabela_analitica && report.tabela_analitica.length > 0 && (
+                  <div className="mt-6 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-6">
+                    <h2 className="text-base font-bold text-[var(--color-text-primary)] mb-4">Tabela Analítica (Departamento × Categoria × Mês)</h2>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="border-b border-[var(--color-border)]">
+                            <th className="text-left py-2 font-semibold text-[var(--color-text-secondary)]">Departamento</th>
+                            <th className="text-left py-2 font-semibold text-[var(--color-text-secondary)]">Categoria</th>
+                            <th className="text-left py-2 font-semibold text-[var(--color-text-secondary)]">Mês</th>
+                            <th className="text-right py-2 font-semibold text-[var(--color-text-secondary)]">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {report.tabela_analitica.map((linha, i) => (
+                            <tr key={i} className="border-b border-[var(--color-border)]/50">
+                              <td className="py-2 text-[var(--color-text-primary)]">{linha.departamento}</td>
+                              <td className="py-2 text-[var(--color-text-secondary)]">{linha.categoria_legal.replace(/_/g, " ")}</td>
+                              <td className="py-2 text-[var(--color-text-secondary)]">{linha.mes}</td>
+                              <td className="py-2 text-right font-medium text-[var(--color-text-primary)]">{linha.total}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* NR-1 */}
+                {report.risco_psicossocial && (
+                  <div className="mt-6 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-6">
+                    <h2 className="text-base font-bold text-[var(--color-text-primary)] mb-4">Riscos Psicossociais (NR-1)</h2>
+                    <p className="text-sm text-[var(--color-text-secondary)] mb-4">
+                      {report.risco_psicossocial.total > 0
+                        ? `Total de ocorrências no período: ${report.risco_psicossocial.total}`
+                        : "Nenhum caso classificado como risco psicossocial neste período."}
+                    </p>
+                    {report.risco_psicossocial.total > 0 && (
+                      <div className="space-y-2">
+                        {Object.entries(report.risco_psicossocial.por_subcategoria)
+                          .sort(([, a], [, b]) => b - a)
+                          .map(([sub, count]) => (
+                            <div key={sub} className="flex justify-between text-xs text-[var(--color-text-secondary)]">
+                              <span>{sub}</span>
+                              <span className="font-medium text-[var(--color-text-primary)]">{count}</span>
+                            </div>
+                          ))}
+                      </div>
+                    )}
                   </div>
                 )}
 

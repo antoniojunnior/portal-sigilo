@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import useSWR from "swr";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { Lock, Download, Sparkles, ChevronRight, FileText, Plus, Clock, CheckCircle2, AlertCircle } from "lucide-react";
+import { Sparkles, ChevronRight, FileText, Clock, CheckCircle2, Download, AlertCircle, Filter, Calendar } from "lucide-react";
 
 interface ReportSummary {
   id: string;
@@ -18,6 +18,12 @@ interface ReportSummary {
 }
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
+
+const CATEGORIAS_LEGAIS = [
+  "assedio_moral", "assedio_sexual", "discriminacao_salarial", "discriminacao",
+  "fraude", "desvio_etico", "violacao_lgpd", "seguranca_trabalho",
+  "risco_psicossocial", "conflito_interesses", "outro",
+];
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
@@ -33,10 +39,47 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+function getMonthStart(): string {
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split("T")[0];
+}
+
+function getMonthEnd(): string {
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().split("T")[0];
+}
+
+function getQuarterStart(): string {
+  const d = new Date();
+  const qMonth = Math.floor(d.getMonth() / 3) * 3;
+  return new Date(d.getFullYear(), qMonth, 1).toISOString().split("T")[0];
+}
+
+function getQuarterEnd(): string {
+  const d = new Date();
+  const qMonth = Math.floor(d.getMonth() / 3) * 3;
+  return new Date(d.getFullYear(), qMonth + 3, 0).toISOString().split("T")[0];
+}
+
 export default function RelatoriosPage() {
   const { user } = useAuth();
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [periodoInicio, setPeriodoInicio] = useState(getMonthStart());
+  const [periodoFim, setPeriodoFim] = useState(getMonthEnd());
+  const [preset, setPreset] = useState<"mes" | "trimestre" | "custom">("mes");
+  const [selectedDepts, setSelectedDepts] = useState<string[]>([]);
+  const [selectedCats, setSelectedCats] = useState<string[]>([]);
+  const [tipo, setTipo] = useState<"padrao" | "analitico">("padrao");
+  const [depts, setDepts] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch("/api/dashboard/org")
+      .then(r => r.ok ? r.json() as Promise<{ configuracoes: { departamentos?: string[] } }> : Promise.reject(null))
+      .then(d => { if (d?.configuracoes?.departamentos) setDepts(d.configuracoes.departamentos); })
+      .catch(() => {});
+  }, []);
 
   const { data, isLoading, mutate } = useSWR<{ reports: ReportSummary[] }>(
     user ? "/api/reports/generate" : null,
@@ -44,18 +87,41 @@ export default function RelatoriosPage() {
     { refreshInterval: 60000 }
   );
 
+  const applyPreset = useCallback((p: "mes" | "trimestre" | "custom") => {
+    setPreset(p);
+    if (p === "mes") {
+      setPeriodoInicio(getMonthStart());
+      setPeriodoFim(getMonthEnd());
+    } else if (p === "trimestre") {
+      setPeriodoInicio(getQuarterStart());
+      setPeriodoFim(getQuarterEnd());
+    }
+  }, []);
+
+  const toggleDept = useCallback((d: string) => {
+    setSelectedDepts(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]);
+  }, []);
+
+  const toggleCat = useCallback((c: string) => {
+    setSelectedCats(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c]);
+  }, []);
+
   const handleGenerate = useCallback(async () => {
     setGenerating(true);
     setGenerateError(null);
     try {
-      const now = new Date();
-      const periodoFim = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-      const periodoInicio = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const body: Record<string, unknown> = {
+        periodoInicio,
+        periodoFim,
+        tipo,
+      };
+      if (selectedDepts.length > 0) body.departamentos = selectedDepts;
+      if (selectedCats.length > 0) body.categorias = selectedCats;
 
       const res = await fetch("/api/reports/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ periodoInicio, periodoFim, tipo: "padrao" }),
+        body: JSON.stringify(body),
       });
 
       if (!res.ok) {
@@ -70,7 +136,7 @@ export default function RelatoriosPage() {
     } finally {
       setGenerating(false);
     }
-  }, [mutate]);
+  }, [periodoInicio, periodoFim, tipo, selectedDepts, selectedCats, mutate]);
 
   if (!user) return null;
 
@@ -104,11 +170,137 @@ export default function RelatoriosPage() {
               ) : (
                 <>
                   <Sparkles size={16} />
-                  Gerar relatório do mês
+                  Gerar relatório
                 </>
               )}
             </button>
           </div>
+
+          {/* Filtros */}
+          <button
+            type="button"
+            onClick={() => setShowFilters(f => !f)}
+            className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-primary)] hover:underline"
+          >
+            <Filter size={14} />
+            {showFilters ? "Ocultar filtros" : "Configurar período e filtros"}
+          </button>
+
+          {showFilters && (
+            <div className="mb-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-[var(--shadow-sm)] space-y-5">
+              {/* Período */}
+              <div>
+                <label className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider">Período</label>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {(["mes", "trimestre", "custom"] as const).map(p => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => applyPreset(p)}
+                      className={`px-4 py-2 rounded-xl text-xs font-semibold transition ${
+                        preset === p
+                          ? "bg-[var(--color-primary)] text-white"
+                          : "bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]"
+                      }`}
+                    >
+                      {p === "mes" ? "Mês atual" : p === "trimestre" ? "Trimestre atual" : "Customizado"}
+                      {p === "trimestre" && (
+                        <span className="block text-[10px] opacity-70 mt-0.5">NR-1 — análise mínima trimestral</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-3 flex flex-wrap gap-3">
+                  <div className="flex items-center gap-2">
+                    <Calendar size={14} className="text-[var(--color-text-tertiary)]" />
+                    <input
+                      type="date"
+                      value={periodoInicio}
+                      onChange={e => { setPeriodoInicio(e.target.value); setPreset("custom"); }}
+                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2 text-xs text-[var(--color-text-primary)]"
+                    />
+                    <span className="text-xs text-[var(--color-text-tertiary)]">até</span>
+                    <input
+                      type="date"
+                      value={periodoFim}
+                      onChange={e => { setPeriodoFim(e.target.value); setPreset("custom"); }}
+                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2 text-xs text-[var(--color-text-primary)]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Tipo */}
+              <div>
+                <label className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider">Tipo de relatório</label>
+                <div className="mt-2 flex gap-2">
+                  {(["padrao", "analitico"] as const).map(t => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setTipo(t)}
+                      className={`px-4 py-2 rounded-xl text-xs font-semibold transition ${
+                        tipo === t
+                          ? "bg-[var(--color-primary)] text-white"
+                          : "bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]"
+                      }`}
+                    >
+                      {t === "padrao" ? "Consolidado (IA)" : "Analítico (tabela)"}
+                    </button>
+                  ))}
+                </div>
+                {tipo === "analitico" && (
+                  <p className="mt-1 text-[11px] text-[var(--color-text-tertiary)]">
+                    Tabela agregada por departamento × categoria × mês, sem sumarização por IA.
+                  </p>
+                )}
+              </div>
+
+              {/* Departamentos */}
+              {depts.length > 0 && (
+                <div>
+                  <label className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider">Departamentos</label>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {depts.map(d => (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => toggleDept(d)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-medium transition ${
+                          selectedDepts.includes(d)
+                            ? "bg-[var(--color-primary)] text-white"
+                            : "bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]"
+                        }`}
+                      >
+                        {d}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Categorias */}
+              <div>
+                <label className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider">Categorias legais</label>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {CATEGORIAS_LEGAIS.map(c => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => toggleCat(c)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-medium transition ${
+                        selectedCats.includes(c)
+                          ? "bg-[var(--color-primary)] text-white"
+                          : "bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]"
+                      }`}
+                    >
+                      {c.replace(/_/g, " ")}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
           {generateError && (
             <div className="mb-6 flex items-center gap-3 rounded-xl bg-[var(--color-danger-surface)] border border-[var(--color-danger)]/20 px-4 py-3">
@@ -133,7 +325,7 @@ export default function RelatoriosPage() {
               </div>
               <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-2">Nenhum relatório ainda</h3>
               <p className="text-sm text-[var(--color-text-secondary)] max-w-sm">
-                Clique em "Gerar relatório do mês" para criar o primeiro relatório executivo automaticamente.
+                Configure o período e os filtros e clique em "Gerar relatório" para criar o primeiro relatório.
               </p>
             </div>
           ) : (

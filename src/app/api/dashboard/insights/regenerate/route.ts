@@ -4,6 +4,7 @@ import { ANTHROPIC_API_KEY } from "@/lib/env";
 import { adminDb } from "@/lib/firebase-admin/admin";
 import { verifySession } from "@/lib/utils/auth";
 import { reserveRegenerationSlot } from "@/lib/insights/rateLimit";
+import { getCategoriaLegal } from "@/lib/triagem";
 import { FieldValue } from "firebase-admin/firestore";
 import type { NextRequest } from "next/server";
 
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
 
     casesSnap.docs.forEach((doc) => {
       const c = doc.data();
-      const cat = (c.triagem_ia?.categoria ?? c.categoria ?? "outro") as string;
+      const cat = getCategoriaLegal(c);
       categories[cat] = (categories[cat] ?? 0) + 1;
       if ((c.triagem_ia?.urgencia ?? c.urgencia ?? 0) >= 4) urgentCount++;
     });
