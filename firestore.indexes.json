@@ -61,6 +61,15 @@
         { "fieldPath": "org_id", "order": "ASCENDING" },
         { "fieldPath": "timestamp", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "reports",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "org_id", "order": "ASCENDING" },
+        { "fieldPath": "dedup_key", "order": "ASCENDING" },
+        { "fieldPath": "gerado_em", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

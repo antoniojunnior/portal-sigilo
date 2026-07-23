@@ -6,6 +6,7 @@ import { verifySession } from "@/lib/utils/auth";
 import { logAudit } from "@/lib/utils/audit";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { getCategoriaLegal } from "@/lib/triagem";
+import { buildReportDedupKey, findRecentDuplicateReport, reserveReportSlot } from "@/lib/reports/dedup";
 import type { NextRequest } from "next/server";
 
 const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
@@ -58,6 +59,8 @@ function buildTabelaAnalitica(cases: Record<string, unknown>[]): LinhaTabela[] {
   );
 }
 
+const DEDUP_WINDOW_MS = 60_000;
+
 function aggregateRiscoPsicossocial(cases: Record<string, unknown>[]): RiscoPsicossocialMetricas {
   const result: RiscoPsicossocialMetricas = { total: 0, por_subcategoria: {} };
 
@@ -107,7 +110,17 @@ export async function POST(request: NextRequest) {
   const inicio = new Date(periodoInicio);
   const fim = new Date(periodoFim);
 
+  const dedupKey = buildReportDedupKey(session.orgId, tipo, periodoInicio, periodoFim, departamentos, categorias);
+
   try {
+  // BUG-20260723-DUP1: pré-checagem barata — evita o custo de Claude no caso comum
+  // (duplicidade sequencial, não simultânea). Não fecha a corrida sozinha; ver transação abaixo.
+  const dedupPrecheck = await findRecentDuplicateReport(session.orgId, dedupKey, DEDUP_WINDOW_MS);
+
+  if (dedupPrecheck) {
+    return Response.json({ reportId: dedupPrecheck.id, status: dedupPrecheck.status, tipo, deduplicated: true });
+  }
+
   const snapshot = await adminDb
     .collection("cases")
     .where("org_id", "==", session.orgId)
@@ -200,11 +213,11 @@ Não inclua conteúdo individual de relatos. Não invente dados.`;
     }
   }
 
-  const reportRef = adminDb.collection("reports").doc();
-  const reportId = reportRef.id;
+  const reportsCollection = adminDb.collection("reports");
+  const newReportRef = reportsCollection.doc();
 
   const reportData: Record<string, unknown> = {
-    id: reportId,
+    id: newReportRef.id,
     org_id: session.orgId,
     periodo: {
       inicio: Timestamp.fromDate(inicio),
@@ -216,6 +229,7 @@ Não inclua conteúdo individual de relatos. Não invente dados.`;
     exportado: false,
     tipo: tipo === "analitico" ? "personalizado" : tipo,
     status: "rascunho",
+    dedup_key: dedupKey,
     metricas: {
       total: totalCases,
       resolvidos,
@@ -237,24 +251,35 @@ Não inclua conteúdo individual de relatos. Não invente dados.`;
     reportData.tabela_analitica = tabela_analitica;
   }
 
-  await reportRef.set(reportData);
+  // BUG-20260723-DUP1: re-checagem transacional — fecha a janela de corrida entre o
+  // pré-check acima e este write. Se outra requisição concorrente já criou um relatório
+  // compatível nesse meio-tempo, reaproveita o dela em vez de gravar um segundo.
+  const { reportId, deduplicated } = await reserveReportSlot(
+    session.orgId,
+    dedupKey,
+    DEDUP_WINDOW_MS,
+    newReportRef,
+    reportData
+  );
 
-  await logAudit({
-    orgId: session.orgId,
-    userId: session.uid,
-    acao: "report_generated",
-    detalhes: {
-      reportId,
-      tipo,
-      periodoInicio,
-      periodoFim,
-      ...(departamentos ? { departamentos } : {}),
-      ...(categorias ? { categorias } : {}),
-      risco_psicossocial: riscoPsicossocial.total,
-    },
-  });
+  if (!deduplicated) {
+    await logAudit({
+      orgId: session.orgId,
+      userId: session.uid,
+      acao: "report_generated",
+      detalhes: {
+        reportId,
+        tipo,
+        periodoInicio,
+        periodoFim,
+        ...(departamentos ? { departamentos } : {}),
+        ...(categorias ? { categorias } : {}),
+        risco_psicossocial: riscoPsicossocial.total,
+      },
+    });
+  }
 
-  return Response.json({ reportId, status: "rascunho", tipo });
+  return Response.json({ reportId, status: "rascunho", tipo, ...(deduplicated ? { deduplicated: true } : {}) });
   } catch (err) {
     console.error("[POST /api/reports/generate]", err);
     return Response.json({ error: "Erro ao gerar relatório. Tente novamente." }, { status: 500 });
@@ -278,6 +303,7 @@ export async function GET(request: NextRequest) {
 
   const reports = snap.docs.map((doc) => {
     const d = doc.data();
+    const filtros = d.filtros as Record<string, unknown> | undefined;
     return {
       id: doc.id,
       tipo: d.tipo,
@@ -288,6 +314,9 @@ export async function GET(request: NextRequest) {
         inicio: (d.periodo?.inicio as { toDate?: () => Date } | undefined)?.toDate?.()?.toISOString() ?? null,
         fim: (d.periodo?.fim as { toDate?: () => Date } | undefined)?.toDate?.()?.toISOString() ?? null,
       },
+      // BUG-20260723-SCP1: expõe o escopo do filtro para o client saber se é "o relatório default"
+      departamentos: (filtros?.departamentos as string[] | undefined) ?? [],
+      categorias: (filtros?.categorias as string[] | undefined) ?? [],
     };
   });
 

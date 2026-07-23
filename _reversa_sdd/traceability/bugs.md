@@ -1,4 +1,4 @@
-<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-07-22 a partir de 11 bugs (9 resolved em unificacao-plano-assinatura, 2 active/observing em insights-ia-dashboard) -->
+<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-07-23 a partir de 14 bugs (9 resolved em unificacao-plano-assinatura, 2 active/observing em insights-ia-dashboard, 3 active/delivering fixed em relatorios) -->
 
 # Rastreabilidade Spec ↔ Bug
 
@@ -71,3 +71,20 @@ Espelho do lado da spec. Source of truth: cada `_reversa_bugs/<contexto>/bugs/<I
 ## `_reversa_forward/003-insights-ia-dashboard-admin/requirements.md#RF-03`, `roadmap.md#D-02`
 
 - BUG-20260722-TCT1 (active/observing, P3, fixed): TOCTOU no rate limit de regeneração — `_reversa_bugs/insights-ia-dashboard/bugs/BUG-20260722-TCT1-toctou-rate-limit/`
+
+## `_reversa_forward/005-relatorios-auto-geracao/requirements.md#RN-01`
+
+- BUG-20260723-SCP1 (active/delivering, P1, fixed): Reaproveitamento de relatório ignora departamento/categoria — `_reversa_bugs/relatorios/bugs/BUG-20260723-SCP1-reaproveitamento-ignora-escopo-filtro/`
+- BUG-20260723-DUP1 (active/delivering, P2, fixed): TOCTOU — geração duplicada em acesso concorrente — `_reversa_bugs/relatorios/bugs/BUG-20260723-DUP1-toctou-geracao-duplicada/`
+
+## `_reversa_forward/005-relatorios-auto-geracao/requirements.md#RF-01`
+
+- BUG-20260723-SCP1 (active/delivering, P1, fixed): ver acima
+
+## `_reversa_forward/005-relatorios-auto-geracao/requirements.md#RF-06`, `#RF-07`
+
+- BUG-20260723-PSU1 (active/delivering, P2, fixed): Org com plano suspenso/cancelado vê "plan_suspended" cru na tela — `_reversa_bugs/relatorios/bugs/BUG-20260723-PSU1-mensagem-erro-plano-suspenso-crua/`
+
+## `_reversa_forward/005-relatorios-auto-geracao/roadmap.md#D-02`
+
+- BUG-20260723-DUP1 (active/delivering, P2, fixed): ver acima

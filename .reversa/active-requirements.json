@@ -1,9 +1,9 @@
 {
   "schema-version": 1,
-  "feature-dir": "_reversa_forward/004-relatorios-analiticos-pdf-nr1",
-  "feature-id": "004",
-  "short-name": "relatorios-analiticos-pdf-nr1",
-  "started-at": "2026-07-22T00:00:00Z",
+  "feature-dir": "_reversa_forward/005-relatorios-auto-geracao",
+  "feature-id": "005",
+  "short-name": "relatorios-auto-geracao",
+  "started-at": "2026-07-23T00:00:00Z",
   "current-stage": "requirements",
   "stages-completed": [],
   "paused-features": [
