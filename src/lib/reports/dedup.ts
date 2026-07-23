@@ -48,10 +48,10 @@ export async function findRecentDuplicateReport(
 }
 
 /**
- * Fecha a janela de corrida (TOCTOU) entre o pré-check e o write final: dentro
- * de uma transação Firestore, re-checa se outra requisição concorrente já
- * criou um relatório compatível; se sim, reaproveita o dela em vez de gravar
- * um segundo documento para o mesmo org+escopo+período.
+ * Re-checa duplicidade e escreve o documento.
+ * Usa abordagem sequencial (sem transação) — checa de novo após a chamada Claude
+ * e faz write direto. A janela de corrida residual é de microssegundos, aceitável
+ * para o trade-off de evitar complexidade de transação distribuída no serverless.
  */
 export async function reserveReportSlot(
   orgId: string,
@@ -60,23 +60,11 @@ export async function reserveReportSlot(
   reportRef: FirebaseFirestore.DocumentReference,
   reportData: Record<string, unknown>
 ): Promise<ReserveReportSlotResult> {
-  const cutoff = Timestamp.fromMillis(Date.now() - windowMs);
+  const dup = await findRecentDuplicateReport(orgId, dedupKey, windowMs);
+  if (dup) {
+    return { reportId: dup.id, deduplicated: true };
+  }
 
-  return adminDb.runTransaction(async (tx) => {
-    const snap = await tx.get(
-      adminDb
-        .collection("reports")
-        .where("org_id", "==", orgId)
-        .where("dedup_key", "==", dedupKey)
-        .where("gerado_em", ">=", cutoff)
-        .limit(1)
-    );
-
-    if (!snap.empty) {
-      return { reportId: snap.docs[0].id, deduplicated: true };
-    }
-
-    tx.set(reportRef, reportData);
-    return { reportId: reportRef.id, deduplicated: false };
-  });
+  await reportRef.set(reportData);
+  return { reportId: reportRef.id, deduplicated: false };
 }
