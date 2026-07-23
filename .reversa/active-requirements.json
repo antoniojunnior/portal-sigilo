@@ -1,8 +1,8 @@
 {
   "schema-version": 1,
-  "feature-dir": "_reversa_forward/003-insights-ia-dashboard-admin",
-  "feature-id": "003",
-  "short-name": "insights-ia-dashboard-admin",
+  "feature-dir": "_reversa_forward/004-relatorios-analiticos-pdf-nr1",
+  "feature-id": "004",
+  "short-name": "relatorios-analiticos-pdf-nr1",
   "started-at": "2026-07-22T00:00:00Z",
   "current-stage": "requirements",
   "stages-completed": [],
