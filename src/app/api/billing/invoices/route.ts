@@ -21,6 +21,13 @@ export async function GET(request: NextRequest) {
   const customerId = orgDoc.data()?.asaas_customer_id as string | undefined;
   if (!customerId) return Response.json({ invoices: [] });
 
-  const invoices = await getInvoices(customerId);
-  return Response.json({ invoices });
+  // BUG-20260723-ERR1: getInvoices agora propaga erro em vez de engolir —
+  // distingue "org sem faturas" (array vazio, 200) de "falha ao buscar" (502).
+  try {
+    const invoices = await getInvoices(customerId);
+    return Response.json({ invoices });
+  } catch (err) {
+    console.error("[GET /api/billing/invoices]", err);
+    return Response.json({ error: "Não foi possível carregar as faturas. Tente novamente." }, { status: 502 });
+  }
 }

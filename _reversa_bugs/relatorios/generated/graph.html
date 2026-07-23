@@ -27,13 +27,13 @@
   .sev-high { color: var(--red); font-weight: 600; }
   .sev-medium { color: var(--amber); font-weight: 600; }
   .sev-critical { color: var(--red); font-weight: 800; }
-  .status-open { color: var(--text-dim); font-weight: 600; }
   .status-partial { color: var(--amber); font-weight: 600; }
   .status-critical { color: var(--red); font-weight: 700; }
-  .incident { background: #2a1215; border: 1px solid var(--red); border-radius: 10px; padding: 16px 18px; margin-bottom: 20px; font-size: 0.9rem; line-height: 1.5; }
-  .incident strong { color: var(--red); }
+  .warn { background: #2a2412; border: 1px solid var(--amber); border-radius: 10px; padding: 16px 18px; margin-bottom: 20px; font-size: 0.9rem; line-height: 1.5; }
+  .warn strong { color: var(--amber); }
+  .good { background: #12261a; border: 1px solid var(--green); border-radius: 10px; padding: 16px 18px; margin-bottom: 20px; font-size: 0.9rem; line-height: 1.5; }
+  .good strong { color: var(--green); }
   .prose { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; margin-bottom: 28px; font-size: 0.9rem; line-height: 1.5; }
-  .prose strong { color: var(--text); }
   section h2 { font-size: 1.05rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
   code { background: #1c2130; padding: 1px 5px; border-radius: 4px; font-size: 0.85em; }
 </style>
@@ -41,54 +41,53 @@
 <body>
 
 <h1>Grafo de Bugs · relatorios</h1>
-<div class="meta">Gerado por /reversa-debugger-graph em 2026-07-23 · 4 bugs · 0 inconsistências</div>
+<div class="meta">Gerado por /reversa-debugger-graph em 2026-07-23 · 6 bugs (5 públicos, 1 restricted omitido) · 1 inconsistência de schema</div>
 
-<div class="incident">
-  <strong>🔴 INCIDENTE ATIVO EM PRODUÇÃO — BUG-20260723-IDX1 (critical, P0)</strong><br>
-  <code>GET /api/reports/generate</code> retornando 500 desde o último deploy. Hipótese: o <code>firebase deploy --only firestore:indexes</code> da sessão anterior pode ter removido um índice que o <code>GET</code> precisava (o CLI trata <code>firestore.indexes.json</code> como fonte única de verdade e apaga do projeto qualquer índice ausente dele). Sem workaround — o botão manual foi removido pela própria feature 005. Aguardando <code>/reversa-debugger-fix BUG-20260723-IDX1</code> com urgência.
+<div class="warn">
+  <strong>⚠️ Inconsistência de schema — BUG-20260723-IDX1</strong><br>
+  Tem <code>DONE.md</code> (encerrado), mas front matter continua <code>status: open</code>. Ação humana recomendada: reconciliar.
 </div>
-<div class="legend">Os 3 bugs vieram da inspeção proativa (<code>/reversa-depth-inspection</code>) rodada logo após o <code>/reversa-coding</code> da feature <code>005-relatorios-auto-geracao</code>, e foram corrigidos na mesma sessão (<code>/reversa-debugger-fix</code>, YOLO mode) — código + testes vermelho→verde para os 3. <code>status: active · delivering</code>, <code>resolution_kind: fixed</code>. Falta <code>delivery</code> (commit/push/deploy — inclusive o índice Firestore novo do DUP1) e a janela de <code>post_fix_observation</code> antes de <code>DONE.md</code>. <code>closure_policy: production-service</code>.</div>
+
+<div class="good">
+  <strong>✅ BUG-20260723-DUP2 corrigido</strong><br>
+  <code>runTransaction</code> restaurado em <code>reserveReportSlot</code>. Investigação concluiu que a "incompatibilidade Vercel" alegada para removê-la não tinha sustentação — a causa real do 500 residual foi um índice de <code>cases</code> ausente, corrigido em commit separado. 5/5 testes verdes, incluindo concorrência real contra Firestore emulator.
+  <br><br>
+  <strong>✅ BUG-20260723-DGN1 corrigido</strong> (restricted) — endpoint de diagnóstico removido do repositório.
+</div>
 
 <div class="cards">
-  <div class="card"><div class="n">4</div><div class="l">Total de bugs</div></div>
-  <div class="card"><div class="n">1</div><div class="l">Critical · triaging</div></div>
-  <div class="card"><div class="n">3</div><div class="l">Fixed · delivering</div></div>
-  <div class="card"><div class="n">0</div><div class="l">Inconsistências</div></div>
-</div>
-
-<div class="prose">
-  <strong>BUG-20260723-SCP1</strong> (high): <code>GET</code> passou a expor <code>departamentos</code>/<code>categorias</code>; <code>isReportWithinHours</code> agora exige escopo igual, não só tipo/período. 16 testes verdes.
-  <br><br>
-  <strong>BUG-20260723-PSU1</strong> (medium): novo <code>translateGenerateErrorMessage</code> traduz <code>plan_suspended</code> para texto legível antes de chegar na tela. 3 testes verdes.
-  <br><br>
-  <strong>BUG-20260723-DUP1</strong> (medium): novo módulo <code>dedup.ts</code> com pré-check + transação Firestore (<code>reserveReportSlot</code>) fecha a corrida — confirmado ao vivo contra o emulador: 2 chamadas concorrentes com o padrão antigo criavam 2 documentos; com o fix, exatamente 1. Requer deploy de índice composto novo antes de produção.
+  <div class="card"><div class="n">6</div><div class="l">Total (5 públicos)</div></div>
+  <div class="card"><div class="n">1</div><div class="l">Critical, front matter inconsistente</div></div>
+  <div class="card"><div class="n">4</div><div class="l">Fixed · delivering</div></div>
+  <div class="card"><div class="n">1</div><div class="l">Restricted (corrigido)</div></div>
 </div>
 
 <section>
-<h2>Incidente crítico (triaging)</h2>
+<h2>Atenção (IDX1)</h2>
 <table>
-<thead><tr><th>#</th><th>ID</th><th>Severidade</th><th>Prioridade</th><th>Título</th><th>Status</th></tr></thead>
+<thead><tr><th>#</th><th>ID</th><th>Severidade</th><th>Título</th><th>Status</th></tr></thead>
 <tbody>
-<tr><td>12</td><td><a href="../bugs/BUG-20260723-IDX1-get-reports-500-indice-ausente/bug.md">BUG-20260723-IDX1</a></td><td class="sev-critical">critical</td><td>P0</td><td>GET /api/reports/generate 500 em produção</td><td class="status-critical">🔴 open · triaging</td></tr>
+<tr><td>12</td><td><a href="../bugs/BUG-20260723-IDX1-get-reports-500-indice-ausente/bug.md">BUG-20260723-IDX1</a></td><td class="sev-critical">critical</td><td>GET /api/reports/generate 500 em produção</td><td class="status-critical">🔴 DONE.md presente, front matter inconsistente</td></tr>
 </tbody>
 </table>
 </section>
 
 <section>
-<h2>Bugs corrigidos (aguardando delivery)</h2>
+<h2>Corrigidos (aguardando delivery)</h2>
 <table>
-<thead><tr><th>#</th><th>ID</th><th>Severidade</th><th>Prioridade</th><th>Título</th><th>Status</th></tr></thead>
+<thead><tr><th>#</th><th>ID</th><th>Severidade</th><th>Título</th><th>Status</th></tr></thead>
 <tbody>
-<tr><td>1</td><td><a href="../bugs/BUG-20260723-SCP1-reaproveitamento-ignora-escopo-filtro/bug.md">BUG-20260723-SCP1</a></td><td class="sev-high">high</td><td>P1</td><td>Reaproveitamento de relatório ignora departamento/categoria</td><td class="status-partial">🟡 active · delivering (fixed)</td></tr>
-<tr><td>2</td><td><a href="../bugs/BUG-20260723-PSU1-mensagem-erro-plano-suspenso-crua/bug.md">BUG-20260723-PSU1</a></td><td class="sev-medium">medium</td><td>P2</td><td>"plan_suspended" cru na tela</td><td class="status-partial">🟡 active · delivering (fixed)</td></tr>
-<tr><td>3</td><td><a href="../bugs/BUG-20260723-DUP1-toctou-geracao-duplicada/bug.md">BUG-20260723-DUP1</a></td><td class="sev-medium">medium</td><td>P2</td><td>TOCTOU — geração duplicada em acesso concorrente</td><td class="status-partial">🟡 active · delivering (fixed)</td></tr>
+<tr><td>1</td><td><a href="../bugs/BUG-20260723-SCP1-reaproveitamento-ignora-escopo-filtro/bug.md">BUG-20260723-SCP1</a></td><td class="sev-high">high</td><td>Reaproveitamento ignora departamento/categoria</td><td class="status-partial">🟡 fixed</td></tr>
+<tr><td>13</td><td><a href="../bugs/BUG-20260723-DUP2-reserveslot-perdeu-transacao/bug.md">BUG-20260723-DUP2</a></td><td class="sev-medium">medium</td><td>TOCTOU reaberto e re-corrigido</td><td class="status-partial">🟡 fixed</td></tr>
+<tr><td>2</td><td><a href="../bugs/BUG-20260723-PSU1-mensagem-erro-plano-suspenso-crua/bug.md">BUG-20260723-PSU1</a></td><td class="sev-medium">medium</td><td>"plan_suspended" cru na tela</td><td class="status-partial">🟡 fixed</td></tr>
+<tr><td>3</td><td><a href="../bugs/BUG-20260723-DUP1-toctou-geracao-duplicada/bug.md">BUG-20260723-DUP1</a></td><td class="sev-medium">medium</td><td>TOCTOU original</td><td class="status-partial">🟡 fixed</td></tr>
 </tbody>
 </table>
 </section>
 
 <section>
-<h2>Concluídos (travados)</h2>
-<p>Nenhum ainda — os 3 têm <code>resolution_kind: fixed</code>, mas falta <code>delivery</code> (commit/push/deploy, inclusive o índice Firestore do DUP1) e a janela de <code>post_fix_observation</code> antes de <code>DONE.md</code>.</p>
+<h2>Visibilidade restrita</h2>
+<p>1 bug com <code>visibility: restricted</code>, corrigido nesta sessão (endpoint removido). Não listado por regra do README.</p>
 </section>
 
 </body>

@@ -1,4 +1,4 @@
-<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-07-23 a partir de 15 bugs (9 resolved em unificacao-plano-assinatura, 2 active/observing em insights-ia-dashboard, 3 active/delivering fixed + 1 open/triaging critical em relatorios) -->
+<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-07-23 a partir de 23 bugs (9 resolved em unificacao-plano-assinatura, 2 active/observing em insights-ia-dashboard, 6 em relatorios (4 fixed + 1 critical/inconsistente + 1 restricted fixed), 6 active/delivering fixed em configuracoes) -->
 
 # Rastreabilidade Spec ↔ Bug
 
@@ -89,3 +89,28 @@ Espelho do lado da spec. Source of truth: cada `_reversa_bugs/<contexto>/bugs/<I
 ## `_reversa_forward/005-relatorios-auto-geracao/roadmap.md#D-02`
 
 - BUG-20260723-DUP1 (active/delivering, P2, fixed): ver acima
+- BUG-20260723-DUP2 (active/delivering, P2, fixed): reserveReportSlot voltou a ser sequencial — TOCTOU reaberto e re-corrigido (regression-of DUP1) — `_reversa_bugs/relatorios/bugs/BUG-20260723-DUP2-reserveslot-perdeu-transacao/`
+
+## `_reversa_forward/006-split-configuracoes/requirements.md#RF-01`
+
+- BUG-20260723-MOB1 (active/delivering, P1, fixed): Sem navegação mobile até Faturamento — `_reversa_bugs/configuracoes/bugs/BUG-20260723-MOB1-sem-navegacao-mobile-faturamento/`
+
+## `_reversa_forward/006-split-configuracoes/actions.md#T006`
+
+- BUG-20260723-CLP1 (active/delivering, P2, fixed): Submenu colapsado não navega — `_reversa_bugs/configuracoes/bugs/BUG-20260723-CLP1-submenu-colapsado-nao-navega/`
+
+## `_reversa_forward/006-split-configuracoes/requirements.md#RF-07`
+
+- BUG-20260723-ACT1 (active/delivering, P3, fixed): Submenu não destaca item ativo em reload — `_reversa_bugs/configuracoes/bugs/BUG-20260723-ACT1-item-ativo-nao-destaca-reload/`
+
+## `_reversa_forward/006-split-configuracoes/requirements.md#RF-05`
+
+- BUG-20260723-SRT1 (active/delivering, P2, fixed): sort/order não documentados na Asaas — `_reversa_bugs/configuracoes/bugs/BUG-20260723-SRT1-sort-order-nao-documentados-asaas/`
+
+## `_reversa_forward/006-split-configuracoes/requirements.md` (cenário "org sem faturas")
+
+- BUG-20260723-ERR1 (active/delivering, P2, fixed): getInvoices() engole erro de rede/API — `_reversa_bugs/configuracoes/bugs/BUG-20260723-ERR1-erro-asaas-vira-lista-vazia/`
+
+## `_reversa_forward/006-split-configuracoes/roadmap.md` (risco paymentDate)
+
+- BUG-20260723-DAT1 (active/delivering, P3, fixed): Possível offset de 1 dia nas datas — `_reversa_bugs/configuracoes/bugs/BUG-20260723-DAT1-possivel-offset-dia-datas/`

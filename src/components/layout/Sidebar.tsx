@@ -49,7 +49,17 @@ export function Sidebar({ className = "" }: SidebarProps) {
   const pathname = usePathname();
   const { user } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
-  const [expandedMenu, setExpandedMenu] = useState<Set<string>>(new Set());
+  // BUG-20260723-ACT1: auto-expande o submenu cujo filho corresponde à rota atual,
+  // pra que acesso direto/reload já mostre o item ativo destacado.
+  const [expandedMenu, setExpandedMenu] = useState<Set<string>>(() => {
+    const initial = new Set<string>();
+    for (const item of NAV_ITEMS) {
+      if (item.children?.some((child) => pathname.startsWith(child.href))) {
+        initial.add(item.href);
+      }
+    }
+    return initial;
+  });
 
   function toggleExpanded(href: string) {
     setExpandedMenu((prev) => {
@@ -120,7 +130,18 @@ export function Sidebar({ className = "" }: SidebarProps) {
                 <div key={item.href}>
                   <button
                     type="button"
-                    onClick={() => toggleExpanded(item.href)}
+                    onClick={() => {
+                      // BUG-20260723-CLP1: colapsado, os filhos nunca renderizam
+                      // (ver `{!collapsed && isExpanded}` abaixo) — só alternar
+                      // isExpanded não tinha efeito visível. Expande a sidebar
+                      // inteira nesse caso, pra o clique navegar até o submenu.
+                      if (collapsed) {
+                        setCollapsed(false);
+                        setExpandedMenu((prev) => new Set(prev).add(item.href));
+                      } else {
+                        toggleExpanded(item.href);
+                      }
+                    }}
                     title={collapsed ? item.label : undefined}
                     className={[
                       "w-full flex h-12 items-center gap-3 rounded-xl px-4 text-left text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-white/60",

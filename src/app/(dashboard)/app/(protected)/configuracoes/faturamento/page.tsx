@@ -49,7 +49,14 @@ const FALLBACK_INVOICE_BADGE = {
 };
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+  // BUG-20260723-DAT1: parse manual da parte de data, ignorando qualquer
+  // componente de hora/timezone. new Date(iso) trataria "YYYY-MM-DD" (data
+  // pura, sem hora) como meia-noite UTC, que em America/Sao_Paulo (UTC-3)
+  // exibiria o dia anterior. Construir a data com ano/mês/dia locais evita
+  // o offset, funcionando tanto para data pura quanto para ISO com horário.
+  const [year, month, day] = iso.split("T")[0].split("-").map(Number);
+  if (!year || !month || !day) return iso;
+  return new Date(year, month - 1, day).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
 }
 
 function formatBRL(value: number): string {
