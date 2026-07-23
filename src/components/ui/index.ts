@@ -14,7 +14,6 @@ export { Select } from "./Select";
 // Portal composites
 export { AnonymousBadge } from "./AnonymousBadge";
 export { ProtocolDisplay } from "./ProtocolDisplay";
-export { ProgressSteps } from "./ProgressSteps";
 export { StatusTimeline } from "./StatusTimeline";
 export { CompanySearchResult } from "./CompanySearchResult";
 export { EmptyState } from "./EmptyState";
@@ -25,7 +24,6 @@ export { UrgencyIndicator } from "./UrgencyIndicator";
 export type { UrgencyLevel } from "./UrgencyIndicator";
 export { CaseRow } from "./CaseRow";
 export { ChannelBadge } from "./ChannelBadge";
-export { RiskCell } from "./RiskCell";
 export { AuditEntry } from "./AuditEntry";
 export { AIAssistantPanel } from "./AIAssistantPanel";
 export { AIInsightsCard } from "./AIInsightsCard";

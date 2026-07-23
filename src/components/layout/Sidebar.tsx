@@ -8,6 +8,7 @@ import { LogoSigilo } from "@/components/portal/LogoSigilo";
 import {
   Home,
   FileText,
+  Lightbulb,
   BarChart3,
   Settings,
   ChevronLeft,
@@ -28,6 +29,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { href: "/app",                label: "Visão geral",   icon: Home     },
   { href: "/app/casos",          label: "Casos",         icon: FileText },
+  { href: "/app/insights",       label: "Insights",       icon: Lightbulb },
   { href: "/app/relatorios",     label: "Relatórios",    icon: BarChart3 },
   {
     href: "/app/configuracoes",

@@ -3,7 +3,6 @@
 import { useState, use } from "react";
 import useSWR from "swr";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -34,7 +33,6 @@ const fetcher = (url: string) => fetch(url).then((r) => {
 export default function ReportDetailPage({ params }: Props) {
   const { reportId } = use(params);
   const { user } = useAuth();
-  const router = useRouter();
 
   const { data: report, isLoading, error, mutate } = useSWR<ReportDetail>(
     `/api/reports/${reportId}`,
