@@ -1,5 +1,6 @@
 import { adminDb } from "@/lib/firebase-admin/admin";
 import { verifySession } from "@/lib/utils/auth";
+import { mapInsightItemsToInsightResponse, resolveInsightSource } from "@/lib/insights/mapItems";
 import type { NextRequest } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -12,19 +13,20 @@ export async function GET(request: NextRequest) {
 
     const { orgId, uid } = session;
 
-    // Tentar ler insights gerados pela scheduled function
+    // Tentar ler insights gerados pela scheduled function ou regeneração manual
     const orgDoc = await adminDb.collection("orgs").doc(orgId).get();
-    const aiInsights = orgDoc.data()?.ai_insights as { items?: string[]; gerado_em?: { toDate: () => Date } } | undefined;
+    const aiInsights = orgDoc.data()?.ai_insights as { items?: string[]; gerado_em?: { toDate: () => Date }; source?: string } | undefined;
 
     if (aiInsights?.items && aiInsights.items.length > 0) {
       const generatedAt = aiInsights.gerado_em?.toDate?.()?.toISOString() ?? new Date().toISOString();
+      const { summary, description, recommendations } = mapInsightItemsToInsightResponse(aiInsights.items);
       return Response.json({
-        summary: aiInsights.items[0] ?? "",
+        summary,
         highlight: null,
-        description: aiInsights.items[1] ?? "",
-        recommendations: aiInsights.items.slice(1),
+        description,
+        recommendations,
         generatedAt,
-        source: "ai_scheduled",
+        source: resolveInsightSource(aiInsights.source),
       });
     }
 

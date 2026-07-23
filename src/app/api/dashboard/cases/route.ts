@@ -18,6 +18,8 @@ export async function GET(request: NextRequest) {
     const urgencyFilter = searchParams.get("urgency");
     const channelFilter = searchParams.get("channel") as CanalOrigem | null;
     const protocolFilter = searchParams.get("protocol")?.trim().toLowerCase() ?? null;
+    const departmentFilter = searchParams.get("department")?.trim() ?? null;
+    const categoryFilter = searchParams.get("category")?.trim() ?? null;
     const dateFrom = searchParams.get("dateFrom"); // ISO string
     const dateTo = searchParams.get("dateTo");     // ISO string
     const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
@@ -63,6 +65,14 @@ export async function GET(request: NextRequest) {
         if (dateTo) {
           const createdAt = timestampToMs((c as Record<string, unknown>).created_at);
           if (createdAt !== null && createdAt > new Date(dateTo).getTime()) return false;
+        }
+        if (departmentFilter) {
+          const areaRisco = ((c as Record<string, unknown>).triagem_ia as Record<string, unknown> | undefined)?.area_risco as string | undefined ?? (c as Record<string, unknown>).departamento as string | undefined ?? "";
+          if (areaRisco.toLowerCase() !== departmentFilter.toLowerCase()) return false;
+        }
+        if (categoryFilter) {
+          const cat = ((c as Record<string, unknown>).triagem_ia as Record<string, unknown> | undefined)?.categoria as string | undefined ?? (c as Record<string, unknown>).categoria as string | undefined ?? "";
+          if (cat.toLowerCase() !== categoryFilter.toLowerCase()) return false;
         }
         return true;
       });

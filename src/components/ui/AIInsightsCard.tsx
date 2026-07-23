@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Sparkles, ArrowRight } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { Sparkles, ArrowRight, RefreshCw, AlertTriangle } from "lucide-react";
+import Link from "next/link";
 import { Skeleton } from "./Skeleton";
 
 interface InsightData {
@@ -10,6 +11,7 @@ interface InsightData {
   description: string;
   recommendations: string[];
   generatedAt: string;
+  source?: string;
 }
 
 export function AIInsightsCard() {
@@ -17,23 +19,52 @@ export function AIInsightsCard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const [regenerating, setRegenerating] = useState(false);
+  const [rateLimitMsg, setRateLimitMsg] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
+  const fetchInsights = useCallback(() => {
     setLoading(true);
     setError(false);
+    setRateLimitMsg(null);
     fetch("/api/dashboard/insights")
       .then(r => r.ok ? r.json() as Promise<InsightData> : Promise.reject(new Error(`HTTP ${r.status}`)))
-      .then(d => { if (!cancelled) { setData(d); setError(false); } })
-      .catch(err => { console.error("[AIInsightsCard]", err); if (!cancelled) setError(true); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-  }, [attempt]);
+      .then(d => { setData(d); setError(false); })
+      .catch(err => { console.error("[AIInsightsCard]", err); setError(true); })
+      .finally(() => { setLoading(false); });
+  }, []);
+
+  useEffect(() => {
+    fetchInsights();
+  }, [attempt, fetchInsights]);
+
+  const handleRegenerate = useCallback(async () => {
+    setRegenerating(true);
+    setRateLimitMsg(null);
+    try {
+      const res = await fetch("/api/dashboard/insights/regenerate", { method: "POST" });
+      const body = (await res.json()) as { ok?: boolean; error?: string; nextAllowedAt?: string; message?: string };
+      if (res.status === 429) {
+        setRateLimitMsg(body.message ?? "Tente novamente mais tarde.");
+        return;
+      }
+      if (!res.ok) {
+        throw new Error(body.error ?? "Erro ao regenerar");
+      }
+      setAttempt(a => a + 1);
+    } catch (err) {
+      console.error("[AIInsightsCard] regenerate:", err);
+      setRateLimitMsg("Erro ao regenerar insights. Tente novamente.");
+    } finally {
+      setRegenerating(false);
+    }
+  }, []);
 
   const timeAgo = data ? new Intl.RelativeTimeFormat("pt-BR", { numeric: "auto" }).format(
     Math.round((new Date(data.generatedAt).getTime() - Date.now()) / (1000 * 60)),
     "minute"
   ) : "";
+
+  const isFallback = data?.source === "fallback" || data?.source === "fallback_heuristic";
 
   if (loading) {
     return (
@@ -48,7 +79,10 @@ export function AIInsightsCard() {
             <Skeleton width="90%" height="20px" />
             <Skeleton width="60%" height="32px" />
             <Skeleton width="80%" height="40px" />
-            <Skeleton width="140px" height="40px" rounded="xl" />
+            <div className="flex items-center gap-3">
+              <Skeleton width="120px" height="40px" rounded="xl" />
+              <Skeleton width="100px" height="40px" rounded="xl" />
+            </div>
           </div>
           <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-5">
             <Skeleton width="150px" height="20px" className="mb-4" />
@@ -90,11 +124,19 @@ export function AIInsightsCard() {
           <Sparkles className="text-[var(--color-primary)]" size={21} strokeWidth={1.8} />
           Insight da IA
         </h2>
-        <span className="text-xs text-[var(--color-text-secondary)]">Gerado {timeAgo}</span>
+        <div className="flex items-center gap-2">
+          {isFallback && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-warning-surface)] px-2 py-0.5 text-[var(--text-2xs)] font-semibold text-[var(--color-warning)]">
+              <AlertTriangle size={10} strokeWidth={2} />
+              Estimativa automática
+            </span>
+          )}
+          <span className="text-xs text-[var(--color-text-secondary)]">Gerado {timeAgo}</span>
+        </div>
       </div>
       <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr] xl:items-center">
         <div className="animate-in fade-in slide-in-from-left-4 duration-700">
-          <p className="mb-4 text-4xl leading-none text-[var(--color-primary)]/20 font-serif">“</p>
+          <p className="mb-4 text-4xl leading-none text-[var(--color-primary)]/20 font-serif">"</p>
           <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">{data.summary}</p>
           {data.highlight && (
             <p className="mt-1 text-xl font-semibold text-[var(--color-text-primary)]">{data.highlight}.</p>
@@ -102,10 +144,26 @@ export function AIInsightsCard() {
           <p className="mt-4 max-w-xl text-sm leading-relaxed text-[var(--color-text-secondary)]">
             {data.description}
           </p>
-          <button className="mt-6 inline-flex h-11 items-center gap-2 rounded-xl border border-[var(--color-border)] px-5 text-sm font-semibold text-[var(--color-primary-dark)] transition hover:bg-[var(--color-card-hover)] focus-visible:shadow-[var(--shadow-focus)]">
-            Ver análise completa
-            <ArrowRight size={17} />
-          </button>
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <button
+              onClick={handleRegenerate}
+              disabled={regenerating}
+              className="inline-flex h-11 items-center gap-2 rounded-xl border border-[var(--color-border)] px-5 text-sm font-semibold text-[var(--color-primary-dark)] transition hover:bg-[var(--color-card-hover)] focus-visible:shadow-[var(--shadow-focus)] disabled:opacity-50"
+            >
+              <RefreshCw size={15} className={regenerating ? "animate-spin" : ""} />
+              {regenerating ? "Atualizando..." : "Atualizar agora"}
+            </button>
+            <Link
+              href="/app/insights"
+              className="inline-flex h-11 items-center gap-2 rounded-xl border border-[var(--color-primary)]/20 px-5 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[var(--color-primary)]/5"
+            >
+              Ver análise completa
+              <ArrowRight size={17} />
+            </Link>
+          </div>
+          {rateLimitMsg && (
+            <p className="mt-3 text-xs text-[var(--color-warning)]">{rateLimitMsg}</p>
+          )}
         </div>
         <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/50 p-4 sm:p-6 animate-in fade-in slide-in-from-right-4 duration-700">
           <h3 className="mb-4 text-sm font-semibold text-[var(--color-text-primary)]">Recomendações sugeridas</h3>
