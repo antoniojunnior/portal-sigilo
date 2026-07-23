@@ -14,8 +14,8 @@
 
 | # | ID | Prioridade | Severidade | Título | Caminho |
 |---|----|-----------|-----------|--------|---------|
-| 1 | BUG-20260722-CAT1 | P1 | high | 6 sites leem "triagem_ia.categoria" — corrigido, aguardando delivery | `bugs/BUG-20260722-CAT1-categoria-legal-campo-errado/` |
+| 1 | BUG-20260722-CAT1 | P1 | high | 6 sites leem "triagem_ia.categoria" — entregue (commit eeda528), em observação | `bugs/BUG-20260722-CAT1-categoria-legal-campo-errado/` |
 
 ## Resolvidos
 
-Nenhum ainda. `resolution_kind: fixed`, mas `closure.satisfied: false` até `delivery` + observação.
+Nenhum ainda. `resolution_kind: fixed`, entregue, `closure.satisfied: false` até a janela de observação confirmar não recorrência.

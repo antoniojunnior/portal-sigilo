@@ -4,7 +4,7 @@ id: BUG-20260722-CAT1
 display_number: 1
 title: 6 sites de leitura referenciam "triagem_ia.categoria", campo que nunca existiu — categoria_legal é o campo real
 status: active
-phase: delivering
+phase: observing
 severity: high
 priority: P1
 created: 2026-07-22
@@ -96,8 +96,16 @@ change_set:
 closure:
   policy: production-service
   satisfied: false
-  delivery: null
-  post_fix_observation: null
+  delivery:
+    kind: commit
+    ref: "36a9afe"
+    code_commit: "eeda528"
+    delivered_at: "2026-07-23"
+    pushed_to: "origin/main"
+  post_fix_observation:
+    started_at: "2026-07-23"
+    window: "a definir — recomendado: 1 caso real triado + exibido em assistente/insights/relatório mostrando categoria_legal correta, sem recorrência do fallback"
+    status: "observing"
 resolution_kind: fixed
 ---
 
@@ -160,7 +168,7 @@ Todo `c.triagem_ia?.categoria` é `undefined`. Relatórios e insights agregam po
 ```
 `npx tsc --noEmit` (projeto + functions): limpo, `EXIT:0` nos dois.
 
-**Fechamento:** `status: active`, `phase: delivering` — `closure.satisfied: false` até `delivery` (commit/push) + janela de `post_fix_observation` (política `production-service`). Sem `DONE.md` ainda.
+**Fechamento:** `status: active`, `phase: observing` — entregue via commit `eeda528` (código) / `36a9afe` (docs), push `560a90f..36a9afe` para `origin/main` em 2026-07-23. `closure.satisfied: false` até a janela de `post_fix_observation` confirmar não recorrência. Sem `DONE.md` ainda.
 
 ## Agent Notes
 
