@@ -3,8 +3,8 @@ schema_version: 1
 id: BUG-20260722-CAT1
 display_number: 1
 title: 6 sites de leitura referenciam "triagem_ia.categoria", campo que nunca existiu — categoria_legal é o campo real
-status: active
-phase: observing
+status: resolved
+phase: resolved
 severity: high
 priority: P1
 created: 2026-07-22
@@ -95,7 +95,7 @@ change_set:
 
 closure:
   policy: production-service
-  satisfied: false
+  satisfied: true
   delivery:
     kind: commit
     ref: "36a9afe"
@@ -104,8 +104,9 @@ closure:
     pushed_to: "origin/main"
   post_fix_observation:
     started_at: "2026-07-23"
-    window: "a definir — recomendado: 1 caso real triado + exibido em assistente/insights/relatório mostrando categoria_legal correta, sem recorrência do fallback"
-    status: "observing"
+    closed_at: "2026-07-23"
+    window: "waived — usuário decidiu promover a resolved tratando a entrega já confirmada (push origin/main) como suficiente, sem aguardar janela de observação adicional. Decisão registrada em 2026-07-23 via /reversa-debugger-graph."
+    status: "closed"
 resolution_kind: fixed
 ---
 
@@ -168,7 +169,7 @@ Todo `c.triagem_ia?.categoria` é `undefined`. Relatórios e insights agregam po
 ```
 `npx tsc --noEmit` (projeto + functions): limpo, `EXIT:0` nos dois.
 
-**Fechamento:** `status: active`, `phase: observing` — entregue via commit `eeda528` (código) / `36a9afe` (docs), push `560a90f..36a9afe` para `origin/main` em 2026-07-23. `closure.satisfied: false` até a janela de `post_fix_observation` confirmar não recorrência. Sem `DONE.md` ainda.
+**Fechamento:** `status: resolved`, `phase: resolved` — entregue via commit `eeda528` (código) / `36a9afe` (docs), push `560a90f..36a9afe` para `origin/main` em 2026-07-23. `closure.satisfied: true` — usuário decidiu promover a `resolved` em 2026-07-23 (via `/reversa-debugger-graph`), tratando a entrega já confirmada como suficiente. `DONE.md` já existia (criado junto do commit `79425a8`, feature 006); front matter agora reconciliado com a trava.
 
 ## Agent Notes
 

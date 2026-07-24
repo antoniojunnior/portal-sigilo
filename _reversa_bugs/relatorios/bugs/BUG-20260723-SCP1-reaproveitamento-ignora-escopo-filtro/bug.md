@@ -3,8 +3,8 @@ schema_version: 1
 id: BUG-20260723-SCP1
 display_number: 1
 title: Reaproveitamento de relatório recente ignora departamento/categoria — relatório filtrado pode ser exibido como se fosse o relatório padrão da org inteira
-status: active
-phase: delivering
+status: resolved
+phase: resolved
 severity: high
 priority: P1
 created: 2026-07-23
@@ -87,7 +87,18 @@ change_set:
 
 closure:
   policy: production-service
-  satisfied: false
+  satisfied: true
+  delivery:
+    kind: commit
+    ref: "79425a8"
+    code_commit: "03f61f7"
+    delivered_at: "2026-07-23"
+    pushed_to: "origin/main"
+  post_fix_observation:
+    started_at: "2026-07-23"
+    closed_at: "2026-07-23"
+    window: "waived — usuário decidiu promover a resolved tratando a entrega já confirmada (push origin/main) como suficiente, sem aguardar janela de observação adicional. Decisão registrada em 2026-07-23 via /reversa-debugger-graph."
+    status: "closed"
 resolution_kind: fixed
 ---
 
@@ -161,7 +172,7 @@ AssertionError: Expected values to be strictly equal: true !== false
 
 `npx tsc --noEmit` limpo após a mudança.
 
-**Closure (production-service):** `resolution_kind: fixed`, mas `closure.satisfied: false` — falta `delivery` (commit/push/deploy, fora do escopo deste fix, requer autorização separada de git) e a janela de `post_fix_observation` antes de `DONE.md`.
+**Closure (production-service):** `resolution_kind: fixed`, entregue via commit `03f61f7` (código) / `79425a8` (trava), push para `origin/main`. `closure.satisfied: true` — usuário decidiu promover a `resolved` em 2026-07-23 (via `/reversa-debugger-graph`), tratando a entrega já confirmada como suficiente, dispensando espera adicional pela janela de observação.
 
 ## Agent Notes
 

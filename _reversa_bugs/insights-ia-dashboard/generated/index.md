@@ -1,32 +1,26 @@
-<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-07-22 a partir de 2 bugs (0 resolved, 2 active/observing) -->
+<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-07-23 a partir de 2 bugs (1 resolved por decisão explícita do usuário, 1 YAML inválido) -->
 
 # Índice de Bugs — insights-ia-dashboard
+
+## ✅ Promovido a `resolved` nesta rodada
+
+| ID | # | Título | Delivery (código / trava) |
+|---|---|---|---|
+| BUG-20260722-TCT1 | 11 | TOCTOU no rate limit de regeneração | `22edd28` / `b906ca5` |
+
+Usuário instruiu explicitamente promover, tratando entrega já confirmada em `origin/main` como suficiente. Janela de `post_fix_observation` waived.
+
+## ⚠️ Inconsistência ainda não resolvida
+
+`BUG-20260722-SRC1` continua com front matter YAML inválido (`title:` com aspas não fechadas) — não pôde ser tocado. Ação humana: corrigir manualmente as aspas do campo `title` antes de qualquer outra operação neste bug.
 
 ## Resumo por status
 
 | Status | Contagem |
 |---|---|
-| open | 0 |
-| active | 2 |
-| resolved | 0 |
+| resolved | 1 (TCT1) |
+| inválido (YAML) | 1 (SRC1) |
 
-## Resumo por phase
+## Travados (`DONE.md`) — reconciliados
 
-| Phase | Contagem |
-|---|---|
-| observing | 2 |
-
-## Bugs abertos / ativos
-
-| # | ID | Prioridade | Severidade | Título | Caminho |
-|---|----|-----------|-----------|--------|---------|
-| 10 | BUG-20260722-SRC1 | P3 | low | "source" do insight não é persistido no Firestore — entregue (commit 22edd28), em observação | `bugs/BUG-20260722-SRC1-source-nao-persistido/` |
-| 11 | BUG-20260722-TCT1 | P3 | low | TOCTOU no rate limit de regeneração — entregue (commit 22edd28), em observação | `bugs/BUG-20260722-TCT1-toctou-rate-limit/` |
-
-## Resolvidos
-
-Nenhum ainda. Ambos os bugs têm `resolution_kind: fixed` e já foram entregues (push `f8fd9c8..b906ca5`), mas `closure.satisfied: false` até a janela de observação confirmar não recorrência.
-
-## Bugs restritos
-
-Nenhum bug com `visibility: restricted` neste contexto.
+TCT1, agora `status: resolved`.

@@ -3,8 +3,8 @@ schema_version: 1
 id: BUG-20260722-TCT1
 display_number: 11
 title: TOCTOU no rate limit de regeneração — duas requisições concorrentes podem passar
-status: active
-phase: observing
+status: resolved
+phase: resolved
 severity: low
 priority: P3
 created: 2026-07-22
@@ -84,7 +84,7 @@ change_set:
 
 closure:
   policy: production-service
-  satisfied: false
+  satisfied: true
   delivery:
     kind: commit
     ref: "b906ca5"
@@ -93,8 +93,9 @@ closure:
     pushed_to: "origin/main"
   post_fix_observation:
     started_at: "2026-07-22"
-    window: "a definir — recomendado: nenhuma dupla-chamada real observada em produção por um período razoável (o teste automatizado já prova a invariante; observação real é sobre uso concorrente de verdade, não sobre a lógica)"
-    status: "observing"
+    closed_at: "2026-07-23"
+    window: "waived — usuário decidiu promover a resolved tratando a entrega já confirmada (push origin/main) como suficiente, sem aguardar janela de observação adicional. Decisão registrada em 2026-07-23 via /reversa-debugger-graph."
+    status: "closed"
 resolution_kind: fixed
 
 agent_notes: |
@@ -141,7 +142,7 @@ has no exported member 'reserveRegenerationSlot'.
 
 `npx tsc --noEmit`: `TSC:0`, sem erros novos.
 
-**Fechamento:** `status: active`, `phase: observing` — entregue via commit `22edd28` (código) / `b906ca5` (docs), push `f8fd9c8..b906ca5` para `origin/main` em 2026-07-22. `closure.satisfied: false` até a janela de `post_fix_observation` confirmar não recorrência. Sem `DONE.md` ainda.
+**Fechamento:** `status: resolved`, `phase: resolved` — entregue via commit `22edd28` (código) / `b906ca5` (docs), push `f8fd9c8..b906ca5` para `origin/main` em 2026-07-22. `closure.satisfied: true` — usuário decidiu promover a `resolved` em 2026-07-23 (via `/reversa-debugger-graph`), tratando a entrega já confirmada como suficiente. `DONE.md` já existia (criado junto do commit `79425a8`, feature 006); front matter agora reconciliado com a trava.
 
 ## Expected Behavior
 

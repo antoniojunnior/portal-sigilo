@@ -3,8 +3,8 @@ schema_version: 1
 id: BUG-20260723-DUP1
 display_number: 3
 title: Sem dedupe no servidor — acessos concorrentes (multi-aba/multi-usuário) podem gerar relatórios duplicados para o mesmo período
-status: active
-phase: delivering
+status: resolved
+phase: resolved
 severity: medium
 priority: P2
 created: 2026-07-23
@@ -89,7 +89,18 @@ change_set:
 
 closure:
   policy: production-service
-  satisfied: false
+  satisfied: true
+  delivery:
+    kind: commit
+    ref: "79425a8"
+    code_commit: "03f61f7"
+    delivered_at: "2026-07-23"
+    pushed_to: "origin/main"
+  post_fix_observation:
+    started_at: "2026-07-23"
+    closed_at: "2026-07-23"
+    window: "waived — usuário decidiu promover a resolved tratando a entrega já confirmada (push origin/main) como suficiente, sem aguardar janela de observação adicional. Decisão registrada em 2026-07-23 via /reversa-debugger-graph."
+    status: "closed"
 resolution_kind: fixed
 
 change_risk:
@@ -168,7 +179,7 @@ Documentos criados por 2 chamadas concorrentes (sem dedupe): 2
 
 **Pendência de infraestrutura:** o índice composto novo em `firestore.indexes.json` precisa de `firebase deploy --only firestore:indexes` antes de valer em produção — a query falharia em runtime sem ele. Esta ação de infraestrutura NÃO foi executada por este fix (fora do escopo de uma correção de código, requer autorização/deploy separados).
 
-**Closure (production-service):** `resolution_kind: fixed`, `closure.satisfied: false` — falta `delivery` (deploy do índice + push/merge) e a janela de `post_fix_observation`.
+**Closure (production-service):** `resolution_kind: fixed`, entregue via commit `03f61f7` (código) / `79425a8` (trava), push para `origin/main`. `closure.satisfied: true` — usuário decidiu promover a `resolved` em 2026-07-23 (via `/reversa-debugger-graph`), tratando a entrega já confirmada como suficiente, dispensando espera adicional pela janela de observação. **Nota:** este bug foi reaberto e re-corrigido via `BUG-20260723-DUP2` (transação removida por engano, depois restaurada) — ambos agora `resolved`.
 
 ## Agent Notes
 

@@ -3,8 +3,8 @@ schema_version: 1
 id: BUG-20260723-SRT1
 display_number: 18
 title: getInvoices envia sort/order não documentados pela Asaas — risco de limit=15 não trazer as faturas mais recentes
-status: active
-phase: delivering
+status: resolved
+phase: resolved
 severity: high
 priority: P2
 created: 2026-07-23
@@ -62,7 +62,18 @@ change_set:
 
 closure:
   policy: production-service
-  satisfied: false
+  satisfied: true
+  delivery:
+    kind: commit
+    ref: "d7ae0c0"
+    code_commit: "0e70981"
+    delivered_at: "2026-07-23"
+    pushed_to: "origin/main"
+  post_fix_observation:
+    started_at: "2026-07-23"
+    closed_at: "2026-07-23"
+    window: "waived — usuário decidiu promover a resolved tratando a entrega já confirmada (push origin/main) como suficiente, sem aguardar janela de observação adicional. Decisão registrada em 2026-07-23 via /reversa-debugger-graph."
+    status: "closed"
 resolution_kind: fixed
 ---
 
@@ -121,7 +132,7 @@ Ver bloco YAML `traceability` no front matter.
 
 `npx tsc --noEmit` e `eslint` limpos.
 
-**Closure (production-service):** `resolution_kind: fixed`, `closure.satisfied: false` — falta `delivery` e `post_fix_observation`. **Nota:** a causa raiz nunca foi confirmada contra a API real (permanece `hypothesized`); a correção é defensiva e independe da confirmação, mas vale revisitar se o comportamento real da Asaas for esclarecido futuramente.
+**Closure (production-service):** `resolution_kind: fixed`, entregue via commit `0e70981` (código) / `d7ae0c0` (trava), push para `origin/main`. `closure.satisfied: true` — usuário decidiu promover a `resolved` em 2026-07-23 (via `/reversa-debugger-graph`), tratando a entrega já confirmada como suficiente, dispensando espera adicional pela janela de observação. **Nota (persiste):** a causa raiz nunca foi confirmada contra a API real (permanece `hypothesized`); a correção é defensiva e independe da confirmação, mas vale revisitar se o comportamento real da Asaas for esclarecido futuramente.
 
 ## Agent Notes
 
