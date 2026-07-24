@@ -3,12 +3,17 @@ schema_version: 1
 id: BUG-20260723-IDX1
 display_number: 12
 title: GET /api/reports/generate retorna 500 em produção — possível índice Firestore ausente após deploy de índices desta sessão
-status: open
-phase: triaging
+status: resolved
+phase: resolved
 severity: critical
 priority: P0
 created: 2026-07-23
 updated: 2026-07-23
+
+change_risk:
+  classification: baixa
+  motivos:
+    - "Nenhum código de produção foi tocado nesta correção — o código já estava corrigido (commits 73241bb/0267da1/82f130b, já em origin/main); o trabalho foi documentar e blindar com teste de regressão"
 
 origin:
   type: manual-report
@@ -42,28 +47,52 @@ traceability:
     - "src/app/api/reports/generate/route.ts#GET"
     - "firestore.indexes.json"
   root_cause:
-    state: hypothesized
-    hypothesis: "GET faz where(org_id==).orderBy(gerado_em, desc) na coleção reports, o que exige um índice composto (org_id + gerado_em). O firestore.indexes.json do repositório nunca teve entrada pra coleção reports antes desta sessão (só ganhou uma, com campos diferentes: org_id + dedup_key + gerado_em, para o dedupe do BUG-20260723-DUP1). Se o índice que o GET precisa existia no projeto Firebase só via console (nunca capturado no arquivo local), o comando 'firebase deploy --only firestore:indexes' rodado na sessão anterior pode ter REMOVIDO esse índice não rastreado — o Firebase CLI trata o arquivo local como fonte única de verdade e apaga do projeto qualquer índice ausente dele. Fator agravante: o handler GET não tem try/catch (diferente do POST, que captura e devolve JSON de erro) — uma exceção do Firestore (ex. FAILED_PRECONDITION: query requires an index) sobe sem tratamento e vira 500 genérico."
-    causal_path: []
+    state: confirmed
+    hypothesis: null
+    causal_path:
+      - "GET faz where(org_id==).orderBy(gerado_em, desc) na coleção reports, exigindo índice composto (org_id + gerado_em)"
+      - "git show 03f61f7 -- firestore.indexes.json confirma: a ÚNICA entrada nova pra coleção reports nesse commit foi a do dedupe (org_id+dedup_key+gerado_em, BUG-20260723-DUP1) — nenhuma entrada com o shape exato que o GET precisa (org_id+gerado_em) existia no arquivo rastreado antes"
+      - "firebase deploy --only firestore:indexes trata o arquivo local como fonte única de verdade — se um índice equivalente existia só no console Firebase (nunca capturado no arquivo), o deploy dessa sessão o removeu por omissão"
+      - "GET não tinha try/catch (diferente do POST) — a exceção FAILED_PRECONDITION do Firestore subiu crua como 500 genérico do runtime"
+      - "Corrigido no mesmo dia, commit 73241bb (~15min após o incidente): índice reports(org_id ASC, gerado_em DESC) adicionado + try/catch no GET"
     evidence:
-      - ref: "src/app/api/reports/generate/route.ts#GET"
-        observation: "GET não tem try/catch ao redor da query Firestore, ao contrário do POST — qualquer exceção não tratada vira 500 cru do runtime, não um JSON de erro controlado"
-      - ref: "firestore.indexes.json (estado antes desta sessão)"
-        observation: "nenhuma entrada para a coleção 'reports' existia no arquivo antes do commit 03f61f7 — se um índice equivalente existisse só no console Firebase, o deploy baseado no arquivo local o teria removido por omissão"
+      - ref: "git show 03f61f7 -- firestore.indexes.json"
+        observation: "confirma ausência do índice reports(org_id,gerado_em) no arquivo rastreado antes do incidente"
+      - ref: "git show 73241bb -- firestore.indexes.json src/app/api/reports/generate/route.ts"
+        observation: "confirma a correção: índice adicionado + try/catch no GET, no mesmo dia do incidente"
+      - ref: "scripts/test-reports-get-resilient.ts"
+        observation: "prova estrutural (fixture pré-fix falha as duas checagens; arquivos reais atuais passam as duas)"
     code_refs:
-      - {file: "src/app/api/reports/generate/route.ts", symbol: "GET", commit: "03f61f7"}
-      - {file: "firestore.indexes.json", symbol: null, commit: "03f61f7"}
-  reproduction_tests: []
-  regression_tests: []
+      - {file: "src/app/api/reports/generate/route.ts", symbol: "GET", commit: "73241bb"}
+      - {file: "firestore.indexes.json", symbol: null, commit: "73241bb"}
+  reproduction_tests:
+    - "scripts/test-reports-get-resilient.ts (fixtures simulando o estado pré-fix — reprodução documental, não ao vivo)"
+  regression_tests:
+    - "scripts/test-reports-get-resilient.ts (arquivos reais: índice presente + try/catch presente)"
 
-spec_verdict: null
+spec_verdict: spec-correta
 
-change_set: []
+change_set:
+  - id: CHG-001
+    kind: test
+    artifact: "scripts/test-reports-get-resilient.ts (novo)"
+    purpose: "Prova estrutural de reprodução (fixture) e regressão (arquivos reais) — guarda contra remoção futura do índice OU do try/catch"
 
 closure:
   policy: production-service
-  satisfied: false
-resolution_kind: null
+  satisfied: true
+  delivery:
+    kind: commit
+    ref: "73241bb"
+    code_commit: "73241bb"
+    delivered_at: "2026-07-23"
+    pushed_to: "origin/main"
+  post_fix_observation:
+    started_at: "2026-07-23T13:55:00-03:00"
+    closed_at: "2026-07-23T22:24:00-03:00"
+    window: "~8h30 decorridas entre a entrega (commit 73241bb) e este fechamento, sem nenhum novo relato de 500 em /app/relatorios ou GET /api/reports/generate — sinal de observação real (não waived), embora mais curto que o ideal"
+    status: "closed"
+resolution_kind: fixed
 ---
 
 # GET /api/reports/generate retorna 500 em produção
@@ -106,11 +135,37 @@ Ver bloco YAML `traceability` no front matter.
 
 ## Resolution
 
-_Pendente — preenchida pelo `/reversa-debugger-fix`._
+**Root cause (confirmado):** `firestore.indexes.json` nunca teve, antes do incidente, uma entrada para `reports(org_id, gerado_em)` — a única entrada nova pra coleção `reports` no commit do deploy (`03f61f7`) foi a do dedupe (`org_id+dedup_key+gerado_em`, formato diferente, não serve a query do GET). `firebase deploy --only firestore:indexes` trata o arquivo local como fonte única de verdade; se um índice equivalente existia só no console, foi removido nesse deploy. Sem `try/catch`, a exceção `FAILED_PRECONDITION` subiu como 500 cru. Confirmado via `git show 03f61f7`/`73241bb` (diff antes/depois), não via log de produção (sem acesso).
+
+**Veredito de spec:** `spec-correta` — RF-01 sempre exigiu que o GET carregasse normalmente; o defeito foi acidente de infraestrutura/deploy (auto-regressão do próprio processo de correção da sessão anterior), não lacuna nem erro de spec. Nenhum adendo.
+
+**Change set:**
+
+| CHG | Tipo | Artefato | Propósito |
+|---|---|---|---|
+| CHG-001 | test | `scripts/test-reports-get-resilient.ts` (novo) | Prova de reprodução (fixture) + regressão (arquivos reais) |
+
+**Nota importante:** nenhum código de produção foi alterado nesta correção — já estava corrigido (commits `73241bb`/`0267da1`/`82f130b`, entregues no mesmo dia do incidente, ~15min depois, já em `origin/main` há ~9h). O trabalho deste ciclo foi fechar corretamente o registro (que nunca tinha completado root cause/testes/veredito/closure) e adicionar um teste de regressão que blinda contra a MESMA classe de erro no futuro (índice removido de um deploy futuro, ou try/catch removido numa refatoração).
+
+**Testes:** vermelho→verde real durante a escrita — a primeira versão do check `hasReportsIndex` tinha um bug (`.some(f.fieldPath==="org_id") && .some(f.fieldPath==="gerado_em")` casava com o índice do dedupe por engano, que também contém os dois fieldPaths mas em shape diferente). Corrigido para exigir prefixo exato `[org_id, gerado_em]`. Depois da correção, os 4 testes passam: 2 de reprodução (fixture pré-fix simula corretamente a ausência) + 2 de regressão (arquivos reais atuais confirmam presença).
+
+```
+🧪 Teste: GET /api/reports/generate resiliente a índice ausente (BUG-20260723-IDX1)
+  ✓ reprodução (fixture pré-fix): índice ausente detectado
+  ✓ reprodução (fixture pré-fix): try/catch ausente detectado
+  ✓ regressão: firestore.indexes.json real tem o índice
+  ✓ regressão: route.ts#GET real tem try/catch
+✅ GET resiliente: índice rastreado presente e try/catch confirmado!
+```
+
+**Closure (production-service):** `resolution_kind: fixed`, entregue via commit `73241bb`, push `origin/main`. `closure.satisfied: true` — ~8h30 decorridas entre entrega e este fechamento sem nenhum novo relato de recorrência (janela de observação real, não waived, embora curta).
+
+**Pendência fora do escopo:** confirmação manual de que o índice está "Enabled" (não só presente no arquivo) no console Firebase — sem credenciais de agente pra isso. Recomendado verificar manualmente na próxima janela de manutenção.
 
 ## Agent Notes
 
 - Registrado a partir de relato direto do usuário em produção (`origin.type: manual-report`), não de inspeção proativa.
 - Severidade `critical`/`P0`: feature inteira fora do ar, sem workaround, incidente ativo.
 - Hipótese de causa raiz aponta para uma ação de infraestrutura da PRÓPRIA sessão anterior (deploy de índice Firestore) — se confirmada, é uma auto-regressão introduzida pelo próprio processo de correção dos 3 bugs anteriores (`SCP1`, `PSU1`, `DUP1`). Tratar com prioridade máxima e considerar mitigação (ex.: recriar o índice ausente manualmente no console, ou reverter o deploy de índices) ANTES de investigar a fundo, dado o dano em produção.
-- Relação `related-to BUG-20260723-DUP1` é `proposed`: o índice novo dessa sessão foi adicionado justamente pro fix do DUP1 — a suspeita é de efeito colateral do MESMO deploy, não que os dois bugs sejam a mesma causa.
+- Relação `related-to BUG-20260723-DUP1` é `proposed`: o índice novo dessa sessão foi adicionado justamente pro fix do DUP1 — a suspeita é de efeito colateral do MESMO deploy, não que os dois bugs sejam a mesma causa. Permanece `proposed` após o fechamento (nenhuma evidência a promoveu a `confirmed`).
+- Este bug teve um `DONE.md` criado prematuramente (commit `79425a8`, feature 006) sem nunca ter passado pelo ciclo de fix — front matter ficou `open`/`resolution_kind: null` mesmo com a trava presente. Achado via `/reversa-debugger-graph` em 2026-07-23, `DONE.md` removido conscientemente por autorização explícita do usuário pra rodar o ciclo completo agora.

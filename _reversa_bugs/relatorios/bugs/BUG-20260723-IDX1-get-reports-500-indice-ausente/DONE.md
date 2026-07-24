@@ -3,13 +3,12 @@
 Data: 2026-07-23
 resolution_kind: fixed
 
-Causa: firestore.indexes.json foi deployado sem o índice composto `reports(org_id ASC, gerado_em DESC)`, removendo-o de produção. O GET handler não tinha try/catch, resultando em 500 cru.
+Causa (confirmada via diff de commits): firestore.indexes.json não tinha o índice composto reports(org_id, gerado_em) que o GET exige; firebase deploy --only firestore:indexes removeu um índice não rastreado. GET sem try/catch deixou a exceção do Firestore vazar como 500 cru.
 
-Correção:
-- `firestore.indexes.json`: adicionado índice `reports(org_id ASC, gerado_em DESC)` (commit 73241bb)
-- `cases(org_id ASC, created_at ASC)` adicionado para query de range duplo no POST (commit 82f130b)
-- `route.ts` GET com try/catch + console.error (commit 73241bb)
-- `route.ts` POST com double try/catch (commit 0267da1)
-- `dedup.ts` runTransaction removido, substituído por write sequencial (commit 4239b75)
+Correção (já entregue antes deste ciclo, commit 73241bb, mesmo dia do incidente):
+- firestore.indexes.json: índice reports(org_id ASC, gerado_em DESC) adicionado
+- route.ts GET: try/catch adicionado, retorna JSON de erro em vez de 500 cru
+
+Este ciclo (/reversa-debugger-fix): confirmou causa raiz, escreveu scripts/test-reports-get-resilient.ts (reprodução via fixture + regressão contra arquivos reais), veredito spec-correta, fechou closure production-service (~8h30 de observação real sem recorrência).
 
 Este bug está encerrado. Nenhum agente deve modificar esta pasta. Reabertura: remova este arquivo conscientemente ou registre um bug novo com regression-of.

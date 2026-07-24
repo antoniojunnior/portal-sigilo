@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plano de Correção · BUG-20260723-IDX1</title>
+<style>
+  :root {
+    --bg: #0f1117; --panel: #161a23; --border: #2a2f3d; --text: #e4e6eb; --text-dim: #9aa0ac;
+    --red: #f04747; --amber: #f0a020; --green: #3ba55d; --blue: #5865f2;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 980px; }
+  h1 { font-size: 1.4rem; margin: 0 0 4px; }
+  h2 { font-size: 1.05rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; margin-top: 32px; }
+  .meta { color: var(--text-dim); font-size: 0.85rem; margin-bottom: 20px; }
+  .cards { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; }
+  .card .l { font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; }
+  .card .v { font-size: 1rem; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.85rem; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--text-dim); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { background: #1c2130; padding: 1px 5px; border-radius: 4px; font-size: 0.88em; }
+  .prose { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; line-height: 1.55; font-size: 0.92rem; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 600; }
+  .badge-low { background: #1e3a2a; color: var(--green); }
+  .badge-confirmed { background: #1e3a2a; color: var(--green); }
+  .badge-P0 { background: #3a1e1e; color: var(--red); }
+  svg { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; }
+</style>
+</head>
+<body>
+
+<h1>Plano de Correção · BUG-20260723-IDX1 (#12)</h1>
+<div class="meta">Contexto: relatorios · Gerado em 2026-07-23 via /reversa-debugger-fix</div>
+
+<div class="cards">
+  <div class="card"><div class="l">Severidade</div><div class="v">critical</div></div>
+  <div class="card"><div class="l">Prioridade</div><div class="v"><span class="badge badge-P0">P0</span></div></div>
+  <div class="card"><div class="l">Change risk</div><div class="v"><span class="badge badge-low">baixa</span></div></div>
+  <div class="card"><div class="l">Root cause</div><div class="v"><span class="badge badge-confirmed">confirmed</span></div></div>
+</div>
+
+<h2>Defeito</h2>
+<div class="prose">
+<code>GET /api/reports/generate</code> retornava <code>500 Internal Server Error</code> em produção, derrubando toda a página <code>/app/relatorios</code> sem workaround (o botão manual "Gerar relatório" foi removido pela própria feature 005).
+</div>
+
+<h2>Causa raiz (confirmada via evidência de código)</h2>
+<div class="prose">
+O commit <code>03f61f7</code> (deploy de índices + feature 005) nunca teve, no <code>firestore.indexes.json</code>, uma entrada para <code>collectionGroup: "reports"</code> com os campos que o <code>GET</code> usa (<code>org_id</code> + <code>gerado_em</code>) — confirmado por <code>git show 03f61f7 -- firestore.indexes.json</code>. Se um índice equivalente existia só no console Firebase (nunca capturado no arquivo local), o <code>firebase deploy --only firestore:indexes</code> dessa mesma sessão o teria removido (o CLI trata o arquivo local como fonte única de verdade). Sem <code>try/catch</code>, a exceção <code>FAILED_PRECONDITION</code> do Firestore subia crua como 500 genérico.
+<br><br>
+O código já foi corrigido no commit <code>73241bb</code> (mesma sessão, ~15min depois do incidente): índice adicionado + <code>try/catch</code> no <code>GET</code>. Já está em <code>origin/main</code> há ~9h sem novos relatos de 500.
+</div>
+
+<h2>Estratégia escolhida</h2>
+<div class="prose">Correção direta — sem debate, causa única sem hipótese concorrente, risco baixo. Como o código já está corrigido e ao vivo, o trabalho restante é <strong>documentar corretamente</strong> o bug (que nunca completou o ciclo) e <strong>blindar contra recorrência</strong> com um teste de regressão estrutural.</div>
+
+<h2>Correction Change Set proposto</h2>
+<table>
+<thead><tr><th>CHG</th><th>Tipo</th><th>Artefato</th><th>Propósito</th></tr></thead>
+<tbody>
+<tr><td>CHG-001</td><td>test</td><td><code>scripts/test-reports-get-resilient.ts</code> (novo)</td><td>Prova estrutural: <code>firestore.indexes.json</code> tem o índice <code>reports(org_id, gerado_em)</code> E <code>route.ts#GET</code> envolve a query em <code>try/catch</code> — guarda contra as duas causas raiz simultaneamente</td></tr>
+<tr><td>CHG-002</td><td>specification</td><td><em>a decidir no veredito de spec</em></td><td>Ver seção de veredito</td></tr>
+</tbody>
+</table>
+<div class="prose">Nenhum código de produção será tocado — já está corrigido (commits <code>73241bb</code>/<code>0267da1</code>/<code>82f130b</code>, já em <code>origin/main</code>).</div>
+
+<h2>Testes planejados</h2>
+<div class="prose">
+<strong>Reprodução:</strong> não é possível reproduzir ao vivo (o estado de índice ausente que causava o 500 não existe mais). Documentada via diff de commits em <code>evidence/reproduction.md</code>.<br>
+<strong>Regressão:</strong> teste estrutural (CHG-001) — falha se alguém remover o índice do arquivo rastreado OU remover o <code>try/catch</code> do GET no futuro.
+</div>
+
+<h2>Riscos e o que fica de fora</h2>
+<div class="prose">
+Risco baixo: nenhuma mudança de código, só teste + documentação. Fica de fora: confirmação manual no console Firebase de que o índice está "Enabled" (Acceptance Criteria original) — sem credenciais de agente pra isso, fica para verificação humana.
+</div>
+
+<h2>Mini-grafo do bug</h2>
+<svg width="520" height="180" viewBox="0 0 520 180">
+  <line x1="260" y1="90" x2="440" y2="90" stroke="#5865f2" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="330" y="82" fill="#9aa0ac" font-size="11" text-anchor="middle">related-to (proposed)</text>
+  <rect x="100" y="55" width="160" height="70" rx="10" fill="#161a23" stroke="#f04747" stroke-width="1.5"/>
+  <text x="180" y="80" fill="#e4e6eb" font-size="12" text-anchor="middle" font-weight="600">#12 IDX1</text>
+  <text x="180" y="98" fill="#9aa0ac" font-size="10" text-anchor="middle">500 em produção</text>
+  <text x="180" y="114" fill="#f0a020" font-size="10" text-anchor="middle">critical · P0</text>
+  <a href="../../BUG-20260723-DUP1-toctou-geracao-duplicada/bug.md">
+  <rect x="440" y="55" width="150" height="70" rx="10" fill="#161a23" stroke="#3ba55d" stroke-width="1.5" transform="translate(-150,0)"/>
+  <text x="360" y="80" fill="#e4e6eb" font-size="12" text-anchor="middle" font-weight="600">#3 DUP1</text>
+  <text x="360" y="98" fill="#9aa0ac" font-size="10" text-anchor="middle">TOCTOU dedupe</text>
+  <text x="360" y="114" fill="#3ba55d" font-size="10" text-anchor="middle">resolved · fixed</text>
+  </a>
+</svg>
+
+<h2>Matriz de relações</h2>
+<table>
+<thead><tr><th>Origem</th><th>Tipo</th><th>Destino</th><th>Estado</th></tr></thead>
+<tbody>
+<tr><td>BUG-20260723-IDX1</td><td>related-to</td><td><a href="../../BUG-20260723-DUP1-toctou-geracao-duplicada/bug.md">BUG-20260723-DUP1</a></td><td>proposed</td></tr>
+</tbody>
+</table>
+<div class="prose">A relação é <code>proposed</code>, nunca confirmada: o índice novo desta sessão foi adicionado pro dedupe do DUP1, não pro GET — são efeitos colaterais do MESMO deploy, não a mesma causa raiz. Mantida como <code>proposed</code> nesta correção (não há evidência que a eleve a <code>confirmed</code>).</div>
+
+</body>
+</html>

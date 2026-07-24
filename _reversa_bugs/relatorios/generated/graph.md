@@ -4,7 +4,7 @@
 
 ```mermaid
 graph LR
-    IDX1["#12 IDX1<br/>GET 500 em produção<br/>critical · triaging (DONE.md, front matter inconsistente)"]
+    IDX1["#12 IDX1<br/>GET 500 em produção<br/>critical · resolved · fixed"]
     DUP2["#13 DUP2<br/>TOCTOU reaberto<br/>medium · delivering · fixed"]
     SCP1["#1 SCP1<br/>reaproveitamento ignora escopo<br/>high · delivering · fixed"]
     PSU1["#2 PSU1<br/>plan_suspended cru<br/>medium · delivering · fixed"]

@@ -1,4 +1,4 @@
-<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-07-23 a partir de 28 bugs (9 resolved em unificacao-plano-assinatura, 1 resolved + 1 YAML-invalido em insights-ia-dashboard, 6 em relatorios (5 resolved incl. 1 restricted + 1 open/critical excluido da promocao), 6 resolved em configuracoes, 1 resolved em categorizacao-de-casos, 4 active/delivering fixed em limpeza-frontend — 24 bugs promovidos a resolved em 2026-07-23 por decisao explicita do usuario, janela de post_fix_observation waived) -->
+<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-07-23 a partir de 28 bugs (9 resolved em unificacao-plano-assinatura, 1 resolved + 1 YAML-invalido em insights-ia-dashboard, 6 resolved em relatorios incl. 1 restricted, 6 resolved em configuracoes, 1 resolved em categorizacao-de-casos, 4 active/delivering fixed em limpeza-frontend — 25 bugs resolved em 2026-07-23: 24 promovidos por decisao explicita do usuario + BUG-20260723-IDX1 via ciclo completo de /reversa-debugger-fix) -->
 
 # Rastreabilidade Spec ↔ Bug
 
@@ -80,7 +80,7 @@ Espelho do lado da spec. Source of truth: cada `_reversa_bugs/<contexto>/bugs/<I
 ## `_reversa_forward/005-relatorios-auto-geracao/requirements.md#RF-01`
 
 - BUG-20260723-SCP1 (resolved, P1, fixed): ver acima
-- BUG-20260723-IDX1 (open/triaging, P0, critical): GET /api/reports/generate retorna 500 em produção — `_reversa_bugs/relatorios/bugs/BUG-20260723-IDX1-get-reports-500-indice-ausente/`
+- BUG-20260723-IDX1 (resolved, P0, critical, fixed): GET /api/reports/generate retorna 500 em produção — `_reversa_bugs/relatorios/bugs/BUG-20260723-IDX1-get-reports-500-indice-ausente/`
 
 ## `_reversa_forward/005-relatorios-auto-geracao/requirements.md#RF-06`, `#RF-07`
 
