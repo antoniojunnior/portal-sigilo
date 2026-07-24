@@ -27,10 +27,7 @@
   .sev-high { color: var(--red); font-weight: 600; }
   .sev-medium { color: var(--amber); font-weight: 600; }
   .sev-critical { color: var(--red); font-weight: 800; }
-  .status-partial { color: var(--amber); font-weight: 600; }
-  .status-critical { color: var(--red); font-weight: 700; }
-  .warn { background: #2a2412; border: 1px solid var(--amber); border-radius: 10px; padding: 16px 18px; margin-bottom: 20px; font-size: 0.9rem; line-height: 1.5; }
-  .warn strong { color: var(--amber); }
+  .status-resolved { color: var(--green); font-weight: 600; }
   .good { background: #12261a; border: 1px solid var(--green); border-radius: 10px; padding: 16px 18px; margin-bottom: 20px; font-size: 0.9rem; line-height: 1.5; }
   .good strong { color: var(--green); }
   .prose { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; margin-bottom: 28px; font-size: 0.9rem; line-height: 1.5; }
@@ -41,53 +38,40 @@
 <body>
 
 <h1>Grafo de Bugs · relatorios</h1>
-<div class="meta">Gerado por /reversa-debugger-graph em 2026-07-23 · 6 bugs (5 públicos, 1 restricted omitido) · 1 inconsistência de schema</div>
-
-<div class="warn">
-  <strong>⚠️ Inconsistência de schema — BUG-20260723-IDX1</strong><br>
-  Tem <code>DONE.md</code> (encerrado), mas front matter continua <code>status: open</code>. Ação humana recomendada: reconciliar.
-</div>
+<div class="meta">Gerado por /reversa-debugger-graph em 2026-07-23 · 6 bugs (5 públicos, 1 restricted omitido) · 0 inconsistências</div>
+<div class="legend">Todos os 6 bugs deste contexto estão <code>resolved</code>. IDX1 (crítico) passou pelo ciclo completo do <code>/reversa-debugger-fix</code>; os outros 5 foram promovidos por decisão explícita do usuário (entrega já confirmada). Arestas tracejadas = relação <code>proposed</code> (hipótese).</div>
 
 <div class="good">
-  <strong>✅ BUG-20260723-DUP2 corrigido</strong><br>
-  <code>runTransaction</code> restaurado em <code>reserveReportSlot</code>. Investigação concluiu que a "incompatibilidade Vercel" alegada para removê-la não tinha sustentação — a causa real do 500 residual foi um índice de <code>cases</code> ausente, corrigido em commit separado. 5/5 testes verdes, incluindo concorrência real contra Firestore emulator.
+  <strong>✅ BUG-20260723-IDX1</strong> — 500 em produção por índice Firestore ausente. Causa raiz confirmada via diff de commits (<code>03f61f7</code>→<code>73241bb</code>). Ciclo completo executado em 2026-07-23: <code>scripts/test-reports-get-resilient.ts</code>, veredito <code>spec-correta</code>, ~8h30 de observação real sem recorrência.
   <br><br>
-  <strong>✅ BUG-20260723-DGN1 corrigido</strong> (restricted) — endpoint de diagnóstico removido do repositório.
+  <strong>✅ BUG-20260723-DUP2</strong> — <code>runTransaction</code> restaurado em <code>reserveReportSlot</code>. A "incompatibilidade Vercel" alegada pra removê-la não tinha sustentação — causa real do 500 residual foi um índice de <code>cases</code> ausente, corrigido em commit separado.
+  <br><br>
+  <strong>✅ BUG-20260723-DGN1</strong> (restricted) — endpoint de diagnóstico removido do repositório.
 </div>
 
 <div class="cards">
   <div class="card"><div class="n">6</div><div class="l">Total (5 públicos)</div></div>
-  <div class="card"><div class="n">1</div><div class="l">Critical, front matter inconsistente</div></div>
-  <div class="card"><div class="n">4</div><div class="l">Fixed · delivering</div></div>
-  <div class="card"><div class="n">1</div><div class="l">Restricted (corrigido)</div></div>
+  <div class="card"><div class="n">6</div><div class="l">resolved · fixed</div></div>
+  <div class="card"><div class="n">0</div><div class="l">Inconsistências</div></div>
 </div>
 
 <section>
-<h2>Atenção (IDX1)</h2>
+<h2>Concluídos (travados)</h2>
 <table>
 <thead><tr><th>#</th><th>ID</th><th>Severidade</th><th>Título</th><th>Status</th></tr></thead>
 <tbody>
-<tr><td>12</td><td><a href="../bugs/BUG-20260723-IDX1-get-reports-500-indice-ausente/bug.md">BUG-20260723-IDX1</a></td><td class="sev-critical">critical</td><td>GET /api/reports/generate 500 em produção</td><td class="status-critical">🔴 DONE.md presente, front matter inconsistente</td></tr>
-</tbody>
-</table>
-</section>
-
-<section>
-<h2>Corrigidos (aguardando delivery)</h2>
-<table>
-<thead><tr><th>#</th><th>ID</th><th>Severidade</th><th>Título</th><th>Status</th></tr></thead>
-<tbody>
-<tr><td>1</td><td><a href="../bugs/BUG-20260723-SCP1-reaproveitamento-ignora-escopo-filtro/bug.md">BUG-20260723-SCP1</a></td><td class="sev-high">high</td><td>Reaproveitamento ignora departamento/categoria</td><td class="status-partial">🟡 fixed</td></tr>
-<tr><td>13</td><td><a href="../bugs/BUG-20260723-DUP2-reserveslot-perdeu-transacao/bug.md">BUG-20260723-DUP2</a></td><td class="sev-medium">medium</td><td>TOCTOU reaberto e re-corrigido</td><td class="status-partial">🟡 fixed</td></tr>
-<tr><td>2</td><td><a href="../bugs/BUG-20260723-PSU1-mensagem-erro-plano-suspenso-crua/bug.md">BUG-20260723-PSU1</a></td><td class="sev-medium">medium</td><td>"plan_suspended" cru na tela</td><td class="status-partial">🟡 fixed</td></tr>
-<tr><td>3</td><td><a href="../bugs/BUG-20260723-DUP1-toctou-geracao-duplicada/bug.md">BUG-20260723-DUP1</a></td><td class="sev-medium">medium</td><td>TOCTOU original</td><td class="status-partial">🟡 fixed</td></tr>
+<tr><td>12</td><td><a href="../bugs/BUG-20260723-IDX1-get-reports-500-indice-ausente/bug.md">BUG-20260723-IDX1</a></td><td class="sev-critical">critical</td><td>GET /api/reports/generate 500 em produção</td><td class="status-resolved">🟢 resolved · fixed</td></tr>
+<tr><td>1</td><td><a href="../bugs/BUG-20260723-SCP1-reaproveitamento-ignora-escopo-filtro/bug.md">BUG-20260723-SCP1</a></td><td class="sev-high">high</td><td>Reaproveitamento ignora departamento/categoria</td><td class="status-resolved">🟢 resolved · fixed</td></tr>
+<tr><td>13</td><td><a href="../bugs/BUG-20260723-DUP2-reserveslot-perdeu-transacao/bug.md">BUG-20260723-DUP2</a></td><td class="sev-medium">medium</td><td>TOCTOU reaberto e re-corrigido</td><td class="status-resolved">🟢 resolved · fixed</td></tr>
+<tr><td>2</td><td><a href="../bugs/BUG-20260723-PSU1-mensagem-erro-plano-suspenso-crua/bug.md">BUG-20260723-PSU1</a></td><td class="sev-medium">medium</td><td>"plan_suspended" cru na tela</td><td class="status-resolved">🟢 resolved · fixed</td></tr>
+<tr><td>3</td><td><a href="../bugs/BUG-20260723-DUP1-toctou-geracao-duplicada/bug.md">BUG-20260723-DUP1</a></td><td class="sev-medium">medium</td><td>TOCTOU original</td><td class="status-resolved">🟢 resolved · fixed</td></tr>
 </tbody>
 </table>
 </section>
 
 <section>
 <h2>Visibilidade restrita</h2>
-<p>1 bug com <code>visibility: restricted</code>, corrigido nesta sessão (endpoint removido). Não listado por regra do README.</p>
+<p>1 bug com <code>visibility: restricted</code> (<code>DGN1</code>), <code>resolved</code>. Não listado acima por regra do README.</p>
 </section>
 
 </body>

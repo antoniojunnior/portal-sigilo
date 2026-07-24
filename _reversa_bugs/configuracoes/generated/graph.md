@@ -4,12 +4,12 @@
 
 ```mermaid
 graph LR
-    MOB1["#15 MOB1<br/>sem nav mobile<br/>high · delivering · fixed"]
-    CLP1["#16 CLP1<br/>submenu colapsado<br/>medium · delivering · fixed"]
-    ACT1["#19 ACT1<br/>item ativo em reload<br/>low · delivering · fixed"]
-    ERR1["#17 ERR1<br/>erro Asaas vira lista vazia<br/>medium · delivering · fixed"]
-    SRT1["#18 SRT1<br/>sort/order não doc.<br/>high · delivering · fixed"]
-    DAT1["#20 DAT1<br/>offset de 1 dia<br/>medium · delivering · fixed"]
+    MOB1["#15 MOB1<br/>sem nav mobile<br/>high · resolved · fixed"]
+    CLP1["#16 CLP1<br/>submenu colapsado<br/>medium · resolved · fixed"]
+    ACT1["#19 ACT1<br/>item ativo em reload<br/>low · resolved · fixed"]
+    ERR1["#17 ERR1<br/>erro Asaas vira lista vazia<br/>medium · resolved · fixed"]
+    SRT1["#18 SRT1<br/>sort/order não doc.<br/>high · resolved · fixed"]
+    DAT1["#20 DAT1<br/>offset de 1 dia<br/>medium · resolved · fixed"]
     CLP1 -.->|related-to| MOB1
     ACT1 -.->|related-to| CLP1
 ```

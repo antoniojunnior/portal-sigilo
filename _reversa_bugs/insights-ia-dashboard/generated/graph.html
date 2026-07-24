@@ -25,7 +25,7 @@
   a { color: var(--blue); text-decoration: none; }
   a:hover { text-decoration: underline; }
   .sev-low { color: var(--text-dim); }
-  .status-partial { color: var(--amber); font-weight: 600; }
+  .status-resolved { color: var(--green); font-weight: 600; }
   .prose { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; margin-bottom: 28px; font-size: 0.9rem; line-height: 1.5; }
   .prose strong { color: var(--text); }
   section h2 { font-size: 1.05rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
@@ -35,12 +35,12 @@
 <body>
 
 <h1>Grafo de Bugs · insights-ia-dashboard</h1>
-<div class="meta">Gerado por /reversa-debugger-graph em 2026-07-22 · 2 bugs · 0 inconsistências</div>
-<div class="legend">Ambos os bugs encontrados na inspeção proativa pós-<code>/reversa-coding</code> da feature 003. Fix aplicado, formalizado e entregue (commit <code>22edd28</code>/<code>b906ca5</code>, push <code>f8fd9c8..b906ca5</code>) nesta sessão de <code>/reversa-debugger-fix</code>. <code>closure_policy: production-service</code> — falta a janela de observação pra virar <code>DONE.md</code>.</div>
+<div class="meta">Gerado por /reversa-debugger-graph em 2026-07-23 · 2 bugs · 0 inconsistências</div>
+<div class="legend">Ambos os bugs encontrados na inspeção proativa pós-<code>/reversa-coding</code> da feature 003. Fix entregue (commit <code>22edd28</code>/<code>b906ca5</code>) e promovido a <code>resolved</code> em 2026-07-23 (usuário aceitou a entrega já confirmada como suficiente, observação waived). SRC1 teve <code>title:</code> com aspas mal-escapadas corrigido nesta rodada.</div>
 
 <div class="cards">
   <div class="card"><div class="n">2</div><div class="l">Total de bugs</div></div>
-  <div class="card"><div class="n">2</div><div class="l">Fixed · observing</div></div>
+  <div class="card"><div class="n">2</div><div class="l">resolved · fixed</div></div>
   <div class="card"><div class="n">0</div><div class="l">Adendos de spec gerados</div></div>
   <div class="card"><div class="n">0</div><div class="l">Inconsistências</div></div>
 </div>
@@ -52,19 +52,14 @@
 </div>
 
 <section>
-<h2>Bugs (fixed, aguardando delivery)</h2>
+<h2>Concluídos (travados)</h2>
 <table>
 <thead><tr><th>#</th><th>ID</th><th>Severidade</th><th>Prioridade</th><th>Título</th><th>Status</th></tr></thead>
 <tbody>
-<tr><td>10</td><td><a href="../bugs/BUG-20260722-SRC1-source-nao-persistido/bug.md">BUG-20260722-SRC1</a></td><td class="sev-low">low</td><td>P3</td><td>"source" do insight não é persistido no Firestore</td><td class="status-partial">🟡 active · observing (entregue)</td></tr>
-<tr><td>11</td><td><a href="../bugs/BUG-20260722-TCT1-toctou-rate-limit/bug.md">BUG-20260722-TCT1</a></td><td class="sev-low">low</td><td>P3</td><td>TOCTOU no rate limit de regeneração</td><td class="status-partial">🟡 active · observing (entregue)</td></tr>
+<tr><td>10</td><td><a href="../bugs/BUG-20260722-SRC1-source-nao-persistido/bug.md">BUG-20260722-SRC1</a></td><td class="sev-low">low</td><td>P3</td><td>"source" do insight não é persistido no Firestore</td><td class="status-resolved">🟢 resolved · fixed</td></tr>
+<tr><td>11</td><td><a href="../bugs/BUG-20260722-TCT1-toctou-rate-limit/bug.md">BUG-20260722-TCT1</a></td><td class="sev-low">low</td><td>P3</td><td>TOCTOU no rate limit de regeneração</td><td class="status-resolved">🟢 resolved · fixed</td></tr>
 </tbody>
 </table>
-</section>
-
-<section>
-<h2>Concluídos (travados)</h2>
-<p>Nenhum ainda. Ambos entregues, aguardando janela de observação antes de <code>DONE.md</code>.</p>
 </section>
 
 </body>

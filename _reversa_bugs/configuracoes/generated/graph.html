@@ -29,6 +29,7 @@
   .sev-low { color: var(--text-dim); }
   .status-open { color: var(--text-dim); font-weight: 600; }
   .status-partial { color: var(--amber); font-weight: 600; }
+  .status-resolved { color: var(--green); font-weight: 600; }
   .prose { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; margin-bottom: 28px; font-size: 0.9rem; line-height: 1.5; }
   .prose strong { color: var(--text); }
   section h2 { font-size: 1.05rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
@@ -39,13 +40,13 @@
 
 <h1>Grafo de Bugs · configuracoes</h1>
 <div class="meta">Gerado por /reversa-debugger-graph em 2026-07-23 · 6 bugs · 0 inconsistências</div>
-<div class="legend">Todos os 6 nasceram de <code>/reversa-depth-inspection</code> (<code>varredura-01-feature-006</code>) e foram corrigidos na mesma sessão de <code>/reversa-debugger-fix</code> (YOLO mode). <code>resolution_kind: fixed</code> em todos, <code>closure.satisfied: false</code> — falta <code>delivery</code> e janela de <code>post_fix_observation</code>. <code>closure_policy: production-service</code>.</div>
+<div class="legend">Todos os 6 nasceram de <code>/reversa-depth-inspection</code> (<code>varredura-01-feature-006</code>) e foram corrigidos na mesma sessão de <code>/reversa-debugger-fix</code> (YOLO mode). Promovidos a <code>resolved</code> em 2026-07-23 por decisão explícita do usuário. <code>SRT1</code> permanece com <code>root_cause.state: supported</code> (não <code>confirmed</code>) — exceção honesta, documentada, não fabricada.</div>
 
 <div class="cards">
-  <div class="card"><div class="n">6</div><div class="l">Total (100% fixed)</div></div>
+  <div class="card"><div class="n">6</div><div class="l">Total · resolved · fixed</div></div>
   <div class="card"><div class="n">2</div><div class="l">Severidade high</div></div>
   <div class="card"><div class="n">3</div><div class="l">Severidade medium</div></div>
-  <div class="card"><div class="n">1</div><div class="l">Severidade low</div></div>
+  <div class="card"><div class="n">1</div><div class="l">Inconsistência (SRT1)</div></div>
 </div>
 
 <div class="prose">
@@ -55,23 +56,18 @@
 </div>
 
 <section>
-<h2>Corrigidos (aguardando delivery)</h2>
+<h2>Concluídos (travados)</h2>
 <table>
 <thead><tr><th>#</th><th>ID</th><th>Severidade</th><th>Prioridade</th><th>Título</th><th>Status</th></tr></thead>
 <tbody>
-<tr><td>15</td><td><a href="../bugs/BUG-20260723-MOB1-sem-navegacao-mobile-faturamento/bug.md">BUG-20260723-MOB1</a></td><td class="sev-high">high</td><td>P1</td><td>Sem navegação mobile até Faturamento</td><td class="status-partial">🟡 fixed</td></tr>
-<tr><td>18</td><td><a href="../bugs/BUG-20260723-SRT1-sort-order-nao-documentados-asaas/bug.md">BUG-20260723-SRT1</a></td><td class="sev-high">high</td><td>P2</td><td>sort/order não documentados na Asaas</td><td class="status-partial">🟡 fixed (defensivo)</td></tr>
-<tr><td>16</td><td><a href="../bugs/BUG-20260723-CLP1-submenu-colapsado-nao-navega/bug.md">BUG-20260723-CLP1</a></td><td class="sev-medium">medium</td><td>P2</td><td>Submenu colapsado não navega</td><td class="status-partial">🟡 fixed</td></tr>
-<tr><td>17</td><td><a href="../bugs/BUG-20260723-ERR1-erro-asaas-vira-lista-vazia/bug.md">BUG-20260723-ERR1</a></td><td class="sev-medium">medium</td><td>P2</td><td>Erro de API da Asaas vira lista vazia</td><td class="status-partial">🟡 fixed</td></tr>
-<tr><td>20</td><td><a href="../bugs/BUG-20260723-DAT1-possivel-offset-dia-datas/bug.md">BUG-20260723-DAT1</a></td><td class="sev-medium">medium</td><td>P3</td><td>Possível offset de 1 dia nas datas</td><td class="status-partial">🟡 fixed</td></tr>
-<tr><td>19</td><td><a href="../bugs/BUG-20260723-ACT1-item-ativo-nao-destaca-reload/bug.md">BUG-20260723-ACT1</a></td><td class="sev-low">low</td><td>P3</td><td>Item ativo não destaca em reload</td><td class="status-partial">🟡 fixed</td></tr>
+<tr><td>15</td><td><a href="../bugs/BUG-20260723-MOB1-sem-navegacao-mobile-faturamento/bug.md">BUG-20260723-MOB1</a></td><td class="sev-high">high</td><td>P1</td><td>Sem navegação mobile até Faturamento</td><td class="status-resolved">🟢 resolved · fixed</td></tr>
+<tr><td>18</td><td><a href="../bugs/BUG-20260723-SRT1-sort-order-nao-documentados-asaas/bug.md">BUG-20260723-SRT1</a></td><td class="sev-high">high</td><td>P2</td><td>sort/order não documentados na Asaas</td><td class="status-partial">🟡 resolved · fixed (root_cause: supported)</td></tr>
+<tr><td>16</td><td><a href="../bugs/BUG-20260723-CLP1-submenu-colapsado-nao-navega/bug.md">BUG-20260723-CLP1</a></td><td class="sev-medium">medium</td><td>P2</td><td>Submenu colapsado não navega</td><td class="status-resolved">🟢 resolved · fixed</td></tr>
+<tr><td>17</td><td><a href="../bugs/BUG-20260723-ERR1-erro-asaas-vira-lista-vazia/bug.md">BUG-20260723-ERR1</a></td><td class="sev-medium">medium</td><td>P2</td><td>Erro de API da Asaas vira lista vazia</td><td class="status-resolved">🟢 resolved · fixed</td></tr>
+<tr><td>20</td><td><a href="../bugs/BUG-20260723-DAT1-possivel-offset-dia-datas/bug.md">BUG-20260723-DAT1</a></td><td class="sev-medium">medium</td><td>P3</td><td>Possível offset de 1 dia nas datas</td><td class="status-resolved">🟢 resolved · fixed</td></tr>
+<tr><td>19</td><td><a href="../bugs/BUG-20260723-ACT1-item-ativo-nao-destaca-reload/bug.md">BUG-20260723-ACT1</a></td><td class="sev-low">low</td><td>P3</td><td>Item ativo não destaca em reload</td><td class="status-resolved">🟢 resolved · fixed</td></tr>
 </tbody>
 </table>
-</section>
-
-<section>
-<h2>Concluídos (travados)</h2>
-<p>Nenhum ainda — todos <code>fixed</code>, aguardando <code>delivery</code> + janela de observação antes de <code>DONE.md</code>.</p>
 </section>
 
 </body>
