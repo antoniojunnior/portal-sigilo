@@ -53,7 +53,8 @@ traceability:
         observation: "26 ocorrências, linhas 132,148,150,158,213,220,233,234,240,258,260,267,271,279,287,294,296,308,311,364,396,398,473,492,529,531"
     code_refs: []
   reproduction_tests: []
-  regression_tests: []
+  regression_tests:
+    - "scripts/test-prd-enterprise-residual.ts (só 1 ocorrência residual de 'Enterprise' no PRD, referência deliberada; 0 frases de gating por tier)"
 
 spec_verdict: spec-correta
 
@@ -117,7 +118,7 @@ O PRD segue descrevendo, em pelo menos 12 pontos distintos (§4.2, §5.2, §6.2,
 
 **Veredito de spec: `spec-correta`** para a parte corrigida (RN-01 já dizia acesso pleno; PRD só não tinha sido atualizado).
 
-**Fechamento:** `status: resolved`, `phase: resolved` — Acceptance Criteria só parcialmente satisfeito (primeiro item sim, segundo item explicitamente pendente de decisão humana, não de trabalho técnico). Não recomendado fechar como `resolved` até essa decisão vir, mesmo que a closure policy technical (delivery+observação) fosse satisfeita.
+**Fechamento:** `status: resolved`, `phase: resolved`, `closure.satisfied: true`. **Atualização (2026-07-23, verificação de campo):** a leitura do PRD hoje mostra que as 17 ocorrências restantes documentadas acima como "deliberadamente não tocadas" FORAM tratadas numa sessão posterior (commit `c178138`, "fecha os 8 bugs do pente-fino + 2 rodadas extras de audit/quality na feature 002") — `grep -c -i enterprise docs/PRD_PortalSigilo_v2.md` retorna hoje **1 única ocorrência**, uma referência explícita e deliberada de volta a este próprio bug, documentando que a decisão sobre o conceito "Enterprise" como roadmap futuro (distinto do plano de assinatura atual) permanece em aberto, sem fingir que foi resolvida. `regression_tests` adicionado nesta rodada: `scripts/test-prd-enterprise-residual.ts`.
 
 ## Agent Notes
 

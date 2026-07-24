@@ -37,9 +37,12 @@ traceability:
   affected_code:
     - "src/lib/asaas/getInvoices.ts:44"
   root_cause:
-    state: hypothesized
+    state: supported
     hypothesis: "getInvoices.ts:44 envia `sort=dateCreated&order=desc` para GET /v3/payments da Asaas. A documentação pública consultada (docs.asaas.com/reference/list-payments, 25 query params listados) não inclui `sort` nem `order` entre os parâmetros suportados. Se a API ignora silenciosamente parâmetros desconhecidos (comportamento comum em APIs REST, mas não confirmado especificamente para a Asaas), a ordenação do resultado pode não ser garantida — e com `limit=15` (sem paginação), isso arrisca trazer 15 faturas em ordem arbitrária/antiga, não necessariamente as 15 mais recentes exigidas por RF-05."
-    causal_path: []
+    causal_path:
+      - "getInvoices.ts envia sort=dateCreated&order=desc, parâmetros ausentes da documentação pública oficial da Asaas (evidência parcial via WebFetch, 2026-07-23)"
+      - "Sem acesso a sandbox real desta sessão pra confirmar se a API de fato ignora, aceita ou rejeita esses parâmetros — permanece supported, não confirmed"
+      - "Correção aplicada independe da confirmação: ordena localmente no lado do cliente, tornando o comportamento correto mesmo que a Asaas ignore sort/order silenciosamente"
     evidence:
       - ref: "src/lib/asaas/getInvoices.ts:44"
         observation: "sort=dateCreated&order=desc na query string"
@@ -114,7 +117,7 @@ Ver bloco YAML `traceability` no front matter.
 
 ## Resolution
 
-**Root cause:** `hypothesized` na criação — permanece não confirmada empiricamente contra a API real da Asaas (sem acesso a sandbox nesta sessão), mas a correção defensiva foi aplicada por decisão do usuário ("corrigir defensivamente" em vez de aguardar confirmação externa).
+**Root cause:** promovido de `hypothesized` para `supported` em 2026-07-23 — evidência parcial real existe (documentação pública oficial da Asaas não lista `sort`/`order` entre os parâmetros aceitos, via WebFetch), mas falta confirmação empírica direta contra a API (sem acesso a sandbox). **Este bug NÃO atinge `confirmed` honestamente sem esse acesso** — decisão consciente de não fabricar uma confirmação que não existe, mesmo que isso mantenha uma divergência técnica com a regra "`fixed` exige `root_cause.state: confirmed`". A correção defensiva foi aplicada por decisão do usuário independente da confirmação.
 
 **Veredito de spec:** `spec-correta` (RF-05). Nenhum adendo necessário.
 

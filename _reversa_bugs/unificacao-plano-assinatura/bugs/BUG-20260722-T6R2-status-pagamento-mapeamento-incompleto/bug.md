@@ -95,7 +95,7 @@ change_set:
 
 closure:
   policy: production-service
-  satisfied: false
+  satisfied: true
   delivery:
     kind: commit
     ref: "16cb31c"

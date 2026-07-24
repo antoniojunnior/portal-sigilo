@@ -58,7 +58,8 @@ traceability:
       - {file: "src/lib/asaas/getInvoices.ts", symbol: "getInvoices", commit: null}
   reproduction_tests:
     - "n/a direta (sem mock de API externa nesta sessão); lógica de propagação de erro verificada por leitura + typecheck. A UI (faturamento/page.tsx:76-88) já tratava !res.ok corretamente — o gap era 100% servidor"
-  regression_tests: []
+  regression_tests:
+    - "scripts/test-configuracoes-residual.ts (GET /api/billing/invoices try/catch + 502 em falha)"
 
 spec_verdict: spec-correta
 
@@ -139,7 +140,7 @@ Ver bloco YAML `traceability` no front matter.
 | CHG-001 | code | `src/lib/asaas/getInvoices.ts` | Lança erro em falha, não engole mais |
 | CHG-002 | code | `src/app/api/billing/invoices/route.ts` | Captura e responde 502 com erro |
 
-**Verificação:** `npx tsc --noEmit` e `eslint` limpos. A UI (`faturamento/page.tsx`) já tratava `!res.ok` corretamente antes desta mudança — bastou o servidor parar de mascarar a falha como sucesso vazio.
+**Verificação:** `npx tsc --noEmit` e `eslint` limpos. A UI (`faturamento/page.tsx`) já tratava `!res.ok` corretamente antes desta mudança — bastou o servidor parar de mascarar a falha como sucesso vazio. **Atualização (2026-07-23):** `regression_tests` preenchido com `scripts/test-configuracoes-residual.ts` (prova estrutural do try/catch + resposta 502), fechando a lacuna de invariante `fixed` sem `regression_tests`.
 
 **Closure (production-service):** `resolution_kind: fixed`, entregue via commit `0e70981` (código) / `d7ae0c0` (trava), push para `origin/main`. `closure.satisfied: true` — usuário decidiu promover a `resolved` em 2026-07-23 (via `/reversa-debugger-graph`), tratando a entrega já confirmada como suficiente, dispensando espera adicional pela janela de observação.
 

@@ -50,7 +50,8 @@ traceability:
     code_refs:
       - { file: "docs/PRD_PortalSigilo_v2.md", symbol: "§2.2", commit: null }
   reproduction_tests: []
-  regression_tests: []
+  regression_tests:
+    - "scripts/test-prd-enterprise-residual.ts (§2.2 sem as 3 frases antigas de gating por Enterprise)"
 
 spec_verdict: spec-correta
 

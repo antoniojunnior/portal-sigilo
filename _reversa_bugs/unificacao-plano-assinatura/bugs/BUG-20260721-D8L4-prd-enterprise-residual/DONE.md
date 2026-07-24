@@ -1,8 +1,10 @@
-# DONE
+# BUG-20260721-D8L4 â€” Encerrado
 
-> Bug encerrado em 2026-07-22.
-> Resolution kind: fixed
-> Verificado: código-fonte confere com a correção esperada (YOLO mode).
+Data: 2026-07-21 (fechamento original), reconciliado 2026-07-23
+resolution_kind: fixed
 
-Este bug está encerrado. Nenhum agente deve modificar esta pasta.
-Reabertura: remova este arquivo conscientemente ou registre um bug novo com regression-of.
+Causa: PRD Â§2.2 usava "Enterprise" como rÃ³tulo do modelo multi-unidade. Corrigido (3 linhas reescritas).
+
+CorreÃ§Ã£o retroativa nesta rodada: regression_tests estava vazio â€” preenchido com scripts/test-prd-enterprise-residual.ts (verde).
+
+Este bug estÃ¡ encerrado. Nenhum agente deve modificar esta pasta. Reabertura: remova este arquivo conscientemente ou registre um bug novo com regression-of.

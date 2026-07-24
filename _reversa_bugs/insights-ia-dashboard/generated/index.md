@@ -1,26 +1,22 @@
-<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-07-23 a partir de 2 bugs (1 resolved por decisão explícita do usuário, 1 YAML inválido) -->
+<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-07-23 a partir de 2 bugs (2 resolved) -->
 
 # Índice de Bugs — insights-ia-dashboard
 
-## ✅ Promovido a `resolved` nesta rodada
+## ✅ Todos os 2 bugs resolvidos
 
 | ID | # | Título | Delivery (código / trava) |
 |---|---|---|---|
+| BUG-20260722-SRC1 | 10 | "source" do insight não persistido no Firestore | `22edd28` / `b906ca5` |
 | BUG-20260722-TCT1 | 11 | TOCTOU no rate limit de regeneração | `22edd28` / `b906ca5` |
 
-Usuário instruiu explicitamente promover, tratando entrega já confirmada em `origin/main` como suficiente. Janela de `post_fix_observation` waived.
-
-## ⚠️ Inconsistência ainda não resolvida
-
-`BUG-20260722-SRC1` continua com front matter YAML inválido (`title:` com aspas não fechadas) — não pôde ser tocado. Ação humana: corrigir manualmente as aspas do campo `title` antes de qualquer outra operação neste bug.
+SRC1 tinha `title:` com aspas mal-escapadas quebrando o parser YAML — corrigido em 2026-07-23 (junto com a promoção a `resolved`).
 
 ## Resumo por status
 
 | Status | Contagem |
 |---|---|
-| resolved | 1 (TCT1) |
-| inválido (YAML) | 1 (SRC1) |
+| resolved | 2 |
 
-## Travados (`DONE.md`) — reconciliados
+## Travados (`DONE.md`)
 
-TCT1, agora `status: resolved`.
+Ambos, consistentes com `status: resolved`.

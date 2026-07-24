@@ -2,9 +2,9 @@
 schema_version: 1
 id: BUG-20260722-SRC1
 display_number: 10
-title: "source" do insight não é persistido no Firestore — GET sempre retorna "ai_generated"
-status: active
-phase: observing
+title: '"source" do insight não é persistido no Firestore — GET sempre retorna "ai_generated"'
+status: resolved
+phase: resolved
 severity: low
 priority: P3
 created: 2026-07-22
@@ -84,7 +84,7 @@ change_set:
 
 closure:
   policy: production-service
-  satisfied: false
+  satisfied: true
   delivery:
     kind: commit
     ref: "b906ca5"
@@ -93,8 +93,9 @@ closure:
     pushed_to: "origin/main"
   post_fix_observation:
     started_at: "2026-07-22"
-    window: "a definir — recomendado: 1 regeneração manual real observada em produção mostrando badge de fallback correto, ou 1 ciclo da scheduled function sem badge indevido"
-    status: "observing"
+    closed_at: "2026-07-23"
+    window: "waived — usuário decidiu promover a resolved tratando a entrega já confirmada (push origin/main) como suficiente, sem aguardar janela de observação adicional. Decisão registrada em 2026-07-23 via /reversa-debugger-graph (correção retroativa de YAML inválido que impedia o processamento anterior)."
+    status: "closed"
 resolution_kind: fixed
 
 agent_notes: |
@@ -142,7 +143,7 @@ has no exported member 'resolveInsightSource'.
 
 `npx tsc --noEmit`: `TSC:0`, sem erros novos.
 
-**Fechamento:** `status: active`, `phase: observing` — entregue via commit `22edd28` (código) / `b906ca5` (docs), push `f8fd9c8..b906ca5` para `origin/main` em 2026-07-22. `closure.satisfied: false` até a janela de `post_fix_observation` confirmar não recorrência. Sem `DONE.md` ainda.
+**Fechamento:** `status: resolved`, `phase: resolved` — entregue via commit `22edd28` (código) / `b906ca5` (docs), push `f8fd9c8..b906ca5` para `origin/main` em 2026-07-22. `closure.satisfied: true` — usuário decidiu promover a `resolved` em 2026-07-23, tratando a entrega já confirmada como suficiente. `title:` no front matter tinha aspas mal-escapadas, quebrando o parser YAML — corrigido nesta rodada (`_reversa_debugger-graph` global) antes da promoção.
 
 ## Expected Behavior
 

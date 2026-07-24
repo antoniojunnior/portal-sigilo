@@ -23,8 +23,8 @@ visibility: normal
 security_suspected: false
 
 reproduction:
-  classification: not-reproduced
-  rate: null
+  classification: deterministic
+  rate: "confirmado ao vivo sob TZ=America/Sao_Paulo: entrada 2026-07-15 sempre exibia 14/jul com o código antigo"
   suspected_triggers: []
 
 blocking: []
@@ -38,9 +38,14 @@ traceability:
     - "src/app/(dashboard)/app/(protected)/configuracoes/faturamento/page.tsx:51-53"
     - "src/app/(dashboard)/app/(protected)/configuracoes/faturamento/page.tsx:186"
   root_cause:
-    state: hypothesized
-    hypothesis: "formatDate() faz new Date(iso).toLocaleDateString('pt-BR'), aplicado tanto ao vencimento quanto ao novo campo data_pagamento (RN-06 da feature 006). Se a Asaas retorna strings de data pura (YYYY-MM-DD, sem componente de hora), o JS interpreta isso como meia-noite UTC; renderizado em fuso America/Sao_Paulo (UTC-3), o dia exibido pode ficar 1 dia atrás do valor real. O próprio roadmap.md da feature 006 lista esse risco e prescreve EXATAMENTE este código (new Date(paymentDate).toLocaleDateString('pt-BR')) como a 'mitigação' — o que sugere que o padrão de código identificado como problema é o mesmo que foi adotado como solução, não confirmado se de fato mitiga ou apenas reproduz o risco."
-    causal_path: []
+    state: confirmed
+    hypothesis: null
+    causal_path:
+      - "formatDate() fazia new Date(iso).toLocaleDateString('pt-BR'), aplicado tanto ao vencimento quanto ao novo campo data_pagamento (RN-06 da feature 006)"
+      - "Confirmado ao vivo (scripts/test-billing-date-sort.ts, TZ=America/Sao_Paulo): entrada '2026-07-15' com o código antigo exibia '14 de jul.' — um dia a menos"
+      - "Mecanismo: new Date('2026-07-15') sem componente de hora é interpretado pelo JS como meia-noite UTC; renderizado em UTC-3 (São Paulo), cai no dia anterior"
+      - "Corrigido com parse manual de ano/mês/dia locais, ignorando timezone; testado sob a mesma TZ real mostra '15 de jul.' correto"
+      - "Não confirmado (fora do alcance desta sessão, sem acesso a sandbox real): se a Asaas de fato retorna data pura (YYYY-MM-DD) ou com timezone explícito para este campo — mas o mecanismo do defeito e da correção está confirmado independente do formato de wire exato, já que o fix trata ambos os casos (ver regression_tests)"
     evidence:
       - ref: "src/app/(dashboard)/app/(protected)/configuracoes/faturamento/page.tsx:51-53"
         observation: "formatDate: new Date(iso).toLocaleDateString('pt-BR')"
@@ -115,7 +120,7 @@ Ver bloco YAML `traceability` no front matter.
 
 ## Resolution
 
-**Root cause (confirmado ao vivo):** `formatDate` usava `new Date(iso)` direto; sob `TZ=America/Sao_Paulo`, uma entrada `"2026-07-15"` exibia "14 de jul." (dia errado). Confirmado rodando o código antigo isoladamente com essa TZ antes de aplicar o fix.
+**Root cause (confirmado ao vivo):** `formatDate` usava `new Date(iso)` direto; sob `TZ=America/Sao_Paulo`, uma entrada `"2026-07-15"` exibia "14 de jul." (dia errado). Confirmado rodando o código antigo isoladamente com essa TZ antes de aplicar o fix. **Atualização (2026-07-23):** o campo `root_cause.state` estava desatualizado como `hypothesized` mesmo com a prosa já descrevendo confirmação ao vivo — corrigido para `confirmed`, `causal_path` preenchido, `reproduction.classification` corrigido pra `deterministic`.
 
 **Veredito de spec:** `spec-correta`. Nenhum adendo necessário — o próprio roadmap da 006 já esperava a data correta, só a "mitigação" sugerida estava incompleta.
 

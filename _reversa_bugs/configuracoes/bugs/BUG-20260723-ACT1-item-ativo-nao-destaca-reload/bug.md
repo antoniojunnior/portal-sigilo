@@ -60,7 +60,8 @@ traceability:
       - {file: "src/components/layout/Sidebar.tsx", symbol: null, commit: "79425a8"}
   reproduction_tests:
     - "n/a — sem infra de teste de componente React; reprodução provada por leitura estática (ver evidence/reproduction.md)"
-  regression_tests: []
+  regression_tests:
+    - "scripts/test-configuracoes-residual.ts (expandedMenu inicializa via lazy state checando pathname)"
 
 spec_verdict: spec-correta
 
@@ -136,7 +137,7 @@ Ver bloco YAML `traceability` no front matter.
 |---|---|---|---|
 | CHG-001 | code | `src/components/layout/Sidebar.tsx` | `expandedMenu` inicializa expandido para o item pai da rota atual |
 
-**Verificação:** `npx tsc --noEmit` e `eslint` limpos. Sem infra de teste de componente React.
+**Verificação:** `npx tsc --noEmit` e `eslint` limpos. Sem infra de teste de componente React. **Atualização (2026-07-23):** `regression_tests` preenchido com `scripts/test-configuracoes-residual.ts` (prova estrutural do `useState` com inicializador lazy checando `pathname.startsWith`), fechando a lacuna de invariante `fixed` sem `regression_tests`.
 
 **Closure (production-service):** `resolution_kind: fixed`, entregue via commit `0e70981` (código) / `d7ae0c0` (trava), push para `origin/main`. `closure.satisfied: true` — usuário decidiu promover a `resolved` em 2026-07-23 (via `/reversa-debugger-graph`), tratando a entrega já confirmada como suficiente, dispensando espera adicional pela janela de observação.
 
