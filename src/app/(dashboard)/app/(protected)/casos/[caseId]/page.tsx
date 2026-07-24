@@ -215,11 +215,6 @@ export default function CaseDetailPage({ params }: Props) {
     return () => { if (pollTimerRef.current) clearInterval(pollTimerRef.current); };
   }, [fetchCase, fetchMessages, fetchAudit, fetchUsers]);
 
-  // Scroll messages to bottom on update
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
   async function handleSendMessage() {
     if (!newMessage.trim()) return;
     setSendingMessage(true);
@@ -233,6 +228,8 @@ export default function CaseDetailPage({ params }: Props) {
         setNewMessage("");
         await fetchMessages();
         await fetchAudit();
+        // Scroll to bottom after sending message
+        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
       }
     } catch (err) {
       console.error("[CaseDetail] sendMessage:", err);
@@ -393,7 +390,7 @@ export default function CaseDetailPage({ params }: Props) {
         breadcrumbs={[{ label: "Casos", href: "/app/casos" }, { label: caseData.protocolo }]}
       />
 
-      <PageContainer className="overflow-y-auto">
+      <PageContainer>
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-5">
           {/* ── Main column ── */}
           <div className="flex-1 min-w-0 space-y-4">
